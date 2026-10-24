@@ -7,13 +7,15 @@ pages_build_output_dir = "public"
 [[d1_databases]]
 binding = "DB"
 database_name = "larret-gourmand"
-database_id = "A_REMPLACER"
+database_id = "e8f9ecb5-85d3-463e-b7cb-a5e7b58ef06e"
 
 # Les secrets (ADMIN_TOKEN, RESEND_API_KEY, MAIL_TO, MAIL_FROM, TURNSTILE_SECRET)
 # se définissent dans le tableau de bord Cloudflare Pages > Settings > Variables and Secrets,
 # ou en local dans le fichier .dev.vars (voir .dev.vars.example).
 
-# Stockage des photos envoyées depuis l'admin (créé avec : npx wrangler r2 bucket create larret-gourmand-photos)
-[[r2_buckets]]
-binding = "PHOTOS"
-bucket_name = "larret-gourmand-photos"
+# Stockage des photos envoyées depuis l'admin (R2, gratuit jusqu'à 10 Go mais demande une carte bancaire).
+# Désactivé pour l'instant : l'envoi de photos depuis l'admin est indisponible tant que ces 3 lignes sont commentées.
+# Pour l'activer : créer le bucket "larret-gourmand-photos" dans R2, puis retirer les # ci-dessous et pousser.
+# [[r2_buckets]]
+# binding = "PHOTOS"
+# bucket_name = "larret-gourmand-photos"
