@@ -13,6 +13,8 @@ import { loadState, computeTonight, altPhoto, typo } from './_lib.js';
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = (n) => (Number.isInteger(n) ? String(n) : n.toFixed(2).replace('.', ',')) + ' €';
 const fmtSup = (n) => '+' + fmt(n);
+// Pour les photos livrées avec le site (/img/xxx.jpg), on propose les versions WebP (pleine et 640 px)
+const srcset = (photo) => /^\/img\/[A-Za-z0-9_-]+\.jpg$/.test(photo) ? ` srcset="${photo.replace('.jpg', '-640.webp')} 640w, ${photo.replace('.jpg', '.webp')} 1100w"` : '';
 
 // ---- HTML de la carte (section Menu)
 function renderMenu(state) {
@@ -25,8 +27,9 @@ function renderMenu(state) {
     else if (i === n - 1 && n > 2 && rem === 2) cls += ' dish--wide';
     else if (i === n - 1 && n > 2 && rem === 1) cls += ' dish--full';
     const prix = b.supplement ? fmtSup(b.supplement) : fmt(state.prix.burger);
+    const sizes = i === 0 ? '(max-width: 980px) 100vw, 66vw' : '(max-width: 600px) 100vw, (max-width: 980px) 50vw, 33vw';
     return `<li class="${cls}" data-burger="${esc(b.id)}"${b.rupture ? ' data-rupture="1"' : ''}>
-  <div class="dish__img"><img src="${esc(b.photo || '/img/og.jpg')}" alt="${esc(altPhoto(b.nom))}" width="1100" height="1100" loading="lazy"><span class="dish__price${b.supplement ? ' sup' : ''}">${prix}</span></div>
+  <div class="dish__img"><img src="${esc(b.photo || '/img/og.jpg')}"${srcset(b.photo)} sizes="${sizes}" alt="${esc(altPhoto(b.nom))}" width="1100" height="1100" loading="lazy" decoding="async"><span class="dish__price${b.supplement ? ' sup' : ''}">${prix}</span></div>
   <div class="dish__body"><h3>${esc(typo(b.nom))}</h3>${b.accroche ? `<span class="tag">${esc(typo(b.accroche))}</span>` : ''}<p class="ing">${esc(typo(b.description))}</p></div>
 </li>`;
   }).join('\n');
@@ -37,7 +40,7 @@ function renderShow(state) {
   const list = state.burgers.filter((b) => b.actif && b.photo);
   return list.map((b, i) => {
     const prix = fmt(state.prix.burger + b.supplement);
-    return `<figure${i === 0 ? ' class="is-on"' : ''} data-burger="${esc(b.id)}"${b.rupture ? ' data-rupture="1"' : ''} data-name="${esc(typo(b.nom))}" data-sub="${esc(typo(b.accroche || b.description.slice(0, 70)))}" data-prix="${prix}"><img src="${esc(b.photo)}" alt="${esc(altPhoto(b.nom))}" width="1100" height="1100"${i === 0 ? ' fetchpriority="high"' : ' loading="lazy"'}></figure>`;
+    return `<figure${i === 0 ? ' class="is-on"' : ''} data-burger="${esc(b.id)}"${b.rupture ? ' data-rupture="1"' : ''} data-name="${esc(typo(b.nom))}" data-sub="${esc(typo(b.accroche || b.description.slice(0, 70)))}" data-prix="${prix}"><img src="${esc(b.photo)}"${srcset(b.photo)} sizes="(max-width: 900px) 92vw, 45vw" alt="${esc(altPhoto(b.nom))}" width="1100" height="1100"${i === 0 ? ' fetchpriority="high"' : ' loading="lazy" decoding="async"'}></figure>`;
   }).join('\n');
 }
 

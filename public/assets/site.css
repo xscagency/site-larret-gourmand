@@ -420,7 +420,7 @@ h2{font-size:clamp(2rem,4.4vw,3.2rem)}
 .band--photo::before{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,rgba(42,26,16,.82),rgba(42,26,16,.66) 40%,rgba(42,26,16,.9))}
 .band--photo .lede{color:rgba(252,243,227,.88)}
 .band--photo .section-head h2::after{background:var(--cheddar)}
-.priv{background-image:url("/img/truck-mariage.jpg")}
+.priv{background-image:url("/img/truck-mariage.webp")}
 .priv p{color:var(--creme)}
 .priv .btn--creme{background:var(--cheddar);border-color:var(--cheddar);color:#2A1A10}
 .priv .btn--creme:hover{background:#F7BD5F;border-color:#F7BD5F}
@@ -430,7 +430,7 @@ h2{font-size:clamp(2rem,4.4vw,3.2rem)}
 .pillars>div{background:rgba(42,26,16,.55);border:1px solid rgba(252,243,227,.18);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);transition:transform .3s ease,border-color .3s ease}
 .pillars>div:hover{transform:translateY(-3px);border-color:rgba(243,173,63,.6)}
 .pillars h3{color:var(--cheddar)}
-.cta-band{background-image:url("/img/service.jpg")}
+.cta-band{background-image:url("/img/service.webp")}
 .cta-band .btn--creme{background:var(--cheddar);border-color:var(--cheddar);color:#2A1A10}
 .cta-band .btn--creme:hover{background:#F7BD5F;border-color:#F7BD5F}
 .cta-band h2::after{background:var(--cheddar)}
