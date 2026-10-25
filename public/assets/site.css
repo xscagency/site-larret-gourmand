@@ -93,7 +93,7 @@ img{max-width:100%;display:block}
 .show figcaption{position:absolute;left:16px;bottom:16px;right:16px;z-index:2;display:flex;justify-content:space-between;align-items:end;gap:12px;pointer-events:none}
 .show .chip{background:rgba(42,26,16,.86);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border:1px solid var(--brun-line);border-radius:12px;padding:10px 14px;color:var(--creme);font-family:var(--display);font-size:1.15rem;line-height:1.1}
 .show .chip small{display:block;font-family:var(--body);font-size:.82rem;color:var(--creme-2);margin-top:3px;font-weight:500}
-.show .chip.price{font-size:1rem;color:var(--cheddar);padding:10px 12px}
+.show .chip.price{font-size:1rem;color:var(--cheddar);padding:10px 12px;white-space:nowrap}
 .show__dots{position:absolute;top:14px;right:14px;z-index:3;display:flex;gap:6px}
 .show__dots button{width:10px;height:10px;border-radius:50%;border:0;padding:0;background:rgba(252,243,227,.4);cursor:pointer;transition:background .2s ease,transform .2s ease}
 .show__dots button.is-on{background:var(--cheddar);transform:scale(1.25)}
@@ -521,3 +521,38 @@ h1,h2,h3{text-wrap:balance}
 @media (max-width:520px){.form .row--cp{grid-template-columns:120px 1fr}}
 .field input:invalid:not(:placeholder-shown),.field select:invalid{border-color:var(--brun-line)}
 .form.was-validated :invalid{border-color:var(--ketchup)}
+
+/* ---------- hero : le camion de nuit en fond ---------- */
+.hero{isolation:isolate}
+.hero::before{content:"";position:absolute;inset:0;z-index:-2;background:#2A1A10 url(/img/truck-nuit.jpg) center 42%/cover no-repeat;
+  background-image:-webkit-image-set(url(/img/truck-nuit.webp) 1x);
+  background-image:image-set(url(/img/truck-nuit.webp) type("image/webp"),url(/img/truck-nuit.jpg) type("image/jpeg"))}
+/* voile : brun soutenu derrière le texte (gauche), camion dégagé à droite, fondu vers le fond du site en bas */
+.hero::after{content:"";position:absolute;inset:0;z-index:-1;background:
+  linear-gradient(90deg,rgba(42,26,16,.9) 0,rgba(42,26,16,.72) 38%,rgba(42,26,16,.22) 62%,rgba(42,26,16,.3) 100%),
+  linear-gradient(180deg,rgba(42,26,16,.62) 0,rgba(42,26,16,.1) 28%,rgba(42,26,16,.12) 58%,var(--brun) 100%)}
+.hero .lights{z-index:1}
+.hero>.wrap{position:relative;z-index:1}
+.hero h1{text-shadow:0 2px 24px rgba(0,0,0,.45)}
+.hero .claims li{background:rgba(42,26,16,.72);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.hero .tonight{background:rgba(42,26,16,.8);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+@media (min-width:901px){
+  .hero .wrap{min-height:min(840px,94vh);align-items:center}
+  .hero .wrap>div:last-child{align-self:end;justify-self:end;width:min(100%,340px)}
+}
+/* Mobile / tablette : le camion entier en bandeau sous la guirlande, le texte vient dessous sur fond uni */
+@media (max-width:900px){
+  .hero::before,.hero::after{inset:0 0 auto 0;height:340px}
+  .hero::before{background-position:62% 50%}
+  .hero::after{background:linear-gradient(180deg,rgba(42,26,16,.5) 0,rgba(42,26,16,.08) 24%,rgba(42,26,16,.06) 62%,rgba(42,26,16,.75) 86%,var(--brun) 100%)}
+  .hero .wrap{padding-top:318px}
+  .hero h1{text-shadow:none}
+}
+@media (max-width:600px){
+  .hero::before,.hero::after{height:290px}
+  .hero::before{background-size:auto 335px;background-position:60% 36%}
+  .hero .wrap{padding-top:266px}
+}
+@media (max-width:700px){
+  .hero::before{background-image:-webkit-image-set(url(/img/truck-nuit-900.webp) 1x);background-image:image-set(url(/img/truck-nuit-900.webp) type("image/webp"),url(/img/truck-nuit-900.jpg) type("image/jpeg"))}
+}
