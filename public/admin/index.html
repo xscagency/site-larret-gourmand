@@ -56,6 +56,7 @@ section.is-on{display:block}
 .btn:disabled{opacity:.5;cursor:default}
 .btn.done{background:var(--mesclun)!important;border-color:var(--mesclun)!important;color:#1c2a12!important}
 .btn.busy{opacity:.7;pointer-events:none}
+.btn.ok{background:var(--mesclun);border-color:var(--mesclun);color:#13200c;font-weight:600}
 .btn.sm{padding:7px 12px;font-size:.88rem}
 label.f{display:grid;gap:5px;font-size:.86rem;color:var(--creme-2);min-width:0}
 input,select,textarea{font:inherit;color:var(--creme);background:var(--brun);border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:100%;min-width:0}
@@ -88,6 +89,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--cheddar)
 .state .dot{width:12px;height:12px;border-radius:50%;background:var(--mesclun);box-shadow:0 0 0 4px rgba(123,166,86,.2)}
 .state .dot.off{background:var(--cheddar);box-shadow:0 0 0 4px rgba(243,173,63,.2)}
 .state b{display:block;font-size:1rem}
+.state small{display:block;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--cheddar);margin-bottom:3px;font-weight:700}
 .state span{color:var(--creme-2);font-size:.92rem}
 /* demandes */
 .filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
@@ -141,7 +143,15 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
 .dvline{background:var(--brun);border:1px solid var(--line);border-radius:12px;padding:8px}
 .totals{display:grid;grid-template-columns:auto auto;gap:4px 18px;font-variant-numeric:tabular-nums;text-align:right;background:var(--brun);border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin-left:auto}
 .totals b{font-size:1.05rem;color:var(--cheddar)}
-.tag.s-brouillon{background:var(--brun-3);color:var(--creme-2)}.tag.s-envoye{background:rgba(243,173,63,.18);color:var(--cheddar);border:1px solid rgba(243,173,63,.5)}.tag.s-accepte{background:rgba(123,166,86,.22);color:#B9DBA0;border:1px solid rgba(123,166,86,.5)}.tag.s-refuse{background:rgba(214,64,47,.2);color:#FFB3AA}
+.tag.s-brouillon{background:var(--brun-3);color:var(--creme-2)}.tag.s-envoye{background:rgba(243,173,63,.18);color:var(--cheddar);border:1px solid rgba(243,173,63,.5)}.tag.s-accepte{background:rgba(123,166,86,.22);color:#B9DBA0;border:1px solid rgba(123,166,86,.5)}.tag.s-refuse{background:rgba(214,64,47,.2);color:#FFB3AA}.tag.s-solde{background:var(--mesclun);color:#13200c}
+/* agenda */
+.agm{margin:22px 0 10px;font:600 .8rem var(--body);letter-spacing:.12em;text-transform:uppercase;color:var(--cheddar)}
+.ag{display:grid;grid-template-columns:64px 1fr;gap:14px;border-left:4px solid var(--cheddar)}.ag.conf{border-left-color:var(--mesclun)}.ag.dem{border-left-color:var(--ketchup)}
+.ag .day{text-align:center;background:var(--brun);border-radius:12px;padding:8px 4px;align-self:start}.ag .day b{display:block;font:700 1.6rem/1 var(--title);color:var(--creme)}.ag .day span{display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--creme-3);margin-top:4px}
+.ag .body{display:grid;gap:8px;min-width:0}.ag .in{color:var(--creme-3);font-size:.82rem}
+.ag .meta{display:flex;flex-wrap:wrap;gap:6px}.ag .meta span{background:var(--brun);border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:.84rem}
+.ag .msg{white-space:pre-wrap;background:var(--brun);border-radius:12px;padding:10px 12px;font-size:.9rem;line-height:1.45;color:var(--creme-2)}
+.ag .actions{display:flex;flex-wrap:wrap;gap:8px}
 @media (max-width:480px){.tabs button{padding:8px 11px;font-size:.86rem}h2{font-size:1.35rem}.card{padding:14px}}
 </style>
 </head>
@@ -173,13 +183,14 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
         <button data-tab="tarifs">Tarifs</button>
         <button data-tab="demandes">Demandes<span class="n" id="nNew" hidden></span></button>
         <button data-tab="devis">Devis</button>
+        <button data-tab="agenda">Agenda<span class="n" id="nAg" hidden></span></button>
         <button data-tab="bandeau">Réglages</button>
       </nav>
     </div>
   </header>
 
   <main class="wrap">
-    <div class="state"><span class="dot" id="stDot"></span><div><b id="stTitle">…</b><span id="stText"></span></div></div>
+    <div class="state" title="Ce que les visiteurs voient en ce moment sur le site (service du soir / prochaine escale)"><span class="dot" id="stDot"></span><div><small>Affiché sur le site en ce moment</small><b id="stTitle">…</b><span id="stText"></span></div></div>
 
     <section id="tab-carte" class="is-on">
       <div class="row" style="margin-bottom:14px;align-items:end"><h2 style="margin:0">La carte<small>Le premier de la liste est mis en avant sur le site</small></h2><button class="btn primary sm" id="addBurger" type="button">+ Ajouter un burger</button></div>
@@ -284,10 +295,16 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
       <div id="devisList"></div>
     </section>
 
+    <section id="tab-agenda">
+      <div class="row" style="margin-bottom:14px;align-items:end"><h2 style="margin:0">Agenda<small>Les privatisations à venir : devis envoyés, confirmées, demandes datées</small></h2></div>
+      <div class="filters" id="agFilters"><button data-agf="all" class="is-on">Tout</button><button data-agf="conf">Confirmées (payées)</button><button data-agf="attente">En attente</button></div>
+      <div id="agenda"></div>
+    </section>
+
     <!-- Éditeur de devis -->
     <dialog id="devisDlg">
       <div class="card sheet" style="margin:0;width:min(760px,calc(100vw - 24px));display:grid;gap:14px">
-        <div class="row"><h2 style="margin:0">Devis <span id="dvNumero"></span><small id="dvSub"></small></h2><div style="display:flex;gap:8px;align-items:center"><select id="dvStatut"><option value="brouillon">Brouillon</option><option value="envoye">Envoyé</option><option value="accepte">Accepté</option><option value="refuse">Refusé</option></select><button class="btn sm" type="button" id="dvClose">Fermer</button></div></div>
+        <div class="row"><h2 style="margin:0">Devis <span id="dvNumero"></span><small id="dvSub"></small></h2><div style="display:flex;gap:8px;align-items:center"><select id="dvStatut"><option value="brouillon">Brouillon</option><option value="envoye">Envoyé</option><option value="accepte">Accepté (arrhes attendues)</option><option value="solde">Payé · confirmé</option><option value="refuse">Refusé</option></select><button class="btn sm" type="button" id="dvClose">Fermer</button></div></div>
         <input type="hidden" id="dvId">
         <h3 class="sub">Client</h3>
         <div class="grid">
@@ -295,6 +312,11 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
           <label class="f">E-mail<input id="dv_client_email" type="email"></label>
           <label class="f">Téléphone<input id="dv_client_tel" type="tel"></label>
           <label class="f">Date du devis<input id="dv_date_devis" type="date"></label>
+        </div>
+        <h3 class="sub">Événement</h3>
+        <div class="grid">
+          <label class="f">Date de l'événement<input id="dv_event_date" type="date"></label>
+          <label class="f">Moment<select id="dv_event_moment"><option value="">—</option><option>Déjeuner / Brunch</option><option>Dîner</option><option>Deuxième partie de soirée (21h+)</option></select></label>
         </div>
         <h3 class="sub">Prestation (lignes affichées sous le client)</h3>
         <div class="grid">
@@ -329,9 +351,11 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
             <a class="btn" id="dvMailto" href="#" target="_blank" rel="noopener">Ouvrir dans Mail</a>
             <button class="btn primary" type="button" id="dvSend">Envoyer par e-mail avec le PDF</button>
           </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;width:100%">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;width:100%;align-items:center">
+            <button class="btn ok sm" type="button" id="dvValider">✓ Valider : acompte reçu</button>
             <button class="btn sm" type="button" data-agenda="devis" data-kind="google">📅 Ajouter à Google Agenda</button>
             <button class="btn sm" type="button" data-agenda="devis" data-kind="ics">📅 Fichier agenda (.ics)</button>
+            <span class="muted" id="dvPdfLink" style="font-size:.85rem"></span>
           </div>
           <button class="btn danger sm" type="button" id="dvDelete">Supprimer</button>
         </div>
@@ -460,13 +484,13 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
   var filter='nouveau';
   function renderDemandes(){
     var nouv=demandes.filter(function(d){return d.statut==='nouveau';}).length;
-    $('#nNew').hidden=!nouv;$('#nNew').textContent=nouv;
+    $('#nNew').hidden=!nouv;$('#nNew').textContent=nouv;renderAgenda();
     var libel={nouveau:'Nouveau',repondu:'Répondu',signe:'Signé',perdu:'Sans suite'};
     var list=demandes.filter(function(d){return filter==='all'||(filter==='nouveau'?d.statut==='nouveau':(d.statut==='nouveau'||d.statut==='repondu'));});
     document.querySelectorAll('#filters button').forEach(function(b){b.classList.toggle('is-on',b.dataset.filter===filter);});
     $('#demandes').innerHTML=list.length?list.map(function(d){
       var quand=dateHeure(d.recu_le||'');
-      return '<div class="card demande s-'+esc(d.statut)+'">'+
+      return '<div class="card demande s-'+esc(d.statut)+'" id="dem-'+d.id+'">'+
         '<div class="head"><div><div class="name">'+esc(d.nom)+'</div><div class="muted">n°'+d.id+(d.page&&d.page!=='/'?' · via '+esc(d.page):'')+'</div></div><span class="when">'+esc(quand)+'</span></div>'+
         '<div class="meta">'+(d.type?'<span><b>'+esc(d.type)+'</b></span>':'')+(d.date_event?'<span>'+esc(d.date_event)+'</span>':'')+(d.moment?'<span>'+esc(d.moment)+'</span>':'')+(d.convives?'<span>'+esc(d.convives)+' convives</span>':'')+(d.lieu?'<span>📍 '+esc(d.lieu)+'</span>':'')+'</div>'+
         (d.message?'<div class="msg">'+esc(d.message)+'</div>':'')+
@@ -538,11 +562,13 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
   // =====================================================================
   var devisList=[], curDevis=null, logoData=null;
   var eur=function(n){return (Math.round((Number(n)||0)*100)/100).toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';};
-  var STATUTS={brouillon:'Brouillon',envoye:'Envoyé',accepte:'Accepté',refuse:'Refusé'};
-  function loadDevis(){return api('devis').then(function(r){devisList=r.devis;renderDevis();});}
+  var STATUTS={brouillon:'Brouillon',envoye:'Envoyé',accepte:'Accepté',solde:'Payé ✓',refuse:'Refusé'};
+  var MOMENT_ORDRE={'Déjeuner / Brunch':0,'Dîner':1,'Deuxième partie de soirée (21h+)':2};
+  function demandeById(id){return demandes.filter(function(x){return x.id===id;})[0]||null;}
+  function loadDevis(){return api('devis').then(function(r){devisList=r.devis;renderDevis();renderAgenda();});}
   function renderDevis(){
     $('#devisList').innerHTML=devisList.length?devisList.map(function(d){
-      return '<div class="card"><div class="row"><div><div class="name">n°'+esc(d.numero)+' · '+esc(d.client_nom||'Sans nom')+' <span class="tag s-'+esc(d.statut)+'">'+STATUTS[d.statut]+'</span></div><div class="muted">'+esc((d.intro&&d.intro[0])||'')+(d.lieu?' · '+esc(d.lieu):'')+' · devis du '+esc(dateFr(d.date_devis))+'</div></div>'+
+      return '<div class="card"><div class="row"><div><div class="name">n°'+esc(d.numero)+' · '+esc(d.client_nom||'Sans nom')+' <span class="tag s-'+esc(d.statut)+'">'+STATUTS[d.statut]+'</span></div><div class="muted">'+esc((d.event_date&&/^\d{4}-\d{2}-\d{2}$/.test(d.event_date)?dateFr(d.event_date)+(d.event_moment?' · '+d.event_moment:''):(d.intro&&d.intro[0])||''))+(d.lieu?' · '+esc(d.lieu):'')+' · devis du '+esc(dateFr(d.date_devis))+'</div></div>'+
         '<div style="display:flex;gap:8px;align-items:center"><b style="font-size:1.05rem">'+eur(d.total_ttc)+'</b><button class="btn sm" data-opendevis="'+d.id+'">Ouvrir</button></div></div></div>';
     }).join(''):'<p class="empty">Aucun devis. Créez-en un depuis une demande (bouton « Préparer le devis ») ou avec « Nouveau devis ».</p>';
   }
@@ -561,7 +587,8 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
     $('#dv_client_nom').value=d.client_nom||'';$('#dv_client_email').value=d.client_email||'';$('#dv_client_tel').value=d.client_tel||'';$('#dv_date_devis').value=d.date_devis||'';
     for(var i=0;i<5;i++)$('#dv_i'+i).value=(d.intro&&d.intro[i])||'';
     $('#dv_mode').value=d.mode||'ttc';$('#dv_email_objet').value=d.email_objet||'';$('#dv_email_corps').value=d.email_corps||'';
-    $('#dvKmInfo').textContent='';$('#dvMsg').hidden=true;
+    $('#dv_event_date').value=/^\d{4}-\d{2}-\d{2}$/.test(d.event_date||'')?d.event_date:'';$('#dv_event_moment').value=d.event_moment||'';
+    $('#dvKmInfo').textContent='';$('#dvMsg').hidden=true;showPdfLink();refreshValider();
     $('#dvSend').disabled=!(state.mail_configure);$('#dvSend').title=state.mail_configure?'':'Brancher Resend (variables RESEND_API_KEY, MAIL_FROM) pour envoyer depuis le site';
     renderLines(); ddlg.showModal(); ddlg.querySelector('.sheet').scrollTop=0;
   }
@@ -579,11 +606,29 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
   }
   function collectDevis(){
     var intro=[];for(var i=0;i<5;i++)intro.push($('#dv_i'+i).value);
-    return {client_nom:$('#dv_client_nom').value,client_email:$('#dv_client_email').value,client_tel:$('#dv_client_tel').value,date_devis:$('#dv_date_devis').value,intro:intro,lieu:intro[4],lignes:curDevis.lignes,mode:$('#dv_mode').value,statut:$('#dvStatut').value,email_objet:$('#dv_email_objet').value,email_corps:$('#dv_email_corps').value};
+    return {client_nom:$('#dv_client_nom').value,client_email:$('#dv_client_email').value,client_tel:$('#dv_client_tel').value,date_devis:$('#dv_date_devis').value,event_date:$('#dv_event_date').value,event_moment:$('#dv_event_moment').value,intro:intro,lieu:intro[4],lignes:curDevis.lignes,mode:$('#dv_mode').value,statut:$('#dvStatut').value,email_objet:$('#dv_email_objet').value,email_corps:$('#dv_email_corps').value};
   }
-  function saveDevis(){
-    return api('devis/'+curDevis.id,{method:'PUT',body:collectDevis()}).then(function(r){curDevis=r.devis;return loadDevis();}).then(function(){toast('Devis enregistré');return curDevis;});
+  function saveDevis(quiet){
+    return api('devis/'+curDevis.id,{method:'PUT',body:collectDevis()}).then(function(r){curDevis=r.devis;return loadDevis();}).then(function(){if(!quiet)toast('Devis enregistré');refreshValider();return curDevis;});
   }
+  function showPdfLink(){var el=$('#dvPdfLink');el.innerHTML=curDevis&&curDevis.pdf_url?'<a href="'+esc(curDevis.pdf_url)+'" target="_blank" rel="noopener" style="color:var(--cheddar)">PDF archivé ↗</a>':'';}
+  function refreshValider(){var b=$('#dvValider'),st=$('#dvStatut').value;b.hidden=(st==='solde'||st==='refuse');}
+  // archive le PDF sur le site (lien privé non devinable) : utilisé dans l'agenda et comme copie de ce qui a été envoyé
+  function archivePdf(d,doc){
+    var b64=doc.output('datauristring').split(',')[1];
+    return api('devis/'+d.id+'/pdf',{method:'POST',body:{pdf_base64:b64}}).then(function(r){d.pdf_url=r.pdf_url;var x=devisList.filter(function(y){return y.id===d.id;})[0];if(x)x.pdf_url=r.pdf_url;if(curDevis&&curDevis.id===d.id){curDevis.pdf_url=r.pdf_url;showPdfLink();}return r.pdf_url;});
+  }
+  function ensurePdf(d,force){if(!force&&d.pdf_url)return Promise.resolve(d.pdf_url);return buildPdf(d).then(function(doc){return archivePdf(d,doc);});}
+  // quand la date ou le moment change, la première ligne « Le 12/06/2027 soir » suit si elle n'a pas été personnalisée
+  var MOMENT_DEVIS={'Déjeuner / Brunch':'midi','Dîner':'soir','Deuxième partie de soirée (21h+)':'deuxième partie de soirée (21h+)'};
+  function syncIntro0(){var dt=$('#dv_event_date').value,mo=$('#dv_event_moment').value,i0=$('#dv_i0');if(!dt)return;var p=dt.split('-'),txt='Le '+p[2]+'/'+p[1]+'/'+p[0]+(mo?' '+MOMENT_DEVIS[mo]:'');if(!i0.value||/^Le \d{2}\/\d{2}\/\d{4}/.test(i0.value))i0.value=txt;}
+  $('#dv_event_date').addEventListener('change',syncIntro0);$('#dv_event_moment').addEventListener('change',syncIntro0);
+  $('#dvStatut').addEventListener('change',refreshValider);
+  $('#dvValider').addEventListener('click',function(){
+    var b=this;if(b.dataset.confirm!=='1'){b.dataset.confirm='1';b.textContent='Confirmer : acompte reçu, privatisation validée';setTimeout(function(){b.dataset.confirm='';b.textContent='✓ Valider : acompte reçu';},4000);return;}
+    b.dataset.confirm='';b.textContent='✓ Valider : acompte reçu';b.classList.add('busy');$('#dvStatut').value='solde';
+    saveDevis(true).then(function(){toast('Privatisation confirmée ✓ — pensez à mettre l\'agenda à jour');return api('demandes');}).then(function(r){demandes=r.demandes;renderDemandes();}).catch(function(e){toast(e.message,true);}).finally(function(){b.classList.remove('busy');});
+  });
   $('#dvLines').addEventListener('input',function(e){var t=e.target;if(!t.dataset.l)return;var l=curDevis.lignes[+t.dataset.i];l[t.dataset.l]=(t.dataset.l==='qte'||t.dataset.l==='prix')?Number(t.value):t.value;t.closest('.dvline').querySelector('.tot').textContent=eur((l.qte||0)*(l.prix||0));renderTotals();});
   $('#dvLines').addEventListener('click',function(e){var b=e.target.closest('[data-rmline]');if(!b)return;curDevis.lignes.splice(+b.dataset.rmline,1);renderLines();});
   ddlg.addEventListener('click',function(e){
@@ -611,7 +656,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
   });
   $('#dvRegen').addEventListener('click',function(){
     var moments={'Déjeuner / Brunch':'à midi','Dîner':'le soir','Deuxième partie de soirée (21h+)':'en deuxième partie de soirée (21h+)'};
-    var v={date:dateFr(curDevis.event_date||''),moment:moments[curDevis.event_moment]||'',nom:$('#dv_client_nom').value,convives:(curDevis.lignes[0]&&curDevis.lignes[0].qte)||'',lieu:$('#dv_i4').value,numero:curDevis.numero};
+    var v={date:dateFr($('#dv_event_date').value||''),moment:moments[$('#dv_event_moment').value]||'',nom:$('#dv_client_nom').value,convives:(curDevis.lignes[0]&&curDevis.lignes[0].qte)||'',lieu:$('#dv_i4').value,numero:curDevis.numero};
     var fill=function(t){return String(t||'').replace(/\{(\w+)\}/g,function(m,k){return v[k]!==undefined?v[k]:'';}).replace(/  +/g,' ');};
     $('#dv_email_objet').value=fill(state.devis_reglages.email_objet);$('#dv_email_corps').value=fill(state.devis_reglages.email_corps);renderTotals();flash(this,'Régénéré ✓');
   });
@@ -625,12 +670,12 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
     }else if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(plain).then(done).catch(function(){fallbackCopy(plain);done();});}
     else{fallbackCopy(plain);done();}
   });
-  $('#dvPdf').addEventListener('click',function(){var b=this;b.classList.add('busy');saveDevis().then(function(d){return buildPdf(d);}).then(function(doc){var name='Devis-'+curDevis.numero+'-L-Arret-Gourmand.pdf';try{doc.save(name);}catch(e){window.open(doc.output('bloburl'),'_blank');}toast('PDF '+name+' généré');flash(b,'PDF prêt ✓');}).catch(function(e){toast(e.message,true);}).finally(function(){b.classList.remove('busy');});});
+  $('#dvPdf').addEventListener('click',function(){var b=this;b.classList.add('busy');saveDevis().then(function(d){return buildPdf(d);}).then(function(doc){var name='Devis-'+curDevis.numero+'-L-Arret-Gourmand.pdf';try{doc.save(name);}catch(e){window.open(doc.output('bloburl'),'_blank');}toast('PDF '+name+' généré');flash(b,'PDF prêt ✓');return archivePdf(curDevis,doc).catch(function(){});}).catch(function(e){toast(e.message,true);}).finally(function(){b.classList.remove('busy');});});
   $('#dvSend').addEventListener('click',function(){
     var btn=this;if(!$('#dv_client_email').value){toast('E-mail du client manquant',true);return;}
     btn.disabled=true;btn.textContent='Envoi…';
     saveDevis().then(function(d){return buildPdf(d);}).then(function(doc){var b64=doc.output('datauristring').split(',')[1];return api('devis/'+curDevis.id+'/envoyer',{method:'POST',body:{pdf_base64:b64}});})
-      .then(function(){toast('Devis envoyé à '+$('#dv_client_email').value);return loadDevis();}).then(function(){var d=devisList.filter(function(x){return x.id===curDevis.id;})[0];if(d)$('#dvStatut').value=d.statut;return api('demandes');}).then(function(r){demandes=r.demandes;})
+      .then(function(){toast('Devis envoyé à '+$('#dv_client_email').value);return loadDevis();}).then(function(){var d=devisList.filter(function(x){return x.id===curDevis.id;})[0];if(d){$('#dvStatut').value=d.statut;curDevis.pdf_url=d.pdf_url;curDevis.statut=d.statut;showPdfLink();refreshValider();}return api('demandes');}).then(function(r){demandes=r.demandes;})
       .catch(function(e){toast(e.message,true);}).finally(function(){btn.disabled=false;btn.textContent='Envoyer par e-mail avec le PDF';});
   });
   $('#newDevis').addEventListener('click',function(){api('devis',{method:'POST',body:{}}).then(function(r){return loadDevis().then(function(){openDevis(r.devis);});}).catch(function(e){toast(e.message,true);});});
@@ -640,29 +685,107 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
     if(b.dataset.mkdevis){api('devis',{method:'POST',body:{demande_id:+b.dataset.mkdevis}}).then(function(r){return loadDevis().then(function(){openDevis(r.devis);});}).catch(function(err){toast(err.message,true);});}
   });
 
-  // ---- Agenda : créneau selon le moment, titre et détails pré-remplis
+  // ---- Agenda : créneau selon le moment, titre selon l'avancement, description complète, PDF en lien
   var CRENEAUX={'Déjeuner / Brunch':['11:00','15:00'],'Dîner':['18:00','22:30'],'Deuxième partie de soirée (21h+)':['21:00','23:59']};
-  function agendaEvent(o){ // o : {date, moment, nom, convives, lieu, tel, email, numero, total, message}
-    var cr=CRENEAUX[o.moment]||['11:00','15:00'];
-    var d=(o.date||'').replace(/-/g,'');if(d.length!==8)return null;
-    var fmt=function(h){return d+'T'+h.replace(':','')+'00';};
-    var titre='Privatisation – '+(o.nom||'')+(o.convives?' ('+o.convives+' pers.)':'');
-    var det=['Food truck L\'Arrêt Gourmand',o.moment?'Moment : '+o.moment:'',o.numero?'Devis n°'+o.numero+(o.total?' · '+eur(o.total):''):'',o.tel?'Tél : '+o.tel:'',o.email?'E-mail : '+o.email:'',o.message?'\n'+o.message:''].filter(Boolean).join('\n');
-    return {titre:titre,debut:fmt(cr[0]),fin:fmt(cr[1]),lieu:o.lieu||'',details:det};
+  function isoOk(d){return /^\d{4}-\d{2}-\d{2}$/.test(d||'');}
+  function convivesDe(d,dem){return (d&&d.lignes&&d.lignes[0]&&d.lignes[0].qte)||(dem&&dem.convives)||'';}
+  function baseEvent(date,moment){var cr=CRENEAUX[moment]||['11:00','15:00'];if(!isoOk(date))return null;var d=date.replace(/-/g,'');return {debut:d+'T'+cr[0].replace(':','')+'00',fin:d+'T'+cr[1].replace(':','')+'00'};}
+  // Événement à partir d'un devis (+ la demande liée pour les précisions du client)
+  function devisEvent(d,pdfUrl){
+    var ev=baseEvent(d.event_date,d.event_moment);if(!ev)return null;
+    var dem=d.demande_id?demandeById(d.demande_id):null,intro=d.intro||[],t=computeTotals(d.lignes||[],d.mode||'ttc'),conv=convivesDe(d,dem),nom=d.client_nom||(dem&&dem.nom)||'';
+    var confirme=d.statut==='solde',tel=d.client_tel||(dem&&dem.tel)||'',mail=d.client_email||(dem&&dem.email)||'';
+    ev.titre=(confirme?'Privatisation confirmée – ':d.statut==='refuse'?'Devis refusé – ':'Devis envoyé - en attente de réponse – ')+nom+(conv?' ('+conv+' pers.)':'');
+    ev.lieu=d.lieu||intro[4]||(dem&&dem.lieu)||'';
+    ev.uid='devis-'+d.numero+'@larretgourmand.com';
+    ev.pdf=pdfUrl?location.origin+pdfUrl:'';
+    var L=[
+      confirme?'✅ Acompte reçu — privatisation confirmée':(d.statut==='refuse'?'❌ Devis refusé':'⏳ Devis n°'+d.numero+' envoyé, en attente de la réponse du client'),
+      '',
+      'Client : '+nom,tel?'Tél : '+tel:'',mail?'E-mail : '+mail:'',
+      dem&&dem.type?'Événement : '+dem.type:'',
+      d.event_moment?'Moment : '+d.event_moment:'',intro[1]||'',conv?'Convives : '+conv:'',intro[2]||'',intro[3]||'',
+      ev.lieu?'Lieu : '+ev.lieu:'',
+      '',
+      'Devis n°'+d.numero+' : '+eur(t.ttc)+' TTC · arrhes 30 % '+eur(t.arrhes)+' · reste à régler '+eur(t.reste),
+      ev.pdf?'PDF du devis : '+ev.pdf:'',
+      dem&&dem.message?'\nPrécisions du client :\n'+dem.message:'',
+      '\nTableau de contrôle : '+location.origin+'/admin'
+    ];
+    ev.details=L.filter(function(x,i){return x!==''||(i>0&&L[i-1]!=='');}).join('\n');
+    return ev;
   }
-  function googleCalUrl(ev){return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent(ev.titre)+'&dates='+ev.debut+'/'+ev.fin+'&ctz=Europe/Paris&details='+encodeURIComponent(ev.details)+'&location='+encodeURIComponent(ev.lieu);}
+  // Événement à partir d'une simple demande (pas encore de devis)
+  function demandeEvent(dem){
+    var ev=baseEvent(dem.date_event,dem.moment);if(!ev)return null;
+    ev.titre='Demande de privatisation – '+dem.nom+(dem.convives?' ('+dem.convives+' pers.)':'');ev.lieu=dem.lieu||'';ev.uid='demande-'+dem.id+'@larretgourmand.com';ev.pdf='';
+    ev.details=['📝 Demande n°'+dem.id+' reçue, devis à préparer','','Client : '+dem.nom,'Tél : '+dem.tel,'E-mail : '+dem.email,dem.type?'Événement : '+dem.type:'',dem.moment?'Moment : '+dem.moment:'',dem.convives?'Convives : '+dem.convives:'',dem.lieu?'Lieu : '+dem.lieu:'',dem.message?'\nPrécisions du client :\n'+dem.message:'','\nTableau de contrôle : '+location.origin+'/admin'].filter(Boolean).join('\n');
+    return ev;
+  }
+  function googleCalUrl(ev){var det=ev.details.length>1800?ev.details.slice(0,1800)+'…':ev.details;return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent(ev.titre)+'&dates='+ev.debut+'/'+ev.fin+'&ctz=Europe/Paris&details='+encodeURIComponent(det)+'&location='+encodeURIComponent(ev.lieu);}
   function downloadIcs(ev){
     var esc2=function(t){return String(t).replace(/\\/g,'\\\\').replace(/\n/g,'\\n').replace(/,/g,'\\,').replace(/;/g,'\\;');};
-    var ics=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//L Arret Gourmand//Admin//FR','BEGIN:VEVENT','UID:'+Date.now()+'@larretgourmand.com','DTSTAMP:'+new Date().toISOString().replace(/[-:]/g,'').slice(0,15)+'Z','DTSTART;TZID=Europe/Paris:'+ev.debut,'DTEND;TZID=Europe/Paris:'+ev.fin,'SUMMARY:'+esc2(ev.titre),'LOCATION:'+esc2(ev.lieu),'DESCRIPTION:'+esc2(ev.details),'END:VEVENT','END:VCALENDAR'].join('\r\n');
-    var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([ics],{type:'text/calendar'}));a.download='privatisation-'+ev.debut.slice(0,8)+'.ics';document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},1000);
+    var fold=function(l){var out=[];while(l.length>70){out.push(l.slice(0,70));l=' '+l.slice(70);}out.push(l);return out.join('\r\n');};
+    var lines=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//L Arret Gourmand//Admin//FR','METHOD:PUBLISH','BEGIN:VEVENT','UID:'+ev.uid,'DTSTAMP:'+new Date().toISOString().replace(/[-:]/g,'').slice(0,15)+'Z','SEQUENCE:'+Math.floor(Date.now()/1000),'DTSTART;TZID=Europe/Paris:'+ev.debut,'DTEND;TZID=Europe/Paris:'+ev.fin,'SUMMARY:'+esc2(ev.titre),'LOCATION:'+esc2(ev.lieu),'DESCRIPTION:'+esc2(ev.details)];
+    if(ev.pdf){lines.push('URL:'+ev.pdf);lines.push('ATTACH;FMTTYPE=application/pdf:'+ev.pdf);}
+    lines.push('END:VEVENT','END:VCALENDAR');
+    var ics=lines.map(fold).join('\r\n');
+    var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([ics],{type:'text/calendar;charset=utf-8'}));a.download='privatisation-'+ev.debut.slice(0,8)+'.ics';document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},1000);
   }
   document.addEventListener('click',function(e){
     var b=e.target.closest('[data-agenda]');if(!b)return;
-    var src=b.dataset.agenda,ev=null;
-    if(src==='devis'&&curDevis){var intro=[];for(var i=0;i<5;i++)intro.push($('#dv_i'+i).value);var t=computeTotals(curDevis.lignes||[],$('#dv_mode').value);ev=agendaEvent({date:curDevis.event_date,moment:curDevis.event_moment,nom:$('#dv_client_nom').value,convives:(curDevis.lignes[0]&&curDevis.lignes[0].qte)||'',lieu:intro[4],tel:$('#dv_client_tel').value,email:$('#dv_client_email').value,numero:curDevis.numero,total:t.ttc,message:intro.slice(0,4).filter(Boolean).join(' · ')});}
-    else{var d=demandes.filter(function(x){return x.id===+src;})[0];if(d)ev=agendaEvent({date:d.date_event,moment:d.moment,nom:d.nom,convives:d.convives,lieu:d.lieu,tel:d.tel,email:d.email,message:d.message});}
-    if(!ev){toast('Date de l\'événement manquante',true);return;}
-    if(b.dataset.kind==='ics'){downloadIcs(ev);flash(b,'Téléchargé ✓');}else{window.open(googleCalUrl(ev),'_blank','noopener');flash(b,'Ouvert ✓');}
+    var src=b.dataset.agenda,kind=b.dataset.kind,p;
+    var win=kind==='google'?window.open('','_blank'):null; // ouvert tout de suite pour ne pas être bloqué comme pop-up
+    b.classList.add('busy');
+    if(src==='devis'&&curDevis){p=saveDevis(true).then(function(d){return ensurePdf(d,true).then(function(url){return devisEvent(d,url);});});}
+    else if(/^d:/.test(src)){var dv=devisList.filter(function(x){return x.id===+src.slice(2);})[0];p=dv?ensurePdf(dv,false).then(function(url){return devisEvent(dv,url);}):Promise.resolve(null);}
+    else{var dem=demandeById(+src);p=Promise.resolve(dem?demandeEvent(dem):null);}
+    p.then(function(ev){
+      if(!ev){if(win)win.close();toast('Date de l\'événement manquante (renseignez-la dans le devis)',true);return;}
+      if(kind==='ics'){downloadIcs(ev);flash(b,'Téléchargé ✓');}
+      else{var url=googleCalUrl(ev);if(win)win.location.href=url;else{var a=document.createElement('a');a.href=url;a.target='_blank';a.rel='noopener';document.body.appendChild(a);a.click();a.remove();}flash(b,'Ouvert ✓');}
+    }).catch(function(err){if(win)win.close();toast(err.message,true);}).finally(function(){b.classList.remove('busy');});
+  });
+
+  // ---- Onglet Agenda : tout ce qui est daté et à venir
+  var agFilter='all';
+  function renderAgenda(){
+    if(!state||!$('#agenda'))return;
+    var today=state.today,items=[],covered={};
+    devisList.forEach(function(d){if(d.demande_id)covered[d.demande_id]=1;if(isoOk(d.event_date)&&d.event_date>=today&&d.statut!=='refuse'){var dem=d.demande_id?demandeById(d.demande_id):null;items.push({date:d.event_date,moment:d.event_moment||'',nom:d.client_nom||(dem&&dem.nom)||'Sans nom',convives:convivesDe(d,dem),lieu:d.lieu||(dem&&dem.lieu)||'',type:dem&&dem.type||'',message:dem&&dem.message||'',kind:'devis',d:d,dem:dem,conf:d.statut==='solde'});}});
+    demandes.forEach(function(x){if(isoOk(x.date_event)&&x.date_event>=today&&!covered[x.id]&&x.statut!=='perdu')items.push({date:x.date_event,moment:x.moment||'',nom:x.nom,convives:x.convives,lieu:x.lieu,type:x.type,message:x.message,kind:'demande',dem:x,conf:false});});
+    items.sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:(MOMENT_ORDRE[a.moment]||0)-(MOMENT_ORDRE[b.moment]||0);});
+    $('#nAg').hidden=!items.length;$('#nAg').textContent=items.length;
+    document.querySelectorAll('#agFilters button').forEach(function(b){b.classList.toggle('is-on',b.dataset.agf===agFilter);});
+    var list=items.filter(function(i){return agFilter==='all'||(agFilter==='conf'?i.conf:!i.conf);});
+    if(!list.length){$('#agenda').innerHTML='<p class="empty">'+(items.length?'Rien dans cette catégorie.':'Aucune privatisation à venir pour le moment. Les devis et les demandes qui ont une date apparaissent ici automatiquement.')+'</p>';return;}
+    var MOIS=['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'],JC=['dim.','lun.','mar.','mer.','jeu.','ven.','sam.'];
+    var html='',lastM='',t0=new Date(today+'T00:00:00Z').getTime();
+    list.forEach(function(i){
+      var p=i.date.split('-'),dt=new Date(Date.UTC(+p[0],+p[1]-1,+p[2])),m=MOIS[+p[1]-1]+' '+p[0];
+      if(m!==lastM){html+='<div class="agm">'+m+'</div>';lastM=m;}
+      var dans=Math.round((dt.getTime()-t0)/86400000),inTxt=dans===0?"aujourd'hui":dans===1?'demain':'dans '+dans+' jours';
+      var tag=i.kind==='devis'?'<span class="tag s-'+esc(i.d.statut)+'">'+(i.conf?'Confirmée · payée':i.d.statut==='accepte'?'Acceptée · arrhes attendues':i.d.statut==='envoye'?'Devis envoyé · en attente':'Devis en brouillon')+'</span>':'<span class="tag cancel">Demande · devis à préparer</span>';
+      var ag=i.kind==='devis'?'d:'+i.d.id:String(i.dem.id);
+      var acts='<div class="actions">'+(i.kind==='devis'?'<button class="btn sm" type="button" data-opendevis="'+i.d.id+'">Devis n°'+esc(i.d.numero)+' · '+eur(i.d.total_ttc)+'</button>'+(i.conf?'':'<button class="btn ok sm" type="button" data-valider="'+i.d.id+'">✓ Acompte reçu</button>'):'<button class="btn sm primary" type="button" data-mkdevis="'+i.dem.id+'">Préparer le devis</button>')+
+        (i.dem?'<button class="btn sm ghost" type="button" data-godemande="'+i.dem.id+'">Voir la demande</button>':'')+
+        '<button class="btn sm ghost" type="button" data-agenda="'+ag+'" data-kind="google">📅 Google Agenda</button><button class="btn sm ghost" type="button" data-agenda="'+ag+'" data-kind="ics">📅 .ics</button></div>';
+      var tel=i.dem?i.dem.tel:i.d.client_tel;
+      html+='<div class="card ag'+(i.conf?' conf':i.kind==='demande'?' dem':'')+'"><div class="day"><b>'+(+p[2])+'</b><span>'+JC[dt.getUTCDay()]+'</span></div><div class="body">'+
+        '<div><div class="name">'+esc(i.nom)+' '+tag+'</div><div class="in">'+inTxt+(i.moment?' · '+esc(i.moment):'')+'</div></div>'+
+        '<div class="meta">'+(i.type?'<span><b>'+esc(i.type)+'</b></span>':'')+(i.convives?'<span>'+esc(i.convives)+' convives</span>':'')+(i.lieu?'<span>📍 '+esc(i.lieu)+'</span>':'')+(tel?'<span>📞 '+esc(tel)+'</span>':'')+'</div>'+
+        (i.message?'<div class="msg">'+esc(i.message)+'</div>':'')+acts+'</div></div>';
+    });
+    $('#agenda').innerHTML=html;
+  }
+  $('#agFilters').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;agFilter=b.dataset.agf;renderAgenda();});
+  document.addEventListener('click',function(e){
+    var b=e.target.closest('button');if(!b)return;
+    if(b.dataset.valider){
+      if(b.dataset.confirm!=='1'){b.dataset.confirm='1';b.textContent='Confirmer la validation';setTimeout(function(){b.dataset.confirm='';b.textContent='✓ Acompte reçu';},4000);return;}
+      b.classList.add('busy');api('devis/'+b.dataset.valider,{method:'PUT',body:{statut:'solde'}}).then(function(){toast('Privatisation confirmée ✓');return api('demandes');}).then(function(r){demandes=r.demandes;return loadDevis();}).then(function(){renderDemandes();}).catch(function(err){toast(err.message,true);});
+    }
+    if(b.dataset.godemande){filter='all';document.querySelector('#tabs button[data-tab="demandes"]').click();renderDemandes();var el=document.getElementById('dem-'+b.dataset.godemande);if(el){el.scrollIntoView({behavior:'smooth',block:'start'});el.style.outline='2px solid var(--cheddar)';setTimeout(function(){el.style.outline='';},2500);}}
   });
 
   // ---- PDF fidèle au modèle Excel (A4, Helvetica)

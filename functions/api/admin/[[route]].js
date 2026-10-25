@@ -178,9 +178,9 @@ export async function onRequest({ request, env, params }) {
   }
 
   // ---- Devis
-  const parseDevis = (row) => row && ({ ...row, intro: JSON.parse(row.intro || '[]'), lignes: JSON.parse(row.lignes || '[]') });
+  const parseDevis = (row) => { if (!row) return row; const { pdf, ...rest } = row; return { ...rest, intro: JSON.parse(row.intro || '[]'), lignes: JSON.parse(row.lignes || '[]'), pdf_url: row.pdf_token ? `/devis/${row.numero}-${row.pdf_token}.pdf` : null }; };
   if (route === 'devis' && method === 'GET') {
-    const r = await env.DB.prepare('SELECT * FROM devis ORDER BY id DESC LIMIT 300').all();
+    const r = await env.DB.prepare('SELECT id, numero, demande_id, cree_le, date_devis, client_nom, client_email, client_tel, event_date, event_moment, lieu, intro, lignes, mode, total_ht, tva, total_ttc, arrhes, statut, email_objet, email_corps, envoye_le, pdf_token, pdf_maj FROM devis ORDER BY id DESC LIMIT 300').all();
     return json({ ok: true, devis: r.results.map(parseDevis) });
   }
   if (route === 'devis' && method === 'POST') {
@@ -218,7 +218,7 @@ export async function onRequest({ request, env, params }) {
     const mode = body.mode === 'ht' ? 'ht' : (body.mode === 'ttc' ? 'ttc' : cur.mode);
     const t = computeTotals(lignes, mode);
     const intro = Array.isArray(body.intro) ? body.intro.slice(0, 6).map((x) => str(x, 160)) : JSON.parse(cur.intro || '[]');
-    const statut = ['brouillon', 'envoye', 'accepte', 'refuse'].includes(body.statut) ? body.statut : cur.statut;
+    const statut = ['brouillon', 'envoye', 'accepte', 'solde', 'refuse'].includes(body.statut) ? body.statut : cur.statut;
     await env.DB.prepare(`UPDATE devis SET date_devis = ?, client_nom = ?, client_email = ?, client_tel = ?, event_date = ?, event_moment = ?, lieu = ?, intro = ?, lignes = ?, mode = ?, total_ht = ?, tva = ?, total_ttc = ?, arrhes = ?, statut = ?, email_objet = ?, email_corps = ? WHERE id = ?`).bind(
       isoDate(body.date_devis) || cur.date_devis,
       body.client_nom !== undefined ? str(body.client_nom, 120) : cur.client_nom,
@@ -232,7 +232,7 @@ export async function onRequest({ request, env, params }) {
       body.email_corps !== undefined ? str(body.email_corps, 4000) : cur.email_corps,
       Number(m[1]),
     ).run();
-    if (statut === 'accepte' && cur.demande_id) await env.DB.prepare("UPDATE demandes SET statut = 'signe' WHERE id = ?").bind(cur.demande_id).run();
+    if ((statut === 'accepte' || statut === 'solde') && cur.demande_id) await env.DB.prepare("UPDATE demandes SET statut = 'signe' WHERE id = ?").bind(cur.demande_id).run();
     const row = await env.DB.prepare('SELECT * FROM devis WHERE id = ?').bind(Number(m[1])).first();
     return json({ ok: true, devis: parseDevis(row), totals: t });
   }
@@ -240,16 +240,33 @@ export async function onRequest({ request, env, params }) {
     await env.DB.prepare('DELETE FROM devis WHERE id = ?').bind(Number(m[1])).run();
     return json({ ok: true });
   }
+  // archive du PDF (généré dans l'admin) : rend le devis téléchargeable par lien, utilisé dans l'agenda
+  const archivePdf = async (cur, b64) => {
+    if (!b64 || b64.length > 8_000_000) throw new Error('PDF manquant ou trop lourd.');
+    const bin = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+    const token = cur.pdf_token || Array.from(crypto.getRandomValues(new Uint8Array(12)), (b) => b.toString(16).padStart(2, '0')).join('');
+    await env.DB.prepare("UPDATE devis SET pdf = ?, pdf_token = ?, pdf_maj = datetime('now') WHERE id = ?").bind(bin, token, cur.id).run();
+    return `/devis/${cur.numero}-${token}.pdf`;
+  };
+  m = route.match(/^devis\/(\d+)\/pdf$/);
+  if (m && method === 'POST') {
+    const cur = await env.DB.prepare('SELECT id, numero, pdf_token FROM devis WHERE id = ?').bind(Number(m[1])).first();
+    if (!cur) return json({ ok: false, error: 'Devis inconnu.' }, 404);
+    try { return json({ ok: true, pdf_url: await archivePdf(cur, body.pdf_base64) }); }
+    catch (e) { return json({ ok: false, error: e.message }, 400); }
+  }
   m = route.match(/^devis\/(\d+)\/envoyer$/);
   if (m && method === 'POST') {
-    const cur = await env.DB.prepare('SELECT * FROM devis WHERE id = ?').bind(Number(m[1])).first();
+    const cur = await env.DB.prepare('SELECT id, numero, demande_id, client_email, email_objet, email_corps, pdf_token FROM devis WHERE id = ?').bind(Number(m[1])).first();
     if (!cur) return json({ ok: false, error: 'Devis inconnu.' }, 404);
     if (!body.pdf_base64) return json({ ok: false, error: 'PDF manquant.' }, 400);
     const r = await sendDevisEmail(env, cur, body.pdf_base64);
     if (!r.ok) return json(r, 400);
+    let pdf_url = null;
+    try { pdf_url = await archivePdf(cur, body.pdf_base64); } catch { /* l'envoi a réussi, l'archive est un bonus */ }
     await env.DB.prepare("UPDATE devis SET statut = CASE WHEN statut = 'brouillon' THEN 'envoye' ELSE statut END, envoye_le = datetime('now') WHERE id = ?").bind(Number(m[1])).run();
     if (cur.demande_id) await env.DB.prepare("UPDATE demandes SET statut = CASE WHEN statut = 'nouveau' THEN 'repondu' ELSE statut END WHERE id = ?").bind(cur.demande_id).run();
-    return json({ ok: true });
+    return json({ ok: true, pdf_url });
   }
   if (route === 'distance' && method === 'GET') {
     const q = str(new URL(request.url).searchParams.get('q'), 200);

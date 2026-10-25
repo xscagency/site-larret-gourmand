@@ -60,7 +60,8 @@ export const STATEMENTS = [
     mode TEXT NOT NULL DEFAULT 'ttc',
     total_ht REAL NOT NULL DEFAULT 0, tva REAL NOT NULL DEFAULT 0, total_ttc REAL NOT NULL DEFAULT 0, arrhes REAL NOT NULL DEFAULT 0,
     statut TEXT NOT NULL DEFAULT 'brouillon',
-    email_objet TEXT, email_corps TEXT, envoye_le TEXT
+    email_objet TEXT, email_corps TEXT, envoye_le TEXT,
+    pdf BLOB, pdf_token TEXT, pdf_maj TEXT
   )`,
   `INSERT OR IGNORE INTO burgers (id, nom, accroche, description, photo, supplement, ordre) VALUES
     ('poulet',     'Le Poulet', 'Votre nouveau burger au poulet préféré !',
@@ -110,7 +111,7 @@ Cordialement,
 Sylvain'),
     ('devis_contact_email','contact@larretgalette.com'),
     ('devis_km_tarif',     '1'),
-    ('schema_version',     '5')`,
+    ('schema_version',     '6')`,
 ];
 
 // Crée les tables et les données de départ (sans toucher à ce qui existe déjà)
@@ -121,7 +122,7 @@ export async function ensureSchema(env) {
 
 // Mises à jour appliquées une seule fois sur une base déjà en ligne (numérotées, dans l'ordre).
 // Une base neuve reçoit directement le schéma complet ; une base existante rattrape les versions manquantes.
-export const SCHEMA_VERSION = 5;
+export const SCHEMA_VERSION = 6;
 export const MIGRATIONS = {
   1: ['ALTER TABLE demandes ADD COLUMN moment TEXT'],
   2: ['ALTER TABLE demandes ADD COLUMN adresse TEXT', 'ALTER TABLE demandes ADD COLUMN code_postal TEXT', 'ALTER TABLE demandes ADD COLUMN ville TEXT',
@@ -177,6 +178,7 @@ Je reste à votre entière disposition pour toute question ou modification, par 
 
 Cordialement,
 Sylvain'`],
+  6: ['ALTER TABLE devis ADD COLUMN pdf BLOB', 'ALTER TABLE devis ADD COLUMN pdf_token TEXT', 'ALTER TABLE devis ADD COLUMN pdf_maj TEXT'],
 };
 export async function applyMigrations(env, from = 0) {
   for (let v = from + 1; v <= SCHEMA_VERSION; v++) {
