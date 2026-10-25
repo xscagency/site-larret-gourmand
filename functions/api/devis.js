@@ -8,6 +8,8 @@
 //   MAIL_TO          adresse qui reçoit les demandes (plusieurs possibles, séparées par des virgules)
 //   MAIL_FROM        expéditeur vérifié chez Resend, ex. "L'Arrêt Gourmand <contact@larretgourmand.com>"
 //   TURNSTILE_SECRET (optionnel) clé secrète Turnstile anti-spam
+//   TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID (optionnels) notification Telegram à chaque demande
+// Sans RESEND_API_KEY, aucun mail ne part : la demande est quand même enregistrée et visible dans /admin.
 
 import { json } from '../_lib.js';
 
@@ -86,6 +88,22 @@ export async function onRequestPost({ request, env }) {
     if (!r1.ok) console.error('Resend error', await r1.text());
     if (!r2.ok) console.error('Resend error (client)', await r2.text());
     await env.DB.prepare('UPDATE demandes SET mail_envoye = ? WHERE id = ?').bind(mailOk ? 1 : 0, id).run();
+  }
+
+  // 3. Notification Telegram (optionnelle) : TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID
+  if (env.TELEGRAM_BOT_TOKEN && env.TELEGRAM_CHAT_ID) {
+    const lignes = [
+      `🍔 Nouvelle demande n°${id}`,
+      `👤 ${d.nom}`, `📞 ${d.tel}`, `✉️ ${d.email}`,
+      d.type ? `🎉 ${d.type}${d.date_event ? ' · ' + d.date_event : ''}` : (d.date_event ? `📅 ${d.date_event}` : ''),
+      d.convives ? `👥 ${d.convives} convives` : '', d.lieu ? `📍 ${d.lieu}` : '',
+      d.message ? `\n${d.message.slice(0, 500)}` : '',
+      `\nVoir dans l'admin : ${new URL(request.url).origin}/admin`,
+    ].filter(Boolean).join('\n');
+    await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ chat_id: env.TELEGRAM_CHAT_ID, text: lignes, disable_web_page_preview: true }),
+    }).catch((e) => console.error('Telegram error', e));
   }
 
   return json({ ok: true, id, mail: mailOk });

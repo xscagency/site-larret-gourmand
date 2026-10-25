@@ -67,6 +67,7 @@ Cloudflare Pages > larret-gourmand > Settings > Variables and Secrets (environne
 | `MAIL_TO` | l'adresse qui reçoit les demandes (plusieurs possibles, séparées par des virgules) |
 | `MAIL_FROM` | `L'Arrêt Gourmand <contact@larretgourmand.com>` |
 | `TURNSTILE_SECRET` | optionnel, anti-spam (étape 7) |
+| `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` | optionnels, notification Telegram à chaque demande (voir ci-dessous) |
 
 Dans Settings > Functions, vérifier les liaisons : D1 `DB` → `larret-gourmand`, R2 `PHOTOS` → `larret-gourmand-photos` (normalement reprises de wrangler.toml).
 Après avoir ajouté des variables, relancer un déploiement (Deployments > Retry, ou `npx wrangler pages deploy public`).
@@ -76,6 +77,13 @@ Après avoir ajouté des variables, relancer un déploiement (Deployments > Retr
 2. Domains > Add domain > `larretgourmand.com`. Resend affiche 3 enregistrements DNS (SPF, DKIM, éventuellement DMARC) à ajouter dans la zone DNS du domaine (chez Cloudflare après l'étape 6, c'est un clic « Add records »).
 3. API Keys > Create : copier la clé dans `RESEND_API_KEY`.
 4. Tester : envoyer une demande depuis le site. Elle apparaît dans /admin > Demandes, et un mail arrive sur `MAIL_TO`.
+
+### 5 bis. Notification Telegram (optionnel, remplace ou complète les mails)
+1. Dans Telegram, écrire à **@BotFather** → `/newbot` → choisir un nom et un identifiant → copier le *token*.
+2. Écrire un message quelconque à ce nouveau bot (sinon il ne peut pas t'écrire).
+3. Ouvrir `https://api.telegram.org/bot<TOKEN>/getUpdates` dans le navigateur et relever le `"chat":{"id":…}`.
+4. Ajouter `TELEGRAM_BOT_TOKEN` (Secret) et `TELEGRAM_CHAT_ID` dans les variables Pages, redéployer.
+Chaque demande arrive alors en notification sur le téléphone, avec un lien vers /admin. Les mails Resend restent facultatifs.
 
 ### 6. Brancher le nom de domaine
 1. Cloudflare > Add a site > `larretgourmand.com` (plan Free). Cloudflare importe les DNS existants et donne 2 serveurs de noms.
