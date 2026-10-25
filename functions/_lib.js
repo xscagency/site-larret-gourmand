@@ -76,6 +76,8 @@ export async function loadState(env) {
       frites_truffe: Number(r.frites_truffe ?? 2),
     },
     bandeau: r.bandeau || '',
+    theme: ['noel', 'halloween', 'fete-nationale', 'saint-valentin', 'paques'].includes(r.theme) ? r.theme : '',
+    theme_fx: r.theme_fx !== '0',
     burgers: burgers.results.map((b) => ({
       id: b.id, nom: b.nom, accroche: b.accroche || '', description: b.description || '', photo: b.photo || '',
       supplement: Number(b.supplement), actif: !!b.actif, ordre: b.ordre,

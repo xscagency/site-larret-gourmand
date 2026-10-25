@@ -177,3 +177,50 @@
     });
   }
 })();
+
+// ---------- Thème saisonnier : particules (flocons, confettis, citrouilles, cœurs, poussins) ----------
+(function () {
+  var root = document.documentElement, theme = root.getAttribute('data-theme');
+  if (!theme || root.getAttribute('data-theme-fx') === '0') return;
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  var CFG = {
+    'noel': { kind: 'snow', n: 110 },
+    'halloween': { kind: 'glyph', glyphs: ['🎃', '🦇', '👻', '🦇'], n: 12, size: [18, 30], vy: [.25, .6], sway: 1.2 },
+    'fete-nationale': { kind: 'confetti', colors: ['#2457C5', '#FFFFFF', '#E53935'], n: 80 },
+    'saint-valentin': { kind: 'glyph', glyphs: ['❤️', '💕', '💗'], n: 16, size: [14, 26], vy: [-.35, -.15], sway: .8 },
+    'paques': { kind: 'glyph', glyphs: ['🐣', '🥚', '🌷', '🐰'], n: 12, size: [18, 28], vy: [.2, .45], sway: .9 }
+  };
+  var cfg = CFG[theme]; if (!cfg) return;
+  var canvas = document.createElement('canvas'); canvas.className = 'fx-canvas'; canvas.setAttribute('aria-hidden', 'true');
+  document.body.appendChild(canvas);
+  var ctx = canvas.getContext('2d'), W = 0, H = 0, dpr = Math.min(window.devicePixelRatio || 1, 2), parts = [], raf = null, last = 0;
+  var small = window.innerWidth < 700, N = Math.round(cfg.n * (small ? .55 : 1));
+  var rnd = function (a, b) { return a + Math.random() * (b - a); };
+  function resize() { W = window.innerWidth; H = window.innerHeight; canvas.width = W * dpr; canvas.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); }
+  function spawn(p, top) {
+    p.x = rnd(0, W); p.phase = rnd(0, Math.PI * 2);
+    if (cfg.kind === 'snow') { p.r = rnd(1, 3.4); p.vy = rnd(.35, 1.1) * (p.r / 2); p.a = rnd(.45, .95); p.sw = rnd(.3, 1.1); p.y = top ? -10 : rnd(0, H); }
+    else if (cfg.kind === 'confetti') { p.w = rnd(5, 9); p.h = rnd(8, 14); p.vy = rnd(.7, 1.8); p.rot = rnd(0, Math.PI); p.vr = rnd(-.06, .06); p.c = cfg.colors[Math.floor(Math.random() * cfg.colors.length)]; p.sw = rnd(.4, 1.3); p.y = top ? -20 : rnd(0, H); }
+    else { p.g = cfg.glyphs[Math.floor(Math.random() * cfg.glyphs.length)]; p.s = rnd(cfg.size[0], cfg.size[1]); p.vy = rnd(cfg.vy[0], cfg.vy[1]); p.sw = rnd(.4, 1) * cfg.sway; p.a = rnd(.6, .95); p.y = top ? (p.vy < 0 ? H + 30 : -30) : rnd(0, H); }
+    return p;
+  }
+  function step(t) {
+    var dt = Math.min(40, t - last || 16) / 16; last = t;
+    ctx.clearRect(0, 0, W, H);
+    for (var i = 0; i < parts.length; i++) {
+      var p = parts[i]; p.phase += .015 * dt; p.y += p.vy * dt; p.x += Math.sin(p.phase) * p.sw * .4 * dt;
+      if (cfg.kind === 'snow') { ctx.globalAlpha = p.a; ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill(); }
+      else if (cfg.kind === 'confetti') { p.rot += p.vr * dt; ctx.globalAlpha = .9; ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot); ctx.fillStyle = p.c; ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h * (0.4 + Math.abs(Math.cos(p.phase * 2)) * 0.6)); ctx.restore(); }
+      else { ctx.globalAlpha = p.a; ctx.font = p.s + 'px system-ui, "Apple Color Emoji", "Segoe UI Emoji", sans-serif'; ctx.textBaseline = 'middle'; ctx.textAlign = 'center'; ctx.fillText(p.g, p.x, p.y); }
+      if (p.y > H + 40 || p.y < -40 || p.x < -40 || p.x > W + 40) spawn(p, true);
+    }
+    ctx.globalAlpha = 1;
+    raf = requestAnimationFrame(step);
+  }
+  function start() { if (!raf) { last = 0; raf = requestAnimationFrame(step); } }
+  function stop() { if (raf) { cancelAnimationFrame(raf); raf = null; } }
+  resize(); for (var i = 0; i < N; i++) parts.push(spawn({}, false));
+  window.addEventListener('resize', resize);
+  document.addEventListener('visibilitychange', function () { document.hidden ? stop() : start(); });
+  start();
+})();

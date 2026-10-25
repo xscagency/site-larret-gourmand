@@ -96,6 +96,8 @@ export const STATEMENTS = [
     ('frites_complet',     '3.5'),
     ('frites_truffe',      '2'),
     ('bandeau',            ''),
+    ('theme',              ''),
+    ('theme_fx',           '1'),
     ('devis_email_objet',  'Votre devis L''Arrêt Gourmand – prestation du {date}'),
     ('devis_email_corps',  'Bonjour,
 
@@ -111,7 +113,7 @@ Cordialement,
 Sylvain'),
     ('devis_contact_email','contact@larretgalette.com'),
     ('devis_km_tarif',     '1'),
-    ('schema_version',     '6')`,
+    ('schema_version',     '7')`,
 ];
 
 // Crée les tables et les données de départ (sans toucher à ce qui existe déjà)
@@ -122,7 +124,7 @@ export async function ensureSchema(env) {
 
 // Mises à jour appliquées une seule fois sur une base déjà en ligne (numérotées, dans l'ordre).
 // Une base neuve reçoit directement le schéma complet ; une base existante rattrape les versions manquantes.
-export const SCHEMA_VERSION = 6;
+export const SCHEMA_VERSION = 7;
 export const MIGRATIONS = {
   1: ['ALTER TABLE demandes ADD COLUMN moment TEXT'],
   2: ['ALTER TABLE demandes ADD COLUMN adresse TEXT', 'ALTER TABLE demandes ADD COLUMN code_postal TEXT', 'ALTER TABLE demandes ADD COLUMN ville TEXT',
@@ -179,6 +181,7 @@ Je reste à votre entière disposition pour toute question ou modification, par 
 Cordialement,
 Sylvain'`],
   6: ['ALTER TABLE devis ADD COLUMN pdf BLOB', 'ALTER TABLE devis ADD COLUMN pdf_token TEXT', 'ALTER TABLE devis ADD COLUMN pdf_maj TEXT'],
+  7: ["INSERT OR IGNORE INTO reglages (cle, valeur) VALUES ('theme', ''), ('theme_fx', '1')"],
 };
 export async function applyMigrations(env, from = 0) {
   for (let v = from + 1; v <= SCHEMA_VERSION; v++) {

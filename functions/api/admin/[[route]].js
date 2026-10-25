@@ -151,8 +151,10 @@ export async function onRequest({ request, env, params }) {
 
   // ---- Réglages (prix, bandeau)
   if (route === 'reglages' && method === 'PUT') {
-    const allowed = ['prix_burger', 'prix_menu_frites', 'prix_menu_complet', 'prix_frites', 'sup_double', 'sup_garniture', 'frites_cheddar', 'frites_cheddar_bacon', 'frites_cheddar_oignons', 'frites_complet', 'frites_truffe', 'bandeau', 'devis_email_objet', 'devis_email_corps', 'devis_contact_email', 'devis_km_tarif'];
-    const textKeys = ['bandeau', 'devis_email_objet', 'devis_email_corps', 'devis_contact_email'];
+    const allowed = ['prix_burger', 'prix_menu_frites', 'prix_menu_complet', 'prix_frites', 'sup_double', 'sup_garniture', 'frites_cheddar', 'frites_cheddar_bacon', 'frites_cheddar_oignons', 'frites_complet', 'frites_truffe', 'bandeau', 'devis_email_objet', 'devis_email_corps', 'devis_contact_email', 'devis_km_tarif', 'theme', 'theme_fx'];
+    const textKeys = ['bandeau', 'devis_email_objet', 'devis_email_corps', 'devis_contact_email', 'theme', 'theme_fx'];
+    if (body.theme !== undefined && !['', 'noel', 'halloween', 'fete-nationale', 'saint-valentin', 'paques'].includes(body.theme)) return json({ ok: false, error: 'Thème inconnu.' }, 400);
+    if (body.theme_fx !== undefined) body.theme_fx = body.theme_fx && body.theme_fx !== '0' ? '1' : '0';
     const stmts = allowed.filter((k) => body[k] !== undefined).map((k) =>
       env.DB.prepare('INSERT INTO reglages (cle, valeur) VALUES (?, ?) ON CONFLICT(cle) DO UPDATE SET valeur = excluded.valeur')
         .bind(k, textKeys.includes(k) ? str(body[k], k === 'devis_email_corps' ? 4000 : 300) : String(num(body[k])))

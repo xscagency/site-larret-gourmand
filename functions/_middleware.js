@@ -119,6 +119,12 @@ export async function onRequest(context) {
         if (e) el.setInnerContent(`Map : ${e.map_url ? `<a href="${esc(e.map_url)}" target="_blank" rel="noopener">${esc(e.lieu)}</a>` : esc(e.lieu)}`, { html: true });
       },
     })
+    // ---- Thème saisonnier (couleurs, guirlande, animation) choisi dans l'admin
+    .on('html', {
+      element(el) {
+        if (state.theme) { el.setAttribute('data-theme', state.theme); el.setAttribute('data-theme-fx', state.theme_fx ? '1' : '0'); }
+      },
+    })
     // ---- Bandeau et état injecté
     .on('head', {
       element(el) {

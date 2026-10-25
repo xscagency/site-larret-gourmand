@@ -84,7 +84,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--cheddar)
 .tag.rupt{background:rgba(243,173,63,.18);color:var(--cheddar);border:1px solid rgba(243,173,63,.5)}
 .tag.cancel{background:rgba(214,64,47,.2);color:#FFB3AA;border:1px solid rgba(214,64,47,.5)}
 .tag.star{background:var(--cheddar);color:#2A1A10}
-.toast{position:fixed;left:50%;bottom:max(20px,env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);background:var(--mesclun);color:#1c2a12;font-weight:500;padding:10px 18px;border-radius:999px;opacity:0;transition:.25s;pointer-events:none;z-index:20;max-width:calc(100% - 32px);box-shadow:0 10px 30px -10px rgba(0,0,0,.6)}
+.toast{position:fixed;left:50%;bottom:max(20px,env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);background:var(--mesclun);color:#1c2a12;font-weight:500;padding:10px 18px;border-radius:16px;text-align:center;opacity:0;transition:.25s;pointer-events:none;z-index:20;max-width:calc(100% - 32px);box-shadow:0 10px 30px -10px rgba(0,0,0,.6)}
 .toast.is-on{opacity:1;transform:translate(-50%,0)}
 .toast.err{background:var(--ketchup);color:var(--creme)}
 /* connexion */
@@ -187,6 +187,15 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
 .dvc .kv{padding-top:10px;border-top:1px solid var(--line)}
 .dvc .actions{display:flex;gap:8px}
 .demande .head .hsub,.ag .sub2,.dvc .hsub{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:5px;color:var(--creme-3);font-size:.9rem;align-items:center}
+/* thèmes */
+.themes{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.theme{position:relative;display:flex;gap:12px;align-items:center;padding:12px;border:1px solid var(--line);border-radius:14px;background:var(--brun);cursor:pointer;transition:border-color .15s,background .15s}
+.theme input{position:absolute;opacity:0;inset:0;margin:0;width:100%;height:100%;cursor:pointer;min-height:0}
+.theme:has(input:checked){border-color:var(--cheddar);background:rgba(243,173,63,.1);box-shadow:0 0 0 1px var(--cheddar) inset}
+.theme__sw{flex:none;width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,var(--a) 0 40%,var(--b) 40% 70%,var(--c) 70%);border:1px solid rgba(255,255,255,.12)}
+.theme__t{display:grid;gap:2px;min-width:0}.theme__t b{font-size:.98rem}.theme__t small{color:var(--creme-3);font-size:.82rem;line-height:1.35}
+.chk{display:flex;gap:10px;align-items:flex-start;font-size:.9rem;color:var(--creme-2);cursor:pointer}
+.chk input{margin-top:3px;width:18px;height:18px;flex:none;accent-color:var(--cheddar)}
 /* agenda */
 .agm{margin:22px 0 10px;font:600 .8rem var(--body);letter-spacing:.12em;text-transform:uppercase;color:var(--cheddar)}
 .ag{display:grid;grid-template-columns:64px 1fr;gap:14px;border-left:4px solid var(--cheddar)}.ag.conf{border-left-color:var(--mesclun)}.ag.dem{border-left-color:var(--ketchup)}
@@ -401,7 +410,21 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
     </section>
 
     <section id="tab-bandeau">
-      <h2>Bandeau<small>Un message affiché en haut de toutes les pages du site</small></h2>
+      <h2>Thème du site<small>Habillez le site pour une occasion : couleurs, guirlande et animation. Un clic sur « Appliquer » et le site bascule.</small></h2>
+      <div class="card" style="display:grid;gap:14px">
+        <div class="themes" id="themes">
+          <label class="theme"><input type="radio" name="theme" value=""><span class="theme__sw" style="--a:#E86010;--b:#F3AD3F;--c:#3A2619"></span><span class="theme__t"><b>Classique</b><small>Le site tel quel, toute l'année</small></span></label>
+          <label class="theme"><input type="radio" name="theme" value="noel"><span class="theme__sw" style="--a:#C62828;--b:#F2C14E;--c:#43A047"></span><span class="theme__t"><b>🎄 Noël</b><small>Rouge et or, guirlande multicolore, flocons qui tombent</small></span></label>
+          <label class="theme"><input type="radio" name="theme" value="halloween"><span class="theme__sw" style="--a:#FF7A1A;--b:#9C4DCC;--c:#261230"></span><span class="theme__t"><b>🎃 Halloween</b><small>Orange vif et violet, citrouilles et chauves-souris</small></span></label>
+          <label class="theme"><input type="radio" name="theme" value="fete-nationale"><span class="theme__sw" style="--a:#2457C5;--b:#FFFFFF;--c:#E53935"></span><span class="theme__t"><b>🇫🇷 Fête nationale</b><small>Bleu, blanc, rouge et pluie de confettis</small></span></label>
+          <label class="theme"><input type="radio" name="theme" value="saint-valentin"><span class="theme__sw" style="--a:#D81B60;--b:#F8A5C2;--c:#E53935"></span><span class="theme__t"><b>💝 Saint-Valentin</b><small>Rose et rouge, cœurs qui s'envolent</small></span></label>
+          <label class="theme"><input type="radio" name="theme" value="paques"><span class="theme__sw" style="--a:#E08E1B;--b:#A5D6A7;--c:#F48FB1"></span><span class="theme__t"><b>🐣 Pâques</b><small>Pastels, poussins, œufs et tulipes</small></span></label>
+        </div>
+        <label class="chk"><input type="checkbox" id="themeFx" checked><span>Animation à l'écran (flocons, confettis…). Elle se coupe d'elle-même pour les visiteurs qui ont demandé moins de mouvement sur leur téléphone.</span></label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button class="btn primary" id="themeSave" type="button">Appliquer au site</button><a class="btn" href="/" target="_blank" rel="noopener">Voir le résultat</a><span class="muted" id="themeNow"></span></div>
+      </div>
+
+      <h2 style="margin-top:28px">Bandeau<small>Un message affiché en haut de toutes les pages du site</small></h2>
       <div class="card">
         <label class="f">Message (vide = pas de bandeau)<input id="bandeau" type="text" maxlength="300" placeholder="Ex. : Fermé du 24 au 31 décembre, bonnes fêtes !"></label>
         <div style="margin-top:12px;display:flex;gap:8px"><button class="btn primary" id="bandeauSave" type="button">Enregistrer</button><button class="btn" id="bandeauClear" type="button">Retirer le bandeau</button></div>
@@ -619,6 +642,8 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
     $('#p_burger').value=state.prix.burger;$('#p_menu_frites').value=state.prix.menu_frites;$('#p_menu_complet').value=state.prix.menu_complet;$('#p_frites').value=state.prix.frites;
     Object.keys(state.supplements||{}).forEach(function(k){var i=document.getElementById('p_'+k);if(i)i.value=state.supplements[k];});
     $('#bandeau').value=state.bandeau||'';
+    var th=document.querySelector('#themes input[value="'+(state.theme||'')+'"]');if(th)th.checked=true;$('#themeFx').checked=state.theme_fx!==false;
+    $('#themeNow').textContent=state.theme?'Actif : '+({noel:'Noël',halloween:'Halloween','fete-nationale':'Fête nationale','saint-valentin':'Saint-Valentin',paques:'Pâques'}[state.theme]||state.theme):'Thème classique actif';
     if(state.devis_reglages){$('#r_email_objet').value=state.devis_reglages.email_objet;$('#r_email_corps').value=state.devis_reglages.email_corps;$('#r_contact_email').value=state.devis_reglages.contact_email;$('#r_km_tarif').value=state.devis_reglages.km_tarif;}
   }
 
@@ -1033,6 +1058,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
     if(b.id==='prixSave'){var body={prix_burger:$('#p_burger').value,prix_menu_frites:$('#p_menu_frites').value,prix_menu_complet:$('#p_menu_complet').value,prix_frites:$('#p_frites').value};['sup_double','sup_garniture','frites_cheddar','frites_cheddar_bacon','frites_cheddar_oignons','frites_complet','frites_truffe'].forEach(function(k){var i=document.getElementById('p_'+k);if(i)body[k]=i.value;});save('reglages',body,'Prix enregistrés');}
     if(b.id==='supSave'){var inputs=document.querySelectorAll('[data-sup]');Promise.all(Array.prototype.map.call(inputs,function(i){return api('burgers/'+i.dataset.sup,{method:'PUT',body:{supplement:i.value}});})).then(function(){toast('Suppléments enregistrés');load();}).catch(function(err){toast(err.message,true);});}
     if(b.id==='bandeauSave')save('reglages',{bandeau:$('#bandeau').value},'Bandeau enregistré');
+    if(b.id==='themeSave'){var sel=document.querySelector('#themes input:checked');save('reglages',{theme:sel?sel.value:'',theme_fx:$('#themeFx').checked?'1':'0'},sel&&sel.value?'Thème appliqué — le site est passé en mode '+sel.closest('.theme').querySelector('b').textContent.replace(/^\S+\s/,''):'Retour au thème classique')}
     if(b.id==='reglagesSave')save('reglages',{devis_email_objet:$('#r_email_objet').value,devis_email_corps:$('#r_email_corps').value,devis_contact_email:$('#r_contact_email').value,devis_km_tarif:$('#r_km_tarif').value},'Réglages enregistrés');
     if(b.id==='bandeauClear'){$('#bandeau').value='';save('reglages',{bandeau:''},'Bandeau retiré');}
   });

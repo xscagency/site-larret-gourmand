@@ -570,3 +570,34 @@ html.dlg-open body{position:fixed;left:0;right:0;width:100%}
   .sheet h2{font-size:1.4rem}
 }
 @keyframes sheetUp{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
+
+/* ---------- thèmes saisonniers (choisis dans l'admin : data-theme sur <html>) ---------- */
+.fx-canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:60}
+html[data-theme] .hero__kicker::before{content:var(--theme-kicker);margin-right:.35em}
+/* Noël : rouge et or, guirlande multicolore, flocons */
+html[data-theme=noel]{--ketchup:#C62828;--ketchup-2:#A51F1F;--cheddar:#F2C14E;--theme-kicker:"🎄 Joyeuses fêtes ·"}
+html[data-theme=noel] .lights .b:nth-child(3n) .h,html[data-theme=noel] .lights .b:nth-child(3n) ellipse{fill:#E53935}
+html[data-theme=noel] .lights .b:nth-child(3n+1) .h,html[data-theme=noel] .lights .b:nth-child(3n+1) ellipse{fill:#43A047}
+html[data-theme=noel] .lights .b:nth-child(3n+2) .h,html[data-theme=noel] .lights .b:nth-child(3n+2) ellipse{fill:#FFD54F}
+html[data-theme=noel] .hero::after{background:linear-gradient(90deg,rgba(28,22,30,.9) 0,rgba(28,22,30,.72) 38%,rgba(28,22,30,.22) 62%,rgba(28,22,30,.3) 100%),linear-gradient(180deg,rgba(28,22,30,.62) 0,rgba(28,22,30,.1) 28%,rgba(42,26,16,.12) 58%,var(--brun) 100%)}
+/* Halloween : orange vif et violet, citrouilles et chauves-souris */
+html[data-theme=halloween]{--ketchup:#FF7A1A;--ketchup-2:#D95F08;--cheddar:#FFA726;--theme-kicker:"🎃 Halloween ·"}
+html[data-theme=halloween] .lights .b:nth-child(2n) .h,html[data-theme=halloween] .lights .b:nth-child(2n) ellipse{fill:#FF7A1A}
+html[data-theme=halloween] .lights .b:nth-child(2n+1) .h,html[data-theme=halloween] .lights .b:nth-child(2n+1) ellipse{fill:#9C4DCC}
+html[data-theme=halloween] .hero::after{background:linear-gradient(90deg,rgba(38,18,48,.9) 0,rgba(38,18,48,.72) 38%,rgba(38,18,48,.25) 62%,rgba(38,18,48,.32) 100%),linear-gradient(180deg,rgba(38,18,48,.66) 0,rgba(38,18,48,.14) 28%,rgba(42,26,16,.12) 58%,var(--brun) 100%)}
+/* 14 juillet : bleu, blanc, rouge et confettis */
+html[data-theme=fete-nationale]{--ketchup:#C8102E;--ketchup-2:#9E0C24;--cheddar:#F5F0E6;--theme-kicker:"🇫🇷 Fête nationale ·"}
+html[data-theme=fete-nationale] .lights .b:nth-child(3n) .h,html[data-theme=fete-nationale] .lights .b:nth-child(3n) ellipse{fill:#2457C5}
+html[data-theme=fete-nationale] .lights .b:nth-child(3n+1) .h,html[data-theme=fete-nationale] .lights .b:nth-child(3n+1) ellipse{fill:#FFFFFF}
+html[data-theme=fete-nationale] .lights .b:nth-child(3n+2) .h,html[data-theme=fete-nationale] .lights .b:nth-child(3n+2) ellipse{fill:#E53935}
+/* Saint-Valentin : rose et rouge, cœurs */
+html[data-theme=saint-valentin]{--ketchup:#D81B60;--ketchup-2:#AD1457;--cheddar:#F8A5C2;--theme-kicker:"💝 Saint-Valentin ·"}
+html[data-theme=saint-valentin] .lights .b:nth-child(2n) .h,html[data-theme=saint-valentin] .lights .b:nth-child(2n) ellipse{fill:#F06292}
+html[data-theme=saint-valentin] .lights .b:nth-child(2n+1) .h,html[data-theme=saint-valentin] .lights .b:nth-child(2n+1) ellipse{fill:#E53935}
+/* Pâques : pastels, poussins et œufs */
+html[data-theme=paques]{--ketchup:#E08E1B;--ketchup-2:#B8730F;--cheddar:#A5D6A7;--theme-kicker:"🐣 Joyeuses Pâques ·"}
+html[data-theme=paques] .lights .b:nth-child(4n) .h,html[data-theme=paques] .lights .b:nth-child(4n) ellipse{fill:#F48FB1}
+html[data-theme=paques] .lights .b:nth-child(4n+1) .h,html[data-theme=paques] .lights .b:nth-child(4n+1) ellipse{fill:#A5D6A7}
+html[data-theme=paques] .lights .b:nth-child(4n+2) .h,html[data-theme=paques] .lights .b:nth-child(4n+2) ellipse{fill:#FFF59D}
+html[data-theme=paques] .lights .b:nth-child(4n+3) .h,html[data-theme=paques] .lights .b:nth-child(4n+3) ellipse{fill:#90CAF9}
+@media (prefers-reduced-motion:reduce){.fx-canvas{display:none}}
