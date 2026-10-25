@@ -1,4 +1,5 @@
 // Fonctions partagées par les routes.
+import { ensureSchema } from './_schema.js';
 
 export const json = (data, status = 200, headers = {}) =>
   new Response(JSON.stringify(data), {
@@ -28,14 +29,27 @@ export function addDays(iso, n) {
   return d.toISOString().slice(0, 10);
 }
 
-// Lit tout l'état public du site depuis D1
-export async function loadState(env) {
-  const [burgers, emplacements, exceptions, reglages] = await Promise.all([
+async function readAll(env) {
+  return Promise.all([
     env.DB.prepare('SELECT * FROM burgers ORDER BY ordre').all(),
     env.DB.prepare('SELECT * FROM emplacements ORDER BY ordre').all(),
     env.DB.prepare('SELECT * FROM exceptions WHERE date >= ? ORDER BY date').bind(addDays(todayParis(), -1)).all(),
     env.DB.prepare('SELECT cle, valeur FROM reglages').all(),
   ]);
+}
+
+// Lit tout l'état public du site depuis D1.
+// Si les tables n'existent pas encore (toute première visite), elles sont créées à la volée.
+export async function loadState(env) {
+  let rows;
+  try {
+    rows = await readAll(env);
+  } catch (e) {
+    if (!/no such table/i.test(String(e?.message || e))) throw e;
+    await ensureSchema(env);
+    rows = await readAll(env);
+  }
+  const [burgers, emplacements, exceptions, reglages] = rows;
   const r = Object.fromEntries(reglages.results.map((x) => [x.cle, x.valeur]));
   const today = todayParis();
   return {
