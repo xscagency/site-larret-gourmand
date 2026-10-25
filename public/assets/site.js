@@ -137,10 +137,13 @@
   // ---------- Fenêtre de contact ----------
   var dlg = document.getElementById('contact');
   if (dlg) {
-    document.querySelectorAll('[data-open-contact]').forEach(function (b) { b.addEventListener('click', function () { dlg.showModal(); }); });
+    // la page derrière est figée tant que la fenêtre est ouverte (sinon elle défile sous le doigt sur mobile)
+    var openDlg = function () { try { dlg.showModal(); document.documentElement.classList.add('dlg-open'); } catch (e) {} };
+    dlg.addEventListener('close', function () { document.documentElement.classList.remove('dlg-open'); });
+    document.querySelectorAll('[data-open-contact]').forEach(function (b) { b.addEventListener('click', openDlg); });
     document.querySelectorAll('[data-close-contact]').forEach(function (b) { b.addEventListener('click', function () { dlg.close(); }); });
     dlg.addEventListener('click', function (e) { if (e.target === dlg) dlg.close(); });
-    if (location.hash === '#open-popup' || location.hash === '#contact') { try { dlg.showModal(); } catch (e) {} }
+    if (location.hash === '#open-popup' || location.hash === '#contact') openDlg();
 
     var form = document.getElementById('contactForm'), status = document.getElementById('formStatus'), submit = form.querySelector('[type="submit"]'), sent = document.getElementById('formSent');
     // à chaque ouverture, on retrouve le formulaire (et non l'écran de confirmation précédent)

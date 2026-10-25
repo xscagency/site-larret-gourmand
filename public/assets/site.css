@@ -556,3 +556,16 @@ h1,h2,h3{text-wrap:balance}
 @media (max-width:700px){
   .hero::before{background-image:-webkit-image-set(url(/img/truck-nuit-900.webp) 1x);background-image:image-set(url(/img/truck-nuit-900.webp) type("image/webp"),url(/img/truck-nuit-900.jpg) type("image/jpeg"))}
 }
+
+/* ---------- fenêtre de contact : stable sur mobile ---------- */
+.sheet{overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+html.dlg-open,html.dlg-open body{overflow:hidden;overscroll-behavior:none}
+@media (max-width:640px){
+  /* plein écran, calé en haut : plus de recentrage à chaque apparition du clavier */
+  dialog{max-width:none;width:100%;height:100vh;height:100dvh;max-height:none;margin:0;inset:0;overflow:hidden;border-radius:0}
+  dialog[open]{animation:sheetUp .28s ease-out}
+  .sheet{height:100%;max-height:none;border-radius:0;border:0;padding:16px 16px calc(28px + env(safe-area-inset-bottom))}
+  .sheet__head{position:sticky;top:-16px;z-index:2;margin:-16px -16px 8px;padding:14px 16px 10px;background:var(--brun-2);border-bottom:1px solid var(--brun-line)}
+  .sheet h2{font-size:1.4rem}
+}
+@keyframes sheetUp{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
