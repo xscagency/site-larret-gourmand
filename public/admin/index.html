@@ -10,6 +10,7 @@
 <link rel="apple-touch-icon" href="/img/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Rubik:wght@400;500;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
 <style>
 :root{--brun:#3A2619;--brun-2:#4A3224;--brun-3:#5C4133;--line:#6B4E3D;--line-2:#7E5F4C;--creme:#FCF3E3;--creme-2:#EAD8BC;--creme-3:#C9B193;--cheddar:#F3AD3F;--ketchup:#E86010;--mesclun:#7BA656;--display:'DM Serif Display',Georgia,serif;--body:'Rubik','Segoe UI',Arial,sans-serif;color-scheme:dark}
 *{box-sizing:border-box}
@@ -122,6 +123,23 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
 .copy{border:1px solid var(--line);background:var(--brun);color:var(--creme-2);border-radius:999px;width:34px;height:34px;display:inline-grid;place-items:center;cursor:pointer;font-size:.95rem;flex:none}
 .copy:hover{border-color:var(--cheddar);color:var(--creme)}
 .sw.disabled{opacity:.4;pointer-events:none}
+.sheet{max-height:calc(100dvh - 24px);overflow:auto;overflow-x:hidden;box-sizing:border-box;max-width:calc(100vw - 24px)}
+.sheet *{min-width:0}
+.sheet .grid{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.kmrow{display:flex;gap:8px;flex-wrap:wrap}
+.kmrow input{flex:1 1 180px}
+@media (max-width:640px){.totals{margin-left:0;width:100%;grid-template-columns:1fr auto}.sheet .row>div{flex-wrap:wrap}.dvline{grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) 34px}.dvline input[data-l=desc]{grid-row:1;grid-column:1/-1}.dvline input[data-l=qte]{grid-row:2;grid-column:1}.dvline input[data-l=unite]{grid-row:2;grid-column:2}.dvline input[data-l=prix]{grid-row:2;grid-column:3}.dvline .x{grid-row:2;grid-column:4;height:38px;width:34px}.dvline .tot{grid-row:3;grid-column:1/-1;font-size:.95rem;padding-top:4px;border-top:1px dashed var(--line)}}
+.dvlines{display:grid;gap:8px}
+.dvline{display:grid;grid-template-columns:minmax(0,1fr) 72px 84px 84px 90px 34px;gap:6px;align-items:center}
+.dvline input{padding:8px 10px;width:100%}
+.dvline .tot{text-align:right;font-variant-numeric:tabular-nums;font-weight:500;white-space:nowrap}
+.dvline .x{border:1px solid var(--line);background:transparent;color:#F5A097;border-radius:8px;height:34px;cursor:pointer}
+.dvhead{display:grid;grid-template-columns:minmax(0,1fr) 72px 84px 84px 90px 34px;gap:6px;font-size:.78rem;color:var(--creme-3);text-transform:uppercase;letter-spacing:.06em}
+@media (max-width:640px){.dvhead{display:none}.dvline{grid-template-columns:72px 84px 1fr auto 34px;row-gap:6px}.dvline input[data-l=desc]{grid-column:1/-1}.dvline .tot{text-align:right}}
+.dvline{background:var(--brun);border:1px solid var(--line);border-radius:12px;padding:8px}
+.totals{display:grid;grid-template-columns:auto auto;gap:4px 18px;font-variant-numeric:tabular-nums;text-align:right;background:var(--brun);border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin-left:auto}
+.totals b{font-size:1.05rem;color:var(--cheddar)}
+.tag.s-brouillon{background:var(--brun-3);color:var(--creme-2)}.tag.s-envoye{background:rgba(243,173,63,.18);color:var(--cheddar);border:1px solid rgba(243,173,63,.5)}.tag.s-accepte{background:rgba(123,166,86,.22);color:#B9DBA0;border:1px solid rgba(123,166,86,.5)}.tag.s-refuse{background:rgba(214,64,47,.2);color:#FFB3AA}
 @media (max-width:480px){.tabs button{padding:8px 11px;font-size:.86rem}h2{font-size:1.35rem}.card{padding:14px}}
 </style>
 </head>
@@ -151,8 +169,9 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
         <button data-tab="carte" class="is-on">Carte</button>
         <button data-tab="emplacements">Emplacements</button>
         <button data-tab="tarifs">Tarifs</button>
-        <button data-tab="bandeau">Bandeau</button>
         <button data-tab="demandes">Demandes<span class="n" id="nNew" hidden></span></button>
+        <button data-tab="devis">Devis</button>
+        <button data-tab="bandeau">Réglages</button>
       </nav>
     </div>
   </header>
@@ -241,12 +260,78 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
     </section>
 
     <section id="tab-bandeau">
-      <h2>Bandeau<small>Un message affiché en haut de toutes les pages</small></h2>
+      <h2>Bandeau<small>Un message affiché en haut de toutes les pages du site</small></h2>
       <div class="card">
         <label class="f">Message (vide = pas de bandeau)<input id="bandeau" type="text" maxlength="300" placeholder="Ex. : Fermé du 24 au 31 décembre, bonnes fêtes !"></label>
         <div style="margin-top:12px;display:flex;gap:8px"><button class="btn primary" id="bandeauSave" type="button">Enregistrer</button><button class="btn" id="bandeauClear" type="button">Retirer le bandeau</button></div>
       </div>
+      <h2 style="margin-top:28px">Modèle d'e-mail de devis<small>Variables : {date} {moment} {nom} {convives} {lieu} {numero}</small></h2>
+      <div class="card" style="display:grid;gap:12px">
+        <label class="f">Objet<input id="r_email_objet" type="text" maxlength="200"></label>
+        <label class="f">Corps<textarea id="r_email_corps" rows="12" maxlength="4000"></textarea></label>
+        <div class="grid">
+          <label class="f">E-mail affiché sur le devis<input id="r_contact_email" type="email" maxlength="160"></label>
+          <label class="f">Tarif du kilomètre (€)<input id="r_km_tarif" type="number" step="0.1" min="0"></label>
+        </div>
+        <div><button class="btn primary" id="reglagesSave" type="button">Enregistrer</button></div>
+      </div>
     </section>
+
+    <section id="tab-devis">
+      <div class="row" style="margin-bottom:14px;align-items:end"><h2 style="margin:0">Devis<small>Brouillons, envoyés, acceptés</small></h2><button class="btn primary sm" id="newDevis" type="button">+ Nouveau devis</button></div>
+      <div id="devisList"></div>
+    </section>
+
+    <!-- Éditeur de devis -->
+    <dialog id="devisDlg">
+      <div class="card sheet" style="margin:0;width:min(760px,calc(100vw - 24px));display:grid;gap:14px">
+        <div class="row"><h2 style="margin:0">Devis <span id="dvNumero"></span><small id="dvSub"></small></h2><div style="display:flex;gap:8px;align-items:center"><select id="dvStatut"><option value="brouillon">Brouillon</option><option value="envoye">Envoyé</option><option value="accepte">Accepté</option><option value="refuse">Refusé</option></select><button class="btn sm" type="button" id="dvClose">Fermer</button></div></div>
+        <input type="hidden" id="dvId">
+        <h3 class="sub">Client</h3>
+        <div class="grid">
+          <label class="f">Nom<input id="dv_client_nom" type="text"></label>
+          <label class="f">E-mail<input id="dv_client_email" type="email"></label>
+          <label class="f">Téléphone<input id="dv_client_tel" type="tel"></label>
+          <label class="f">Date du devis<input id="dv_date_devis" type="date"></label>
+        </div>
+        <h3 class="sub">Prestation (lignes affichées sous le client)</h3>
+        <div class="grid">
+          <label class="f">Date et moment<input id="dv_i0" type="text" placeholder="Le 12/06/2027 soir"></label>
+          <label class="f">Horaires de service<input id="dv_i1" type="text" placeholder="Service 19h - 21h"></label>
+          <label class="f">Formule<input id="dv_i2" type="text" placeholder="Formule Burger + Frites maison + Desserts"></label>
+          <label class="f">Composition<input id="dv_i3" type="text" placeholder="70% charolais - 30% végétariens"></label>
+        </div>
+        <label class="f">Lieu de la prestation<div class="kmrow"><input id="dv_i4" type="text" placeholder="12 rue des Lilas, 78510 Triel-sur-Seine"><button class="btn sm" type="button" id="dvKm" title="Calculer les kilomètres depuis Verneuil-sur-Seine">Calculer les km</button></div><span class="muted" id="dvKmInfo"></span></label>
+        <h3 class="sub">Lignes du devis</h3>
+        <div class="dvlines" id="dvLines"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn sm" type="button" data-addline="Ligne libre||1|">+ Ligne</button>
+          <button class="btn sm" type="button" data-addline="Desserts|Menu|0|">+ Desserts</button>
+          <button class="btn sm" type="button" data-addline="Boissons (softs)|Menu|0|">+ Boissons</button>
+          <button class="btn sm" type="button" data-addline="Groupe électrogène silencieux|Forfait|1|50">+ Groupe électrogène</button>
+          <button class="btn sm" type="button" data-addline="Heure de service supplémentaire|Heure|1|">+ Heure supp.</button>
+        </div>
+        <div class="row">
+          <label class="f" style="flex-direction:row;display:flex;gap:10px;align-items:center"><span>Prix saisis</span><select id="dv_mode" style="width:auto"><option value="ttc">TTC (TVA 10 % incluse)</option><option value="ht">HT (TVA 10 % en plus)</option></select></label>
+          <div class="totals" id="dvTotals"></div>
+        </div>
+        <h3 class="sub">E-mail d'accompagnement</h3>
+        <label class="f">Objet<input id="dv_email_objet" type="text"></label>
+        <label class="f">Message<textarea id="dv_email_corps" rows="10"></textarea></label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn sm" type="button" id="dvRegen">Régénérer depuis le modèle</button></div>
+        <div class="row" style="border-top:1px solid var(--line);padding-top:14px">
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn primary" type="button" id="dvSave">Enregistrer</button>
+            <button class="btn" type="button" id="dvPdf">Télécharger le PDF</button>
+            <button class="btn" type="button" id="dvCopy">Copier l'e-mail</button>
+            <a class="btn" id="dvMailto" href="#" target="_blank" rel="noopener">Ouvrir dans Mail</a>
+            <button class="btn primary" type="button" id="dvSend">Envoyer par e-mail avec le PDF</button>
+          </div>
+          <button class="btn danger sm" type="button" id="dvDelete">Supprimer</button>
+        </div>
+        <p class="muted" id="dvMsg" hidden></p>
+      </div>
+    </dialog>
 
     <section id="tab-demandes">
       <h2>Demandes de devis<small>Reçues depuis le formulaire du site</small></h2>
@@ -308,7 +393,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
     return api('state').then(function(r){
       state=r.state;$('#login').hidden=true;$('#app').hidden=false;
       render();
-      return api('demandes').then(function(d){demandes=d.demandes;renderDemandes();});
+      return api('demandes').then(function(d){demandes=d.demandes;return loadDevis();}).then(function(){renderDemandes();});
     }).catch(function(e){if(first)toast(e.message,true);if(!token)showLogin();});
   }
 
@@ -361,6 +446,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
     $('#p_burger').value=state.prix.burger;$('#p_menu_frites').value=state.prix.menu_frites;$('#p_menu_complet').value=state.prix.menu_complet;$('#p_frites').value=state.prix.frites;
     Object.keys(state.supplements||{}).forEach(function(k){var i=document.getElementById('p_'+k);if(i)i.value=state.supplements[k];});
     $('#bandeau').value=state.bandeau||'';
+    if(state.devis_reglages){$('#r_email_objet').value=state.devis_reglages.email_objet;$('#r_email_corps').value=state.devis_reglages.email_corps;$('#r_contact_email').value=state.devis_reglages.contact_email;$('#r_km_tarif').value=state.devis_reglages.km_tarif;}
   }
 
   var filter='nouveau';
@@ -378,7 +464,8 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
         (d.message?'<div class="msg">'+esc(d.message)+'</div>':'')+
         '<div class="actions"><a class="btn sm" href="tel:'+esc(d.tel)+'">📞 '+esc(d.tel)+'</a><button class="copy" type="button" data-copy="'+esc(d.tel)+'" title="Copier le numéro" aria-label="Copier le numéro">⧉</button><a class="btn sm" href="mailto:'+esc(d.email)+'">✉️ '+esc(d.email)+'</a><button class="copy" type="button" data-copy="'+esc(d.email)+'" title="Copier l\'email" aria-label="Copier l\'email">⧉</button><span class="spacer"></span>'+
         '<select data-statut="'+d.id+'">'+Object.keys(libel).map(function(k){return '<option value="'+k+'"'+(d.statut===k?' selected':'')+'>'+libel[k]+'</option>';}).join('')+'</select>'+
-        '<button class="btn sm danger" data-del="'+d.id+'" type="button">Supprimer</button></div></div>';
+        '<button class="btn sm danger" data-del="'+d.id+'" type="button">Supprimer</button></div>'+
+        '<div class="actions">'+(function(){var dv=devisForDemande(d.id);return dv.length?dv.map(function(x){return '<button class="btn sm" data-opendevis="'+x.id+'" type="button">Devis n°'+esc(x.numero)+' · '+eur(x.total_ttc)+' <span class="tag s-'+esc(x.statut)+'">'+STATUTS[x.statut]+'</span></button>';}).join('')+'<button class="btn sm ghost" data-mkdevis="'+d.id+'" type="button">+ Autre devis</button>':'<button class="btn sm primary" data-mkdevis="'+d.id+'" type="button">Préparer le devis</button>';})()+'</div></div>';
     }).join(''):'<p class="empty">'+(filter==='nouveau'?'Aucune nouvelle demande.':filter==='encours'?'Aucune demande en cours.':'Aucune demande pour le moment.')+'</p>';
   }
   $('#filters').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;filter=b.dataset.filter;renderDemandes();});
@@ -436,6 +523,170 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
   });
   bdlg.addEventListener('close',function(){var d=$('#burgerDelete');d.dataset.confirm='';d.textContent='Supprimer ce burger';});
 
+
+  // =====================================================================
+  //  DEVIS
+  // =====================================================================
+  var devisList=[], curDevis=null, logoData=null;
+  var eur=function(n){return (Math.round((Number(n)||0)*100)/100).toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';};
+  var STATUTS={brouillon:'Brouillon',envoye:'Envoyé',accepte:'Accepté',refuse:'Refusé'};
+  function loadDevis(){return api('devis').then(function(r){devisList=r.devis;renderDevis();});}
+  function renderDevis(){
+    $('#devisList').innerHTML=devisList.length?devisList.map(function(d){
+      return '<div class="card"><div class="row"><div><div class="name">n°'+esc(d.numero)+' · '+esc(d.client_nom||'Sans nom')+' <span class="tag s-'+esc(d.statut)+'">'+STATUTS[d.statut]+'</span></div><div class="muted">'+esc((d.intro&&d.intro[0])||'')+(d.lieu?' · '+esc(d.lieu):'')+' · devis du '+esc(dateFr(d.date_devis))+'</div></div>'+
+        '<div style="display:flex;gap:8px;align-items:center"><b style="font-size:1.05rem">'+eur(d.total_ttc)+'</b><button class="btn sm" data-opendevis="'+d.id+'">Ouvrir</button></div></div></div>';
+    }).join(''):'<p class="empty">Aucun devis. Créez-en un depuis une demande (bouton « Préparer le devis ») ou avec « Nouveau devis ».</p>';
+  }
+  function devisForDemande(id){return devisList.filter(function(d){return d.demande_id===id;});}
+  function computeTotals(lignes,mode){
+    var somme=lignes.reduce(function(t,l){return t+(Number(l.qte)||0)*(Number(l.prix)||0);},0);
+    var ht,tva,ttc; if(mode==='ht'){ht=somme;tva=somme*0.10;ttc=somme+tva;}else{ttc=somme;tva=somme/11;ht=somme-tva;}
+    var arrhes=ttc*0.30; return {ht:ht,tva:tva,ttc:ttc,arrhes:arrhes,reste:ttc-arrhes};
+  }
+  // ---- éditeur
+  var ddlg=$('#devisDlg');
+  function openDevis(d){
+    curDevis=JSON.parse(JSON.stringify(d));
+    $('#dvId').value=d.id;$('#dvNumero').textContent='n°'+d.numero;$('#dvSub').textContent=d.demande_id?'Lié à la demande n°'+d.demande_id:'Devis libre';
+    $('#dvStatut').value=d.statut;
+    $('#dv_client_nom').value=d.client_nom||'';$('#dv_client_email').value=d.client_email||'';$('#dv_client_tel').value=d.client_tel||'';$('#dv_date_devis').value=d.date_devis||'';
+    for(var i=0;i<5;i++)$('#dv_i'+i).value=(d.intro&&d.intro[i])||'';
+    $('#dv_mode').value=d.mode||'ttc';$('#dv_email_objet').value=d.email_objet||'';$('#dv_email_corps').value=d.email_corps||'';
+    $('#dvKmInfo').textContent='';$('#dvMsg').hidden=true;
+    $('#dvSend').disabled=!(state.mail_configure);$('#dvSend').title=state.mail_configure?'':'Brancher Resend (variables RESEND_API_KEY, MAIL_FROM) pour envoyer depuis le site';
+    renderLines(); ddlg.showModal(); ddlg.querySelector('.sheet').scrollTop=0;
+  }
+  function renderLines(){
+    var L=curDevis.lignes||[];
+    $('#dvLines').innerHTML='<div class="dvhead"><span>Description</span><span>Qté</span><span>Unité</span><span>Prix</span><span style="text-align:right">Total</span><span></span></div>'+L.map(function(l,i){
+      return '<div class="dvline"><input data-l="desc" data-i="'+i+'" value="'+esc(l.desc)+'"><input data-l="qte" data-i="'+i+'" type="number" step="1" min="0" value="'+(l.qte||0)+'"><input data-l="unite" data-i="'+i+'" value="'+esc(l.unite||'')+'"><input data-l="prix" data-i="'+i+'" type="number" step="0.5" min="0" value="'+(l.prix||0)+'"><span class="tot">'+eur((l.qte||0)*(l.prix||0))+'</span><button class="x" type="button" data-rmline="'+i+'" aria-label="Retirer">×</button></div>';
+    }).join('');
+    renderTotals();
+  }
+  function renderTotals(){
+    var t=computeTotals(curDevis.lignes||[],$('#dv_mode').value);
+    $('#dvTotals').innerHTML='<span>Total HT</span><span>'+eur(t.ht)+'</span><span>TVA 10 %</span><span>'+eur(t.tva)+'</span><span>Total TTC</span><b>'+eur(t.ttc)+'</b><span>Arrhes 30 %</span><span>'+eur(t.arrhes)+'</span><span>Montant restant</span><span>'+eur(t.reste)+'</span>';
+    $('#dvMailto').href='mailto:'+encodeURIComponent($('#dv_client_email').value)+'?subject='+encodeURIComponent($('#dv_email_objet').value)+'&body='+encodeURIComponent($('#dv_email_corps').value);
+  }
+  function collectDevis(){
+    var intro=[];for(var i=0;i<5;i++)intro.push($('#dv_i'+i).value);
+    return {client_nom:$('#dv_client_nom').value,client_email:$('#dv_client_email').value,client_tel:$('#dv_client_tel').value,date_devis:$('#dv_date_devis').value,intro:intro,lieu:intro[4],lignes:curDevis.lignes,mode:$('#dv_mode').value,statut:$('#dvStatut').value,email_objet:$('#dv_email_objet').value,email_corps:$('#dv_email_corps').value};
+  }
+  function saveDevis(){
+    return api('devis/'+curDevis.id,{method:'PUT',body:collectDevis()}).then(function(r){curDevis=r.devis;return loadDevis();}).then(function(){toast('Devis enregistré');return curDevis;});
+  }
+  $('#dvLines').addEventListener('input',function(e){var t=e.target;if(!t.dataset.l)return;var l=curDevis.lignes[+t.dataset.i];l[t.dataset.l]=(t.dataset.l==='qte'||t.dataset.l==='prix')?Number(t.value):t.value;t.closest('.dvline').querySelector('.tot').textContent=eur((l.qte||0)*(l.prix||0));renderTotals();});
+  $('#dvLines').addEventListener('click',function(e){var b=e.target.closest('[data-rmline]');if(!b)return;curDevis.lignes.splice(+b.dataset.rmline,1);renderLines();});
+  ddlg.addEventListener('click',function(e){
+    var b=e.target.closest('[data-addline]');if(b){var p=b.dataset.addline.split('|');curDevis.lignes.push({desc:p[0],unite:p[1],qte:Number(p[2])||0,prix:Number(p[3])||0});renderLines();}
+    if(e.target===ddlg)ddlg.close();
+  });
+  $('#dv_mode').addEventListener('change',renderTotals);
+  ['dv_client_email','dv_email_objet','dv_email_corps'].forEach(function(id){$('#'+id).addEventListener('input',renderTotals);});
+  $('#dvClose').addEventListener('click',function(){ddlg.close();});
+  $('#dvSave').addEventListener('click',function(){saveDevis().catch(function(e){toast(e.message,true);});});
+  $('#dvDelete').addEventListener('click',function(){
+    if(this.dataset.confirm!=='1'){this.dataset.confirm='1';this.textContent='Confirmer la suppression';return;}
+    api('devis/'+curDevis.id,{method:'DELETE'}).then(function(){toast('Devis supprimé');ddlg.close();return loadDevis();}).catch(function(e){toast(e.message,true);});
+  });
+  ddlg.addEventListener('close',function(){var d=$('#dvDelete');d.dataset.confirm='';d.textContent='Supprimer';renderDemandes();});
+  $('#dvKm').addEventListener('click',function(){
+    var q=$('#dv_i4').value.trim();if(!q){toast('Indiquez le lieu de la prestation',true);return;}
+    $('#dvKmInfo').textContent='Calcul en cours…';
+    api('distance?q='+encodeURIComponent(q)).then(function(r){
+      if(r.km==null){$('#dvKmInfo').textContent='Adresse trouvée ('+r.lieu+') mais itinéraire indisponible : saisissez les km à la main.';return;}
+      var l=curDevis.lignes.filter(function(x){return /km/i.test(x.unite);})[0];
+      if(!l){l={desc:'Frais de déplacements',qte:0,unite:'Km',prix:state.devis_reglages.km_tarif||1};curDevis.lignes.push(l);}
+      l.qte=r.km;renderLines();$('#dvKmInfo').textContent=r.km+' km (aller simple) depuis Verneuil-sur-Seine → '+r.lieu;
+    }).catch(function(e){$('#dvKmInfo').textContent=e.message;});
+  });
+  $('#dvRegen').addEventListener('click',function(){
+    var moments={'Déjeuner / Brunch':'à midi','Dîner':'le soir','Deuxième partie de soirée (21h+)':'en deuxième partie de soirée (21h+)'};
+    var v={date:dateFr(curDevis.event_date||''),moment:moments[curDevis.event_moment]||'',nom:$('#dv_client_nom').value,convives:(curDevis.lignes[0]&&curDevis.lignes[0].qte)||'',lieu:$('#dv_i4').value,numero:curDevis.numero};
+    var fill=function(t){return String(t||'').replace(/\{(\w+)\}/g,function(m,k){return v[k]!==undefined?v[k]:'';}).replace(/  +/g,' ');};
+    $('#dv_email_objet').value=fill(state.devis_reglages.email_objet);$('#dv_email_corps').value=fill(state.devis_reglages.email_corps);renderTotals();
+  });
+  $('#dvCopy').addEventListener('click',function(){var t='Objet : '+$('#dv_email_objet').value+'\n\n'+$('#dv_email_corps').value;if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(function(){toast('E-mail copié');}).catch(function(){fallbackCopy(t);toast('E-mail copié');});}else{fallbackCopy(t);toast('E-mail copié');}});
+  $('#dvPdf').addEventListener('click',function(){saveDevis().then(function(d){return buildPdf(d);}).then(function(doc){var name='Devis-'+curDevis.numero+'-L-Arret-Gourmand.pdf';try{doc.save(name);}catch(e){window.open(doc.output('bloburl'),'_blank');}}).catch(function(e){toast(e.message,true);});});
+  $('#dvSend').addEventListener('click',function(){
+    var btn=this;if(!$('#dv_client_email').value){toast('E-mail du client manquant',true);return;}
+    btn.disabled=true;btn.textContent='Envoi…';
+    saveDevis().then(function(d){return buildPdf(d);}).then(function(doc){var b64=doc.output('datauristring').split(',')[1];return api('devis/'+curDevis.id+'/envoyer',{method:'POST',body:{pdf_base64:b64}});})
+      .then(function(){toast('Devis envoyé à '+$('#dv_client_email').value);return loadDevis();}).then(function(){var d=devisList.filter(function(x){return x.id===curDevis.id;})[0];if(d)$('#dvStatut').value=d.statut;return api('demandes');}).then(function(r){demandes=r.demandes;})
+      .catch(function(e){toast(e.message,true);}).finally(function(){btn.disabled=false;btn.textContent='Envoyer par e-mail avec le PDF';});
+  });
+  $('#newDevis').addEventListener('click',function(){api('devis',{method:'POST',body:{}}).then(function(r){return loadDevis().then(function(){openDevis(r.devis);});}).catch(function(e){toast(e.message,true);});});
+  document.addEventListener('click',function(e){
+    var b=e.target.closest('button');if(!b)return;
+    if(b.dataset.opendevis){var d=devisList.filter(function(x){return x.id===+b.dataset.opendevis;})[0];if(d)openDevis(d);}
+    if(b.dataset.mkdevis){api('devis',{method:'POST',body:{demande_id:+b.dataset.mkdevis}}).then(function(r){return loadDevis().then(function(){openDevis(r.devis);});}).catch(function(err){toast(err.message,true);});}
+  });
+
+  // ---- PDF fidèle au modèle Excel (A4, Helvetica)
+  function getLogo(){
+    if(logoData)return Promise.resolve(logoData);
+    return fetch('/img/logo.jpg').then(function(r){return r.blob();}).then(function(b){return new Promise(function(res){var fr=new FileReader();fr.onload=function(){logoData=fr.result;res(logoData);};fr.readAsDataURL(b);});}).catch(function(){return null;});
+  }
+  function clean(t){return String(t==null?'':t).replace(/[  ]/g,' ').replace(/’/g,"'");}
+  function buildPdf(d){
+    if(!window.jspdf){return Promise.reject(new Error('Générateur PDF non chargé, rechargez la page'));}
+    return getLogo().then(function(logo){
+      var J=window.jspdf.jsPDF, doc=new J({unit:'mm',format:'a4'});
+      var W=210, M=15, R=W-M, y=M, grey=[216,216,216], dark=[40,40,40], mid=[127,127,127];
+      var t=computeTotals(d.lignes||[],d.mode||'ttc');
+      var txt=function(s,x,yy,o){doc.text(Array.isArray(s)?s.map(clean):clean(s),x,yy,o||{});};
+      var dateCourte=function(iso){var p=(iso||'').split('-');return p.length===3?p[2]+'/'+p[1]+'/'+p[0]:iso||'';};
+      doc.setTextColor.apply(doc,dark);
+      // en-tête
+      if(logo){try{doc.addImage(logo,'JPEG',R-40,y-7,40,40);}catch(e){}}
+      doc.setFont('helvetica','bold');doc.setFontSize(12);
+      ['LAG','38 Rue du bois madame','60240 Hadancourt','N° SIREN : 801 578 584'].forEach(function(l,i){txt(l,M,y+4+i*5.5);});
+      y+=32;
+      txt('Client',M,y);doc.setFont('helvetica','normal');txt(d.client_nom||'',M,y+6);
+      doc.setFontSize(9.5);doc.setTextColor.apply(doc,mid);txt([d.client_email,d.client_tel].filter(Boolean).join('  ·  '),M,y+11);doc.setTextColor.apply(doc,dark);
+      // bloc devis (droite)
+      doc.setFont('helvetica','bold');doc.setFontSize(13);txt('DEVIS '+d.numero,R-40,y+2,{align:'center'});
+      doc.setFont('helvetica','normal');doc.setFontSize(10.5);
+      txt('Numéro du devis',R-80,y+10);txt(String(d.numero),R,y+10,{align:'right'});
+      txt('Date du devis',R-80,y+16);txt(dateCourte(d.date_devis),R,y+16,{align:'right'});
+      y+=24;
+      // prestation + montant TTC
+      doc.setFontSize(10.5);var iy=y;
+      (d.intro||[]).forEach(function(l){if(l){txt(l,M,iy);iy+=5.5;}});
+      doc.setFillColor.apply(doc,grey);doc.rect(R-80,y-5,80,9,'F');doc.setFont('helvetica','bold');doc.setFontSize(12);txt('Montant TTC',R-78,y+1);doc.setFontSize(11);txt(eur(t.ttc),R-2,y+1,{align:'right'});
+      doc.setFont('helvetica','normal');
+      y=Math.max(iy,y+12)+6;
+      // tableau
+      var cols={desc:M,qte:112,unite:130,prix:152,total:R};
+      doc.setFillColor.apply(doc,grey);doc.rect(M,y-5,W-2*M,8,'F');doc.setFont('helvetica','bold');doc.setFontSize(10.5);
+      txt('Description',cols.desc+2,y);txt('Quantité',cols.qte+14,y,{align:'right'});txt('Unité',cols.unite+16,y,{align:'right'});txt('Prix',cols.prix+14,y,{align:'right'});txt('TOTAL',cols.total-2,y,{align:'right'});
+      doc.setFont('helvetica','normal');y+=8;
+      (d.lignes||[]).forEach(function(l){
+        var lines=doc.splitTextToSize(clean(l.desc||''),90);
+        txt(lines,cols.desc+2,y);txt(String(l.qte||0),cols.qte+14,y,{align:'right'});txt(l.unite||'',cols.unite+16,y,{align:'right'});txt(eur(l.prix),cols.prix+14,y,{align:'right'});txt(eur((l.qte||0)*(l.prix||0)),cols.total-2,y,{align:'right'});
+        y+=5.5*lines.length+1.5;
+      });
+      y+=4;
+      // totaux
+      var rows=[['Total HT',eur(t.ht)],['TVA 10%',eur(t.tva)],['Total Net en Euros',eur(t.ttc)],['Arrhes de 30%',eur(t.arrhes)],['Montant restant',eur(t.reste)]];
+      rows.forEach(function(r,i){doc.setFillColor.apply(doc,grey);doc.rect(R-80,y-5,80,8,'F');doc.setFont('helvetica','bold');doc.setFontSize(i===2?12:11);txt(r[0],R-78,y+0.5);doc.setFontSize(11);txt(r[1],R-2,y+0.5,{align:'right'});y+=(i===2?10:9);});
+      y+=4;
+      // conditions
+      doc.setFont('helvetica','bold');doc.setFontSize(11);txt("Conditions d'utilisation",M,y);y+=6;doc.setFont('helvetica','normal');doc.setFontSize(9.5);
+      ['Règlement du montant restant par CB, chèque ou espèce le jour de la prestation.','*Ce tarif comprend la réservation du Food-Truck et de ses cuisiniers.','** Quantité minimum de formules pour une privatisation'].forEach(function(l){txt(l,M,y);y+=5;});
+      y+=3;doc.setFont('helvetica','bold');txt('Modalités de réservation de camion :',M,y);y+=5.5;doc.setFont('helvetica','normal');
+      ['Une prise électrique de 16 ampères (prise de maison classique).',"La réservation s'effectue à réception d'un chèque d'arrhes ou virement de 30% et du devis daté et signé portant la mention \"Bon pour accord\".","En cas d'annulation de votre part, les arrhes sont conservées à titre de dédommagement."].forEach(function(l){var ls=doc.splitTextToSize(clean(l),W-2*M);txt(ls,M,y);y+=5*ls.length;});
+      y+=6;
+      // signature + RIB
+      doc.setFont('helvetica','bold');doc.setFontSize(10.5);txt('Date, signature et mention "Bon pour accord" :',R-85,y);doc.setDrawColor(180);doc.rect(R-85,y+3,85,28);
+      txt('Coordonnées bancaires',M,y);txt('BP VAL DE FRANCE',M,y+6);txt('IBAN : FR76 1870 7001 8631 4213 2199 822',M,y+12);txt('BIC : CCBPFRPPVER',M,y+18);
+      // pied de page
+      var fy=283;doc.setFontSize(9);doc.setTextColor.apply(doc,mid);
+      txt('Tél: 07 82 54 98 29',M,fy);txt('Site web: www.larretgourmand.com',M+52,fy);txt('E-mail: '+(state.devis_reglages.contact_email||''),M+118,fy);txt('N° SIREN : 801 578 584',R,fy+5,{align:'right'});
+      return doc;
+    });
+  }
+
   // ---------- actions (délégation)
   document.addEventListener('change',function(e){
     var t=e.target;
@@ -475,6 +726,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
     if(b.id==='prixSave'){var body={prix_burger:$('#p_burger').value,prix_menu_frites:$('#p_menu_frites').value,prix_menu_complet:$('#p_menu_complet').value,prix_frites:$('#p_frites').value};['sup_double','sup_garniture','frites_cheddar','frites_cheddar_bacon','frites_cheddar_oignons','frites_complet','frites_truffe'].forEach(function(k){var i=document.getElementById('p_'+k);if(i)body[k]=i.value;});save('reglages',body,'Prix enregistrés');}
     if(b.id==='supSave'){var inputs=document.querySelectorAll('[data-sup]');Promise.all(Array.prototype.map.call(inputs,function(i){return api('burgers/'+i.dataset.sup,{method:'PUT',body:{supplement:i.value}});})).then(function(){toast('Suppléments enregistrés');load();}).catch(function(err){toast(err.message,true);});}
     if(b.id==='bandeauSave')save('reglages',{bandeau:$('#bandeau').value},'Bandeau enregistré');
+    if(b.id==='reglagesSave')save('reglages',{devis_email_objet:$('#r_email_objet').value,devis_email_corps:$('#r_email_corps').value,devis_contact_email:$('#r_contact_email').value,devis_km_tarif:$('#r_km_tarif').value},'Réglages enregistrés');
     if(b.id==='bandeauClear'){$('#bandeau').value='';save('reglages',{bandeau:''},'Bandeau retiré');}
   });
 

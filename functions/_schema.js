@@ -47,6 +47,21 @@ export const STATEMENTS = [
     statut TEXT NOT NULL DEFAULT 'nouveau',
     mail_envoye INTEGER NOT NULL DEFAULT 0
   )`,
+  `CREATE TABLE IF NOT EXISTS devis (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    numero TEXT NOT NULL UNIQUE,
+    demande_id INTEGER,
+    cree_le TEXT NOT NULL DEFAULT (datetime('now')),
+    date_devis TEXT NOT NULL,
+    client_nom TEXT, client_email TEXT, client_tel TEXT,
+    event_date TEXT, event_moment TEXT, lieu TEXT,
+    intro TEXT NOT NULL DEFAULT '[]',
+    lignes TEXT NOT NULL DEFAULT '[]',
+    mode TEXT NOT NULL DEFAULT 'ttc',
+    total_ht REAL NOT NULL DEFAULT 0, tva REAL NOT NULL DEFAULT 0, total_ttc REAL NOT NULL DEFAULT 0, arrhes REAL NOT NULL DEFAULT 0,
+    statut TEXT NOT NULL DEFAULT 'brouillon',
+    email_objet TEXT, email_corps TEXT, envoye_le TEXT
+  )`,
   `INSERT OR IGNORE INTO burgers (id, nom, accroche, description, photo, supplement, ordre) VALUES
     ('poulet',     'Le Poulet', 'Votre nouveau burger au poulet préféré !',
      'Un bun boulanger, du Poulet Français croustillant maison, du cheddar, une sauce Ranch maison, des oignons frits et du mesclun !', '/img/poulet.jpg', 0, 1),
@@ -79,7 +94,23 @@ export const STATEMENTS = [
     ('frites_cheddar_oignons', '2.5'),
     ('frites_complet',     '3.5'),
     ('frites_truffe',      '2'),
-    ('bandeau',            '')`,
+    ('bandeau',            ''),
+    ('devis_email_objet',  'Votre devis L''Arrêt Gourmand – prestation du {date}'),
+    ('devis_email_corps',  'Bonjour,
+
+Nous vous remercions de l''intérêt que vous portez à nos services. Nous sommes encore disponibles à cette date, vous trouverez ci-joint un devis pour une prestation le {date} {moment}.
+
+Pour rappel, tous nos burgers sont préparés avec des steaks charolais de 150g, des pains boulangers et des fromages de qualité, et servis avec des frites maison. Nous pourrons également nous adapter pour des demandes VG ou Halal si besoin.
+
+Si ce devis vous convient, n''hésitez pas à nous le confirmer par mail afin que nous puissions poser une option sur la date en attendant la réception des arrhes.
+
+Je reste à votre entière disposition pour toute question ou modification, par mail ou par téléphone au 06 83 82 71 49.
+
+Cordialement,
+Sylvain'),
+    ('devis_contact_email','contact@larretgalette.com'),
+    ('devis_km_tarif',     '1'),
+    ('schema_version',     '4')`,
 ];
 
 // Crée les tables et les données de départ (sans toucher à ce qui existe déjà)
@@ -90,12 +121,39 @@ export async function ensureSchema(env) {
 
 // Mises à jour appliquées une seule fois sur une base déjà en ligne (numérotées, dans l'ordre).
 // Une base neuve reçoit directement le schéma complet ; une base existante rattrape les versions manquantes.
-export const SCHEMA_VERSION = 3;
+export const SCHEMA_VERSION = 4;
 export const MIGRATIONS = {
   1: ['ALTER TABLE demandes ADD COLUMN moment TEXT'],
   2: ['ALTER TABLE demandes ADD COLUMN adresse TEXT', 'ALTER TABLE demandes ADD COLUMN code_postal TEXT', 'ALTER TABLE demandes ADD COLUMN ville TEXT',
       `INSERT OR IGNORE INTO reglages (cle, valeur) VALUES ('sup_double','5'),('sup_garniture','2'),('frites_cheddar','2'),('frites_cheddar_bacon','3'),('frites_cheddar_oignons','2.5'),('frites_complet','3.5'),('frites_truffe','2')`],
   3: [`UPDATE burgers SET nom = 'Le Poulet' WHERE id = 'poulet' AND nom = 'Burger au poulet'`],
+  4: [`CREATE TABLE IF NOT EXISTS devis (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    numero TEXT NOT NULL UNIQUE,
+    demande_id INTEGER,
+    cree_le TEXT NOT NULL DEFAULT (datetime('now')),
+    date_devis TEXT NOT NULL,
+    client_nom TEXT, client_email TEXT, client_tel TEXT,
+    event_date TEXT, event_moment TEXT, lieu TEXT,
+    intro TEXT NOT NULL DEFAULT '[]',
+    lignes TEXT NOT NULL DEFAULT '[]',
+    mode TEXT NOT NULL DEFAULT 'ttc',
+    total_ht REAL NOT NULL DEFAULT 0, tva REAL NOT NULL DEFAULT 0, total_ttc REAL NOT NULL DEFAULT 0, arrhes REAL NOT NULL DEFAULT 0,
+    statut TEXT NOT NULL DEFAULT 'brouillon',
+    email_objet TEXT, email_corps TEXT, envoye_le TEXT
+  )`,
+      `INSERT OR IGNORE INTO reglages (cle, valeur) VALUES ('devis_email_objet','Votre devis L''Arrêt Gourmand – prestation du {date}'),('devis_email_corps','Bonjour,
+
+Nous vous remercions de l''intérêt que vous portez à nos services. Nous sommes encore disponibles à cette date, vous trouverez ci-joint un devis pour une prestation le {date} {moment}.
+
+Pour rappel, tous nos burgers sont préparés avec des steaks charolais de 150g, des pains boulangers et des fromages de qualité, et servis avec des frites maison. Nous pourrons également nous adapter pour des demandes VG ou Halal si besoin.
+
+Si ce devis vous convient, n''hésitez pas à nous le confirmer par mail afin que nous puissions poser une option sur la date en attendant la réception des arrhes.
+
+Je reste à votre entière disposition pour toute question ou modification, par mail ou par téléphone au 06 83 82 71 49.
+
+Cordialement,
+Sylvain'),('devis_contact_email','contact@larretgalette.com'),('devis_km_tarif','1')`],
 };
 export async function applyMigrations(env, from = 0) {
   for (let v = from + 1; v <= SCHEMA_VERSION; v++) {

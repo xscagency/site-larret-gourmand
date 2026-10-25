@@ -108,7 +108,9 @@ Sur iPhone : Partager > « Sur l'écran d'accueil » pour l'avoir comme une appl
 - **Emplacements** : suspendre un jour, modifier ville / lieu / lien carte / horaires, annuler ou déplacer une date précise.
 - **Tarifs** : prix des formules et supplément par burger.
 - **Bandeau** : message affiché en haut de toutes les pages.
-- **Demandes** : les devis reçus, avec un statut.
+- **Demandes** : les demandes reçues, avec un statut, les coordonnées copiables et un bouton « Préparer le devis ».
+- **Devis** : éditeur de devis pré-rempli depuis la demande (numéro automatique du type 202609221, lignes, TVA 10 % incluse ou en plus, arrhes 30 %, calcul des km depuis Verneuil-sur-Seine), PDF au modèle de la SARL LAG, e-mail type modifiable, envoi au client avec le PDF joint (si Resend est configuré) ou copie / ouverture dans Mail.
+- **Réglages** : bandeau du site, modèle d'e-mail de devis, e-mail affiché sur le devis, tarif du kilomètre.
 
 Les changements sont visibles sur le site dans la minute (cache de 60 s).
 
