@@ -42,6 +42,7 @@ export const STATEMENTS = [
     recu_le TEXT NOT NULL DEFAULT (datetime('now')),
     nom TEXT, tel TEXT, email TEXT,
     type TEXT, date_event TEXT, convives TEXT, lieu TEXT, message TEXT,
+    moment TEXT,
     page TEXT,
     statut TEXT NOT NULL DEFAULT 'nouveau',
     mail_envoye INTEGER NOT NULL DEFAULT 0
@@ -77,4 +78,16 @@ export const STATEMENTS = [
 // Crée les tables et les données de départ (sans toucher à ce qui existe déjà)
 export async function ensureSchema(env) {
   await env.DB.batch(STATEMENTS.map((s) => env.DB.prepare(s)));
+  await applyMigrations(env);
+}
+
+// Colonnes ajoutées après la première mise en ligne. Chaque ligne est ignorée si la colonne existe déjà.
+export const MIGRATIONS = [
+  'ALTER TABLE demandes ADD COLUMN moment TEXT',
+];
+export async function applyMigrations(env) {
+  for (const sql of MIGRATIONS) {
+    try { await env.DB.prepare(sql).run(); }
+    catch (e) { if (!/duplicate column/i.test(String(e?.message || e))) throw e; }
+  }
 }

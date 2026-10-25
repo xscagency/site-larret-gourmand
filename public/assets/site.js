@@ -70,6 +70,21 @@
     });
   }
 
+  // ---------- Menu mobile ----------
+  var nav = document.getElementById('nav'), burger = document.getElementById('navBurger');
+  if (nav && burger) {
+    burger.addEventListener('click', function () {
+      var open = nav.classList.toggle('is-open');
+      burger.setAttribute('aria-expanded', open ? 'true' : 'false');
+      burger.setAttribute('aria-label', open ? 'Fermer le menu' : 'Ouvrir le menu');
+    });
+    nav.querySelectorAll('.nav__panel a, .nav__panel button').forEach(function (a) { a.addEventListener('click', function () { nav.classList.remove('is-open'); burger.setAttribute('aria-expanded', 'false'); }); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { nav.classList.remove('is-open'); burger.setAttribute('aria-expanded', 'false'); } });
+  }
+  // la pastille du menu mobile reprend le texte de celle du haut
+  var pillCopy = document.querySelector('[data-pill-copy]');
+  if (pillCopy && pillText) { pillCopy.textContent = pillText.textContent; if (pill && pill.classList.contains('is-off')) pillCopy.parentNode.classList.add('is-off'); }
+
   // ---------- Carrousel du hero ----------
   var show = document.getElementById('show');
   if (show) {
@@ -111,7 +126,9 @@
     dlg.addEventListener('click', function (e) { if (e.target === dlg) dlg.close(); });
     if (location.hash === '#open-popup' || location.hash === '#contact') { try { dlg.showModal(); } catch (e) {} }
 
-    var form = document.getElementById('contactForm'), status = document.getElementById('formStatus'), submit = form.querySelector('[type="submit"]');
+    var form = document.getElementById('contactForm'), status = document.getElementById('formStatus'), submit = form.querySelector('[type="submit"]'), sent = document.getElementById('formSent');
+    // à chaque ouverture, on retrouve le formulaire (et non l'écran de confirmation précédent)
+    document.querySelectorAll('[data-open-contact]').forEach(function (b) { b.addEventListener('click', function () { if (sent) { sent.hidden = true; form.hidden = false; } }); });
     form.addEventListener('submit', function (e) {
       e.preventDefault();
       status.className = 'status';
@@ -126,8 +143,8 @@
         .then(function (r) {
           if (!r.ok) throw new Error(r.error || 'Erreur');
           form.reset();
-          status.textContent = 'Demande envoyée. Nous vous contacterons par mail ou téléphone dans les plus brefs délais.';
-          status.classList.add('is-on');
+          if (sent) { form.hidden = true; sent.hidden = false; sent.scrollIntoView({ block: 'nearest' }); }
+          else { status.textContent = 'Demande envoyée. Nous vous contacterons par mail ou téléphone dans les plus brefs délais.'; status.classList.add('is-on'); }
           if (window.dataLayer) window.dataLayer.push({ event: 'demande_devis', page: data.page, type: data.type });
           if (window.turnstile) { try { window.turnstile.reset(); } catch (e) {} }
         })

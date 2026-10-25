@@ -16,7 +16,7 @@
 <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Rubik:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Rubik:wght@400;500;700&display=swap">
 <link rel="stylesheet" href="/assets/site.css">
 <!-- Google Tag Manager -->
 <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-N2TH4HN4');</script>
@@ -29,7 +29,7 @@
 <!-- End Google Tag Manager (noscript) -->
 
 <!--#nav-->
-<header class="nav">
+<header class="nav" id="nav">
   <div class="wrap">
     <a class="brand" href="/"><span class="brand__bun" aria-hidden="true"></span>L'Arrêt Gourmand</a>
     <ul class="nav__links">
@@ -41,8 +41,20 @@
     <div class="nav__right">
       <a class="pill" id="navPill" href="/#emplacements"><i aria-hidden="true"></i><span id="navPillText">Mardi à samedi, de 19h à 20h30</span></a>
       <button class="btn btn--primary" type="button" data-open-contact>Demande de contact</button>
+      <button class="nav__burger" type="button" id="navBurger" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="navPanel"><span></span></button>
     </div>
   </div>
+  <nav class="nav__panel" id="navPanel" aria-label="Navigation">
+    <div class="wrap">
+      <a class="lnk" href="/#menu">Menu</a>
+      <a class="lnk" href="/#tarifs">Tarifs</a>
+      <a class="lnk" href="/#emplacements">Nos emplacements</a>
+      <a class="lnk" href="/#privatisation">Privatisation</a>
+      <a class="lnk" href="/food-truck-traiteur">Food-Truck Traiteur</a>
+      <a class="pill" href="/#emplacements"><i aria-hidden="true"></i><span data-pill-copy>Mardi à samedi, de 19h à 20h30</span></a>
+      <button class="btn btn--primary" type="button" data-open-contact>Demande de contact</button>
+    </div>
+  </nav>
 </header>
 <!--/nav-->
 
@@ -168,8 +180,8 @@
       <h2 id="contactTitle">Contact / Privatisations</h2>
       <button class="x" type="button" data-close-contact aria-label="Fermer">×</button>
     </div>
-    <p class="lede">Nous vous contacterons par mail ou téléphone dans les plus brefs délais. Ou par téléphone au <a class="tel" href="tel:0782549829">07 82 54 98 29</a>.</p>
     <form class="form" id="contactForm" novalidate>
+      <p class="lede">Nous vous contacterons par mail ou téléphone dans les plus brefs délais.</p>
       <h3>Coordonnées :</h3>
       <div class="row">
         <label class="field"><span>Nom</span><input id="f-nom" name="nom" type="text" autocomplete="name" required></label>
@@ -186,10 +198,15 @@
         <label class="field"><span>Date souhaitée</span><input id="f-date" name="date" type="date"></label>
       </div>
       <div class="row">
+        <label class="field"><span>Déjeuner ou dîner ?</span>
+          <select id="f-moment" name="moment">
+            <option value="">Je ne sais pas encore</option><option>Déjeuner</option><option>Dîner</option><option>Déjeuner et dîner</option><option>Brunch</option>
+          </select>
+        </label>
         <label class="field"><span>Nombre de convives</span><input id="f-nb" name="convives" type="number" min="1" inputmode="numeric"></label>
-        <label class="field"><span>Lieu (ville)</span><input id="f-lieu" name="lieu" type="text"></label>
       </div>
-      <label class="field"><span>Votre message</span><textarea id="f-msg" name="message"></textarea></label>
+      <label class="field"><span>Lieu (ville)</span><input id="f-lieu" name="lieu" type="text"></label>
+      <label class="field"><span>Précisions</span><textarea id="f-msg" name="message" placeholder="Apportez vos précisions : horaires souhaités, nombre de burgers estimé, contraintes du lieu, envies particulières…"></textarea></label>
       <!-- piège à robots : laissé vide par les humains -->
       <input type="text" name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px" aria-hidden="true">
       <!-- Anti-spam Turnstile (optionnel) : décommenter et mettre la clé de site
@@ -201,6 +218,13 @@
         <p class="status" id="formStatus" role="status"></p>
       </div>
     </form>
+    <div class="sent" id="formSent" hidden>
+      <div class="sent__check" aria-hidden="true">✓</div>
+      <h3>Demande envoyée, merci !</h3>
+      <p>Nous vous contacterons par mail ou téléphone dans les plus brefs délais.</p>
+      <p class="sent__urgent">Votre demande est urgente ? Vous pouvez nous joindre directement au <a class="tel" href="tel:0683827149">06 83 82 71 49</a>.</p>
+      <button class="btn btn--ghost" type="button" data-close-contact>Fermer</button>
+    </div>
   </div>
 </dialog>
 <!--/dialog-->

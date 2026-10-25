@@ -12,6 +12,7 @@
 // Sans RESEND_API_KEY, aucun mail ne part : la demande est quand même enregistrée et visible dans /admin.
 
 import { json } from '../_lib.js';
+import { applyMigrations } from '../_schema.js';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -35,6 +36,7 @@ export async function onRequestPost({ request, env }) {
     date_event: String(data.date || data.date_event || '').trim().slice(0, 20),
     convives: String(data.convives || '').trim().slice(0, 20),
     lieu: String(data.lieu || '').trim().slice(0, 160),
+    moment: String(data.moment || '').trim().slice(0, 40),
     message: String(data.message || '').trim().slice(0, 4000),
     page: String(data.page || request.headers.get('referer') || '').slice(0, 200),
   };
@@ -52,10 +54,17 @@ export async function onRequestPost({ request, env }) {
     if (!v.success) return json({ ok: false, error: 'Vérification anti-spam échouée, réessayez.' }, 400);
   }
 
-  // 1. Enregistrement
-  const ins = await env.DB.prepare(
-    `INSERT INTO demandes (nom, tel, email, type, date_event, convives, lieu, message, page) VALUES (?,?,?,?,?,?,?,?,?)`
-  ).bind(d.nom, d.tel, d.email, d.type, d.date_event, d.convives, d.lieu, d.message, d.page).run();
+  // 1. Enregistrement (si la colonne "moment" manque sur une base plus ancienne, on l'ajoute et on réessaie)
+  const insert = () => env.DB.prepare(
+    `INSERT INTO demandes (nom, tel, email, type, date_event, convives, lieu, moment, message, page) VALUES (?,?,?,?,?,?,?,?,?,?)`
+  ).bind(d.nom, d.tel, d.email, d.type, d.date_event, d.convives, d.lieu, d.moment, d.message, d.page).run();
+  let ins;
+  try { ins = await insert(); }
+  catch (e) {
+    if (!/no column named moment|has no column named/i.test(String(e?.message || e))) throw e;
+    await applyMigrations(env);
+    ins = await insert();
+  }
   const id = ins.meta.last_row_id;
 
   // 2. Mails
@@ -63,7 +72,7 @@ export async function onRequestPost({ request, env }) {
   if (env.RESEND_API_KEY && env.MAIL_TO && env.MAIL_FROM) {
     const lignes = [
       ['Nom', d.nom], ['Téléphone', d.tel], ['Email', d.email], ['Type d\'événement', d.type],
-      ['Date souhaitée', d.date_event], ['Nombre de convives', d.convives], ['Lieu', d.lieu], ['Page', d.page],
+      ['Date souhaitée', d.date_event], ['Moment', d.moment], ['Nombre de convives', d.convives], ['Lieu', d.lieu], ['Page', d.page],
     ].filter(([, v]) => v);
     const htmlEquipe = `
       <h2 style="font-family:sans-serif">Nouvelle demande n°${id}</h2>
@@ -95,7 +104,7 @@ export async function onRequestPost({ request, env }) {
     const lignes = [
       `🍔 Nouvelle demande n°${id}`,
       `👤 ${d.nom}`, `📞 ${d.tel}`, `✉️ ${d.email}`,
-      d.type ? `🎉 ${d.type}${d.date_event ? ' · ' + d.date_event : ''}` : (d.date_event ? `📅 ${d.date_event}` : ''),
+      d.type ? `🎉 ${d.type}${d.date_event ? ' · ' + d.date_event : ''}${d.moment ? ' · ' + d.moment : ''}` : (d.date_event ? `📅 ${d.date_event}${d.moment ? ' · ' + d.moment : ''}` : ''),
       d.convives ? `👥 ${d.convives} convives` : '', d.lieu ? `📍 ${d.lieu}` : '',
       d.message ? `\n${d.message.slice(0, 500)}` : '',
       `\nVoir dans l'admin : ${new URL(request.url).origin}/admin`,

@@ -13,6 +13,7 @@
 //   PUT    /api/admin/reglages              { prix_burger, prix_menu_frites, prix_menu_complet, prix_frites, bandeau }
 //   GET    /api/admin/demandes              liste des demandes (200 dernières)
 //   PUT    /api/admin/demandes/:id          { statut }
+//   DELETE /api/admin/demandes/:id
 
 import { json, loadState, computeTonight, slugify } from '../../_lib.js';
 
@@ -157,6 +158,10 @@ export async function onRequest({ request, env, params }) {
   if (m && method === 'PUT') {
     const statut = ['nouveau', 'repondu', 'signe', 'perdu'].includes(body.statut) ? body.statut : 'nouveau';
     await env.DB.prepare('UPDATE demandes SET statut = ? WHERE id = ?').bind(statut, Number(m[1])).run();
+    return json({ ok: true });
+  }
+  if (m && method === 'DELETE') {
+    await env.DB.prepare('DELETE FROM demandes WHERE id = ?').bind(Number(m[1])).run();
     return json({ ok: true });
   }
 

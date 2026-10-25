@@ -17,7 +17,7 @@
 <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Rubik:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Rubik:wght@400;500;700&display=swap">
 <link rel="stylesheet" href="/assets/site.css">
 <!-- Google Tag Manager -->
 <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-N2TH4HN4');</script>
@@ -75,7 +75,7 @@
 <!-- End Google Tag Manager (noscript) -->
 
 <!--#nav-->
-<header class="nav">
+<header class="nav" id="nav">
   <div class="wrap">
     <a class="brand" href="/"><span class="brand__bun" aria-hidden="true"></span>L'Arrêt Gourmand</a>
     <ul class="nav__links">
@@ -87,8 +87,20 @@
     <div class="nav__right">
       <a class="pill" id="navPill" href="/#emplacements"><i aria-hidden="true"></i><span id="navPillText">Mardi à samedi, de 19h à 20h30</span></a>
       <button class="btn btn--primary" type="button" data-open-contact>Demande de contact</button>
+      <button class="nav__burger" type="button" id="navBurger" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="navPanel"><span></span></button>
     </div>
   </div>
+  <nav class="nav__panel" id="navPanel" aria-label="Navigation">
+    <div class="wrap">
+      <a class="lnk" href="/#menu">Menu</a>
+      <a class="lnk" href="/#tarifs">Tarifs</a>
+      <a class="lnk" href="/#emplacements">Nos emplacements</a>
+      <a class="lnk" href="/#privatisation">Privatisation</a>
+      <a class="lnk" href="/food-truck-traiteur">Food-Truck Traiteur</a>
+      <a class="pill" href="/#emplacements"><i aria-hidden="true"></i><span data-pill-copy>Mardi à samedi, de 19h à 20h30</span></a>
+      <button class="btn btn--primary" type="button" data-open-contact>Demande de contact</button>
+    </div>
+  </nav>
 </header>
 <!--/nav-->
 
@@ -266,9 +278,13 @@
 
   <section class="band band--ketchup priv" id="privatisation">
     <div class="wrap">
-      <div>
+      <div class="section-head">
         <h2>Privatisation de votre Food-Truck Burger dans les Yvelines (78)</h2>
-        <div class="stack" style="margin-top:22px">
+        <p class="lede">Mariage, anniversaire, réception à domicile, repas d'entreprise : un service traiteur original et convivial.</p>
+      </div>
+      <div class="priv__grid">
+      <div>
+        <div class="stack">
           <p><b>L'Arrêt Gourmand</b> vous propose un service <b>traiteur</b> original et convivial pour tous vos <b>événements privés et professionnels</b>. Que vous organisiez un <b>mariage</b>, un <b>anniversaire</b>, une <b>réception à domicile</b> ou un <b>repas d'entreprise</b>, notre food truck apporte une touche de gourmandise nomade à votre fête.</p>
           <p><b>Zone d'intervention :</b> Basé dans les <a href="https://www.destination-yvelines.fr/restaurants/food-truck-larret-gourmand/" target="_blank" rel="noopener"><b>Yvelines</b></a>, notre food truck se déplace également dans les départements limitrophes : Eure (27), Val-d'Oise (95), Hauts-de-Seine (92), Oise (60) et partout à Paris.</p>
           <p>Pour toute demande de <b>location du food truck</b>, merci de remplir le formulaire en cliquant sur le bouton ci-dessous. Nous vous répondrons rapidement avec une proposition adaptée à votre événement.</p>
@@ -289,14 +305,17 @@
         <div><h3>Efficacité</h3><p>Un service rapide et efficace afin que vos convives puissent tous déguster leurs burgers sans trop d'attente</p></div>
         <div><h3>100% Satisfait</h3><p>Plusieurs centaines de privatisations depuis 12 ans, notre expérience est à votre service</p></div>
       </div>
+      </div>
     </div>
   </section>
 
   <section class="band band--kraft" id="apropos">
     <div class="wrap">
+      <div class="section-head">
+        <h2>L'Arrêt Gourmand : votre Food‑Truck de burgers dans les Yvelines (78)</h2>
+      </div>
       <div class="about">
         <div>
-          <h2 style="margin-bottom:22px">L'Arrêt Gourmand : votre Food‑Truck de burgers dans les Yvelines (78)</h2>
           <div class="prose">
             <p>Depuis 2014, <b>L'Arrêt Gourmand</b>, food truck de burgers artisanaux dans les <a href="https://www.destination-yvelines.fr/restaurants/food-truck-larret-gourmand/" target="_blank" rel="noopener">Yvelines</a>, sillonne les routes des Yvelines pour offrir une véritable alternative à la restauration rapide industrielle. Notre mission ? Proposer une expérience gastronomique nomade où le goût, le savoir-faire et la convivialité sont au rendez-vous à chaque escale.</p>
             <p>Au-delà de nos emplacements quotidiens, nous mettons notre expertise au service de vos plus beaux moments. <b>Privatisez notre food truck pour un <a href="https://www.mariages.net/food-truck/larret-gourmand--e128298" target="_blank" rel="noopener">mariage</a></b> original et convivial : du vin d'honneur au brunch du lendemain, nous régalons vos invités avec une touche street-food gourmet. Pour vos <b>fêtes d'anniversaire</b>, surprenez vos proches avec une animation culinaire unique directement à votre domicile.</p>
@@ -377,8 +396,8 @@
       <h2 id="contactTitle">Contact / Privatisations</h2>
       <button class="x" type="button" data-close-contact aria-label="Fermer">×</button>
     </div>
-    <p class="lede">Nous vous contacterons par mail ou téléphone dans les plus brefs délais. Ou par téléphone au <a class="tel" href="tel:0782549829">07 82 54 98 29</a>.</p>
     <form class="form" id="contactForm" novalidate>
+      <p class="lede">Nous vous contacterons par mail ou téléphone dans les plus brefs délais.</p>
       <h3>Coordonnées :</h3>
       <div class="row">
         <label class="field"><span>Nom</span><input id="f-nom" name="nom" type="text" autocomplete="name" required></label>
@@ -395,10 +414,15 @@
         <label class="field"><span>Date souhaitée</span><input id="f-date" name="date" type="date"></label>
       </div>
       <div class="row">
+        <label class="field"><span>Déjeuner ou dîner ?</span>
+          <select id="f-moment" name="moment">
+            <option value="">Je ne sais pas encore</option><option>Déjeuner</option><option>Dîner</option><option>Déjeuner et dîner</option><option>Brunch</option>
+          </select>
+        </label>
         <label class="field"><span>Nombre de convives</span><input id="f-nb" name="convives" type="number" min="1" inputmode="numeric"></label>
-        <label class="field"><span>Lieu (ville)</span><input id="f-lieu" name="lieu" type="text"></label>
       </div>
-      <label class="field"><span>Votre message</span><textarea id="f-msg" name="message"></textarea></label>
+      <label class="field"><span>Lieu (ville)</span><input id="f-lieu" name="lieu" type="text"></label>
+      <label class="field"><span>Précisions</span><textarea id="f-msg" name="message" placeholder="Apportez vos précisions : horaires souhaités, nombre de burgers estimé, contraintes du lieu, envies particulières…"></textarea></label>
       <!-- piège à robots : laissé vide par les humains -->
       <input type="text" name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px" aria-hidden="true">
       <!-- Anti-spam Turnstile (optionnel) : décommenter et mettre la clé de site
@@ -410,6 +434,13 @@
         <p class="status" id="formStatus" role="status"></p>
       </div>
     </form>
+    <div class="sent" id="formSent" hidden>
+      <div class="sent__check" aria-hidden="true">✓</div>
+      <h3>Demande envoyée, merci !</h3>
+      <p>Nous vous contacterons par mail ou téléphone dans les plus brefs délais.</p>
+      <p class="sent__urgent">Votre demande est urgente ? Vous pouvez nous joindre directement au <a class="tel" href="tel:0683827149">06 83 82 71 49</a>.</p>
+      <button class="btn btn--ghost" type="button" data-close-contact>Fermer</button>
+    </div>
   </div>
 </dialog>
 <!--/dialog-->
