@@ -54,6 +54,8 @@ section.is-on{display:block}
 .btn.ghost{background:transparent}
 .btn.danger{background:transparent;color:#F5A097;border-color:#8a4a42}
 .btn:disabled{opacity:.5;cursor:default}
+.btn.done{background:var(--mesclun)!important;border-color:var(--mesclun)!important;color:#1c2a12!important}
+.btn.busy{opacity:.7;pointer-events:none}
 .btn.sm{padding:7px 12px;font-size:.88rem}
 label.f{display:grid;gap:5px;font-size:.86rem;color:var(--creme-2);min-width:0}
 input,select,textarea{font:inherit;color:var(--creme);background:var(--brun);border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:100%;min-width:0}
@@ -268,7 +270,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
       <h2 style="margin-top:28px">Modèle d'e-mail de devis<small>Variables : {date} {moment} {nom} {convives} {lieu} {numero}</small></h2>
       <div class="card" style="display:grid;gap:12px">
         <label class="f">Objet<input id="r_email_objet" type="text" maxlength="200"></label>
-        <label class="f">Corps<textarea id="r_email_corps" rows="12" maxlength="4000"></textarea></label>
+        <label class="f">Corps<textarea id="r_email_corps" rows="12" maxlength="4000"></textarea><span class="muted">Entourez un passage de ** pour le mettre en gras.</span></label>
         <div class="grid">
           <label class="f">E-mail affiché sur le devis<input id="r_contact_email" type="email" maxlength="160"></label>
           <label class="f">Tarif du kilomètre (€)<input id="r_km_tarif" type="number" step="0.1" min="0"></label>
@@ -317,7 +319,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
         </div>
         <h3 class="sub">E-mail d'accompagnement</h3>
         <label class="f">Objet<input id="dv_email_objet" type="text"></label>
-        <label class="f">Message<textarea id="dv_email_corps" rows="10"></textarea></label>
+        <label class="f">Message<textarea id="dv_email_corps" rows="10"></textarea><span class="muted">Entourez un passage de ** pour le mettre en gras : **comme ceci**. Le gras est conservé à l'envoi et à la copie.</span></label>
         <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn sm" type="button" id="dvRegen">Régénérer depuis le modèle</button></div>
         <div class="row" style="border-top:1px solid var(--line);padding-top:14px">
           <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -326,6 +328,10 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
             <button class="btn" type="button" id="dvCopy">Copier l'e-mail</button>
             <a class="btn" id="dvMailto" href="#" target="_blank" rel="noopener">Ouvrir dans Mail</a>
             <button class="btn primary" type="button" id="dvSend">Envoyer par e-mail avec le PDF</button>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;width:100%">
+            <button class="btn sm" type="button" data-agenda="devis" data-kind="google">📅 Ajouter à Google Agenda</button>
+            <button class="btn sm" type="button" data-agenda="devis" data-kind="ics">📅 Fichier agenda (.ics)</button>
           </div>
           <button class="btn danger sm" type="button" id="dvDelete">Supprimer</button>
         </div>
@@ -359,7 +365,9 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
   function dateHeure(sql){try{var d=new Date(sql.replace(' ','T')+'Z');return d.toLocaleString('fr-FR',{timeZone:'Europe/Paris',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}).replace(',',' à');}catch(e){return sql;}}
   function dateFr(iso){var p=iso.split('-');var d=new Date(Date.UTC(+p[0],+p[1]-1,+p[2]));return JOURS[d.getUTCDay()].toLowerCase()+' '+(+p[2])+'/'+p[1]+'/'+p[0];}
   var toastT;
-  function toast(msg,err){var t=$('#toast');t.textContent=msg;t.className='toast is-on'+(err?' err':'');clearTimeout(toastT);toastT=setTimeout(function(){t.className='toast';},2200);}
+  function toast(msg,err){var t=$('#toast');var host=document.querySelector('dialog[open]')||document.body;if(t.parentNode!==host)host.appendChild(t);t.textContent=msg;t.className='toast is-on'+(err?' err':'');clearTimeout(toastT);toastT=setTimeout(function(){t.className='toast';},2600);}
+  // le bouton lui-même confirme l'action pendant 1,5 s
+  function flash(btn,label){if(!btn)return;var old=btn.dataset.label||btn.textContent;btn.dataset.label=old;btn.classList.add('done');btn.textContent=label||'Fait ✓';setTimeout(function(){btn.classList.remove('done');btn.textContent=old;},1500);}
 
   function fallbackCopy(t){var ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');}catch(e){}document.body.removeChild(ta);}
   function api(path,opts){
@@ -465,6 +473,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
         '<div class="actions"><a class="btn sm" href="tel:'+esc(d.tel)+'">📞 '+esc(d.tel)+'</a><button class="copy" type="button" data-copy="'+esc(d.tel)+'" title="Copier le numéro" aria-label="Copier le numéro">⧉</button><a class="btn sm" href="mailto:'+esc(d.email)+'">✉️ '+esc(d.email)+'</a><button class="copy" type="button" data-copy="'+esc(d.email)+'" title="Copier l\'email" aria-label="Copier l\'email">⧉</button><span class="spacer"></span>'+
         '<select data-statut="'+d.id+'">'+Object.keys(libel).map(function(k){return '<option value="'+k+'"'+(d.statut===k?' selected':'')+'>'+libel[k]+'</option>';}).join('')+'</select>'+
         '<button class="btn sm danger" data-del="'+d.id+'" type="button">Supprimer</button></div>'+
+        (d.date_event?'<div class="actions"><button class="btn sm ghost" type="button" data-agenda="'+d.id+'" data-kind="google">📅 Google Agenda</button><button class="btn sm ghost" type="button" data-agenda="'+d.id+'" data-kind="ics">📅 .ics</button></div>':'')+
         '<div class="actions">'+(function(){var dv=devisForDemande(d.id);return dv.length?dv.map(function(x){return '<button class="btn sm" data-opendevis="'+x.id+'" type="button">Devis n°'+esc(x.numero)+' · '+eur(x.total_ttc)+' <span class="tag s-'+esc(x.statut)+'">'+STATUTS[x.statut]+'</span></button>';}).join('')+'<button class="btn sm ghost" data-mkdevis="'+d.id+'" type="button">+ Autre devis</button>':'<button class="btn sm primary" data-mkdevis="'+d.id+'" type="button">Préparer le devis</button>';})()+'</div></div>';
     }).join(''):'<p class="empty">'+(filter==='nouveau'?'Aucune nouvelle demande.':filter==='encours'?'Aucune demande en cours.':'Aucune demande pour le moment.')+'</p>';
   }
@@ -566,7 +575,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
   function renderTotals(){
     var t=computeTotals(curDevis.lignes||[],$('#dv_mode').value);
     $('#dvTotals').innerHTML='<span>Total HT</span><span>'+eur(t.ht)+'</span><span>TVA 10 %</span><span>'+eur(t.tva)+'</span><span>Total TTC</span><b>'+eur(t.ttc)+'</b><span>Arrhes 30 %</span><span>'+eur(t.arrhes)+'</span><span>Montant restant</span><span>'+eur(t.reste)+'</span>';
-    $('#dvMailto').href='mailto:'+encodeURIComponent($('#dv_client_email').value)+'?subject='+encodeURIComponent($('#dv_email_objet').value)+'&body='+encodeURIComponent($('#dv_email_corps').value);
+    $('#dvMailto').href='mailto:'+encodeURIComponent($('#dv_client_email').value)+'?subject='+encodeURIComponent($('#dv_email_objet').value)+'&body='+encodeURIComponent(emailPlain($('#dv_email_corps').value));
   }
   function collectDevis(){
     var intro=[];for(var i=0;i<5;i++)intro.push($('#dv_i'+i).value);
@@ -584,7 +593,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
   $('#dv_mode').addEventListener('change',renderTotals);
   ['dv_client_email','dv_email_objet','dv_email_corps'].forEach(function(id){$('#'+id).addEventListener('input',renderTotals);});
   $('#dvClose').addEventListener('click',function(){ddlg.close();});
-  $('#dvSave').addEventListener('click',function(){saveDevis().catch(function(e){toast(e.message,true);});});
+  $('#dvSave').addEventListener('click',function(){var b=this;b.classList.add('busy');saveDevis().then(function(){flash(b,'Enregistré ✓');}).catch(function(e){toast(e.message,true);}).finally(function(){b.classList.remove('busy');});});
   $('#dvDelete').addEventListener('click',function(){
     if(this.dataset.confirm!=='1'){this.dataset.confirm='1';this.textContent='Confirmer la suppression';return;}
     api('devis/'+curDevis.id,{method:'DELETE'}).then(function(){toast('Devis supprimé');ddlg.close();return loadDevis();}).catch(function(e){toast(e.message,true);});
@@ -604,10 +613,19 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
     var moments={'Déjeuner / Brunch':'à midi','Dîner':'le soir','Deuxième partie de soirée (21h+)':'en deuxième partie de soirée (21h+)'};
     var v={date:dateFr(curDevis.event_date||''),moment:moments[curDevis.event_moment]||'',nom:$('#dv_client_nom').value,convives:(curDevis.lignes[0]&&curDevis.lignes[0].qte)||'',lieu:$('#dv_i4').value,numero:curDevis.numero};
     var fill=function(t){return String(t||'').replace(/\{(\w+)\}/g,function(m,k){return v[k]!==undefined?v[k]:'';}).replace(/  +/g,' ');};
-    $('#dv_email_objet').value=fill(state.devis_reglages.email_objet);$('#dv_email_corps').value=fill(state.devis_reglages.email_corps);renderTotals();
+    $('#dv_email_objet').value=fill(state.devis_reglages.email_objet);$('#dv_email_corps').value=fill(state.devis_reglages.email_corps);renderTotals();flash(this,'Régénéré ✓');
   });
-  $('#dvCopy').addEventListener('click',function(){var t='Objet : '+$('#dv_email_objet').value+'\n\n'+$('#dv_email_corps').value;if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(function(){toast('E-mail copié');}).catch(function(){fallbackCopy(t);toast('E-mail copié');});}else{fallbackCopy(t);toast('E-mail copié');}});
-  $('#dvPdf').addEventListener('click',function(){saveDevis().then(function(d){return buildPdf(d);}).then(function(doc){var name='Devis-'+curDevis.numero+'-L-Arret-Gourmand.pdf';try{doc.save(name);}catch(e){window.open(doc.output('bloburl'),'_blank');}}).catch(function(e){toast(e.message,true);});});
+  function emailPlain(t){return String(t||'').replace(/\*\*(.+?)\*\*/g,'$1');}
+  function emailHtml(t){return '<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.55;color:#222">'+String(t||'').split(/\n\s*\n/).map(function(p){return p.trim()?'<p style="margin:0 0 1em">'+esc(p).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>')+'</p>':'';}).join('')+'</div>';}
+  $('#dvCopy').addEventListener('click',function(){
+    var btn=this,corps=$('#dv_email_corps').value,plain=emailPlain(corps),html=emailHtml(corps);
+    var done=function(){toast('E-mail copié (le gras est conservé en le collant dans votre messagerie)');flash(btn,'Copié ✓');};
+    if(navigator.clipboard&&window.ClipboardItem){
+      navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([html],{type:'text/html'}),'text/plain':new Blob([plain],{type:'text/plain'})})]).then(done).catch(function(){fallbackCopy(plain);done();});
+    }else if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(plain).then(done).catch(function(){fallbackCopy(plain);done();});}
+    else{fallbackCopy(plain);done();}
+  });
+  $('#dvPdf').addEventListener('click',function(){var b=this;b.classList.add('busy');saveDevis().then(function(d){return buildPdf(d);}).then(function(doc){var name='Devis-'+curDevis.numero+'-L-Arret-Gourmand.pdf';try{doc.save(name);}catch(e){window.open(doc.output('bloburl'),'_blank');}toast('PDF '+name+' généré');flash(b,'PDF prêt ✓');}).catch(function(e){toast(e.message,true);}).finally(function(){b.classList.remove('busy');});});
   $('#dvSend').addEventListener('click',function(){
     var btn=this;if(!$('#dv_client_email').value){toast('E-mail du client manquant',true);return;}
     btn.disabled=true;btn.textContent='Envoi…';
@@ -620,6 +638,31 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
     var b=e.target.closest('button');if(!b)return;
     if(b.dataset.opendevis){var d=devisList.filter(function(x){return x.id===+b.dataset.opendevis;})[0];if(d)openDevis(d);}
     if(b.dataset.mkdevis){api('devis',{method:'POST',body:{demande_id:+b.dataset.mkdevis}}).then(function(r){return loadDevis().then(function(){openDevis(r.devis);});}).catch(function(err){toast(err.message,true);});}
+  });
+
+  // ---- Agenda : créneau selon le moment, titre et détails pré-remplis
+  var CRENEAUX={'Déjeuner / Brunch':['11:00','15:00'],'Dîner':['18:00','22:30'],'Deuxième partie de soirée (21h+)':['21:00','23:59']};
+  function agendaEvent(o){ // o : {date, moment, nom, convives, lieu, tel, email, numero, total, message}
+    var cr=CRENEAUX[o.moment]||['11:00','15:00'];
+    var d=(o.date||'').replace(/-/g,'');if(d.length!==8)return null;
+    var fmt=function(h){return d+'T'+h.replace(':','')+'00';};
+    var titre='Privatisation – '+(o.nom||'')+(o.convives?' ('+o.convives+' pers.)':'');
+    var det=['Food truck L\'Arrêt Gourmand',o.moment?'Moment : '+o.moment:'',o.numero?'Devis n°'+o.numero+(o.total?' · '+eur(o.total):''):'',o.tel?'Tél : '+o.tel:'',o.email?'E-mail : '+o.email:'',o.message?'\n'+o.message:''].filter(Boolean).join('\n');
+    return {titre:titre,debut:fmt(cr[0]),fin:fmt(cr[1]),lieu:o.lieu||'',details:det};
+  }
+  function googleCalUrl(ev){return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent(ev.titre)+'&dates='+ev.debut+'/'+ev.fin+'&ctz=Europe/Paris&details='+encodeURIComponent(ev.details)+'&location='+encodeURIComponent(ev.lieu);}
+  function downloadIcs(ev){
+    var esc2=function(t){return String(t).replace(/\\/g,'\\\\').replace(/\n/g,'\\n').replace(/,/g,'\\,').replace(/;/g,'\\;');};
+    var ics=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//L Arret Gourmand//Admin//FR','BEGIN:VEVENT','UID:'+Date.now()+'@larretgourmand.com','DTSTAMP:'+new Date().toISOString().replace(/[-:]/g,'').slice(0,15)+'Z','DTSTART;TZID=Europe/Paris:'+ev.debut,'DTEND;TZID=Europe/Paris:'+ev.fin,'SUMMARY:'+esc2(ev.titre),'LOCATION:'+esc2(ev.lieu),'DESCRIPTION:'+esc2(ev.details),'END:VEVENT','END:VCALENDAR'].join('\r\n');
+    var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([ics],{type:'text/calendar'}));a.download='privatisation-'+ev.debut.slice(0,8)+'.ics';document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},1000);
+  }
+  document.addEventListener('click',function(e){
+    var b=e.target.closest('[data-agenda]');if(!b)return;
+    var src=b.dataset.agenda,ev=null;
+    if(src==='devis'&&curDevis){var intro=[];for(var i=0;i<5;i++)intro.push($('#dv_i'+i).value);var t=computeTotals(curDevis.lignes||[],$('#dv_mode').value);ev=agendaEvent({date:curDevis.event_date,moment:curDevis.event_moment,nom:$('#dv_client_nom').value,convives:(curDevis.lignes[0]&&curDevis.lignes[0].qte)||'',lieu:intro[4],tel:$('#dv_client_tel').value,email:$('#dv_client_email').value,numero:curDevis.numero,total:t.ttc,message:intro.slice(0,4).filter(Boolean).join(' · ')});}
+    else{var d=demandes.filter(function(x){return x.id===+src;})[0];if(d)ev=agendaEvent({date:d.date_event,moment:d.moment,nom:d.nom,convives:d.convives,lieu:d.lieu,tel:d.tel,email:d.email,message:d.message});}
+    if(!ev){toast('Date de l\'événement manquante',true);return;}
+    if(b.dataset.kind==='ics'){downloadIcs(ev);flash(b,'Téléchargé ✓');}else{window.open(googleCalUrl(ev),'_blank','noopener');flash(b,'Ouvert ✓');}
   });
 
   // ---- PDF fidèle au modèle Excel (A4, Helvetica)

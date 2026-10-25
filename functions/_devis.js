@@ -51,15 +51,20 @@ export async function distanceKm(adresse) {
   return { km: Math.round(route.routes[0].distance / 1000), lieu: display_name };
 }
 
+// Le corps de l'e-mail accepte **texte en gras** ; version HTML pour l'envoi, version texte sans les marqueurs
+const escHtml = (t) => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+export const emailPlain = (t) => String(t || '').replace(/\*\*(.+?)\*\*/g, '$1');
+export const emailHtml = (t) => `<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.55;color:#222">${String(t || '').split(/\n\s*\n/).map((para) => para.trim() ? `<p style="margin:0 0 1em">${escHtml(para).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>')}</p>` : '').join('')}</div>`;
+
 // Envoi du devis par e-mail (Resend) avec le PDF en pièce jointe (base64 fourni par l'admin)
 export async function sendDevisEmail(env, devis, pdfBase64, fromName) {
   if (!env.RESEND_API_KEY || !env.MAIL_FROM) return { ok: false, error: 'Envoi d\'e-mails non configuré (RESEND_API_KEY / MAIL_FROM).' };
   if (!devis.client_email) return { ok: false, error: 'Pas d\'adresse e-mail client.' };
-  const html = `<div style="font-family:sans-serif;font-size:15px;line-height:1.55;color:#222">${String(devis.email_corps || '').split('\n').map((l) => l.trim() ? `<p style="margin:0 0 1em">${l.replace(/&/g, '&amp;').replace(/</g, '&lt;')}</p>` : '').join('')}</div>`;
+  const html = emailHtml(devis.email_corps);
   const payload = {
     from: env.MAIL_FROM, to: [devis.client_email], reply_to: env.MAIL_TO ? env.MAIL_TO.split(',')[0].trim() : undefined,
     subject: devis.email_objet || `Votre devis L'Arrêt Gourmand`,
-    text: devis.email_corps || '', html,
+    text: emailPlain(devis.email_corps), html,
     attachments: [{ filename: `Devis-${devis.numero}-L-Arret-Gourmand.pdf`, content: pdfBase64 }],
   };
   if (env.MAIL_TO) payload.bcc = env.MAIL_TO.split(',').map((s) => s.trim()); // copie pour toi

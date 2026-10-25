@@ -100,7 +100,7 @@ export const STATEMENTS = [
 
 Nous vous remercions de l''intérêt que vous portez à nos services. Nous sommes encore disponibles à cette date, vous trouverez ci-joint un devis pour une prestation le {date} {moment}.
 
-Pour rappel, tous nos burgers sont préparés avec des steaks charolais de 150g, des pains boulangers et des fromages de qualité, et servis avec des frites maison. Nous pourrons également nous adapter pour des demandes VG ou Halal si besoin.
+**Pour rappel, tous nos burgers sont préparés avec des steaks charolais de 150g, des pains boulangers et des fromages de qualité, et servis avec des frites maison.** Nous pourrons également nous adapter pour des demandes VG ou Halal si besoin.
 
 Si ce devis vous convient, n''hésitez pas à nous le confirmer par mail afin que nous puissions poser une option sur la date en attendant la réception des arrhes.
 
@@ -110,7 +110,7 @@ Cordialement,
 Sylvain'),
     ('devis_contact_email','contact@larretgalette.com'),
     ('devis_km_tarif',     '1'),
-    ('schema_version',     '4')`,
+    ('schema_version',     '5')`,
 ];
 
 // Crée les tables et les données de départ (sans toucher à ce qui existe déjà)
@@ -121,7 +121,7 @@ export async function ensureSchema(env) {
 
 // Mises à jour appliquées une seule fois sur une base déjà en ligne (numérotées, dans l'ordre).
 // Une base neuve reçoit directement le schéma complet ; une base existante rattrape les versions manquantes.
-export const SCHEMA_VERSION = 4;
+export const SCHEMA_VERSION = 5;
 export const MIGRATIONS = {
   1: ['ALTER TABLE demandes ADD COLUMN moment TEXT'],
   2: ['ALTER TABLE demandes ADD COLUMN adresse TEXT', 'ALTER TABLE demandes ADD COLUMN code_postal TEXT', 'ALTER TABLE demandes ADD COLUMN ville TEXT',
@@ -146,7 +146,7 @@ export const MIGRATIONS = {
 
 Nous vous remercions de l''intérêt que vous portez à nos services. Nous sommes encore disponibles à cette date, vous trouverez ci-joint un devis pour une prestation le {date} {moment}.
 
-Pour rappel, tous nos burgers sont préparés avec des steaks charolais de 150g, des pains boulangers et des fromages de qualité, et servis avec des frites maison. Nous pourrons également nous adapter pour des demandes VG ou Halal si besoin.
+**Pour rappel, tous nos burgers sont préparés avec des steaks charolais de 150g, des pains boulangers et des fromages de qualité, et servis avec des frites maison.** Nous pourrons également nous adapter pour des demandes VG ou Halal si besoin.
 
 Si ce devis vous convient, n''hésitez pas à nous le confirmer par mail afin que nous puissions poser une option sur la date en attendant la réception des arrhes.
 
@@ -154,6 +154,29 @@ Je reste à votre entière disposition pour toute question ou modification, par 
 
 Cordialement,
 Sylvain'),('devis_contact_email','contact@larretgalette.com'),('devis_km_tarif','1')`],
+  5: [`UPDATE reglages SET valeur = 'Bonjour,
+
+Nous vous remercions de l''intérêt que vous portez à nos services. Nous sommes encore disponibles à cette date, vous trouverez ci-joint un devis pour une prestation le {date} {moment}.
+
+**Pour rappel, tous nos burgers sont préparés avec des steaks charolais de 150g, des pains boulangers et des fromages de qualité, et servis avec des frites maison.** Nous pourrons également nous adapter pour des demandes VG ou Halal si besoin.
+
+Si ce devis vous convient, n''hésitez pas à nous le confirmer par mail afin que nous puissions poser une option sur la date en attendant la réception des arrhes.
+
+Je reste à votre entière disposition pour toute question ou modification, par mail ou par téléphone au 06 83 82 71 49.
+
+Cordialement,
+Sylvain' WHERE cle = 'devis_email_corps' AND valeur = 'Bonjour,
+
+Nous vous remercions de l''intérêt que vous portez à nos services. Nous sommes encore disponibles à cette date, vous trouverez ci-joint un devis pour une prestation le {date} {moment}.
+
+Pour rappel, tous nos burgers sont préparés avec des steaks charolais de 150g, des pains boulangers et des fromages de qualité, et servis avec des frites maison. Nous pourrons également nous adapter pour des demandes VG ou Halal si besoin.
+
+Si ce devis vous convient, n''hésitez pas à nous le confirmer par mail afin que nous puissions poser une option sur la date en attendant la réception des arrhes.
+
+Je reste à votre entière disposition pour toute question ou modification, par mail ou par téléphone au 06 83 82 71 49.
+
+Cordialement,
+Sylvain'`],
 };
 export async function applyMigrations(env, from = 0) {
   for (let v = from + 1; v <= SCHEMA_VERSION; v++) {
