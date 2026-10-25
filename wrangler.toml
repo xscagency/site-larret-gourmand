@@ -1,4 +1,4 @@
-name = "larret-gourmand"
+name = "site-larret-gourmand"
 compatibility_date = "2025-06-01"
 pages_build_output_dir = "public"
 
