@@ -148,12 +148,92 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
 /* agenda */
 .agm{margin:22px 0 10px;font:600 .8rem var(--body);letter-spacing:.12em;text-transform:uppercase;color:var(--cheddar)}
 .ag{display:grid;grid-template-columns:64px 1fr;gap:14px;border-left:4px solid var(--cheddar)}.ag.conf{border-left-color:var(--mesclun)}.ag.dem{border-left-color:var(--ketchup)}
-.ag .day{text-align:center;background:var(--brun);border-radius:12px;padding:8px 4px;align-self:start}.ag .day b{display:block;font:700 1.6rem/1 var(--title);color:var(--creme)}.ag .day span{display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--creme-3);margin-top:4px}
+.ag .day{text-align:center;background:var(--brun);border-radius:12px;padding:8px 4px;align-self:start}.ag .day b{display:block;font:400 1.6rem/1 var(--display);color:var(--creme)}.ag .day span{display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--creme-3);margin-top:4px}
 .ag .body{display:grid;gap:8px;min-width:0}.ag .in{color:var(--creme-3);font-size:.82rem}
 .ag .meta{display:flex;flex-wrap:wrap;gap:6px}.ag .meta span{background:var(--brun);border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:.84rem}
 .ag .msg{white-space:pre-wrap;background:var(--brun);border-radius:12px;padding:10px 12px;font-size:.9rem;line-height:1.45;color:var(--creme-2)}
 .ag .actions{display:flex;flex-wrap:wrap;gap:8px}
-@media (max-width:480px){.tabs button{padding:8px 11px;font-size:.86rem}h2{font-size:1.35rem}.card{padding:14px}}
+/* en-têtes de section : titre + bouton */
+.sec-head{margin-bottom:14px;align-items:end}
+/* demandes : coordonnées alignées */
+.demande .contact{display:grid;grid-template-columns:auto 34px auto 34px;gap:8px;align-items:center;justify-content:start}
+.demande .contact .btn{min-width:0;max-width:100%}
+.ell{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ---------- mobile ---------- */
+@media (max-width:640px){
+  /* en-tête compact, tout sur une ligne */
+  .top .wrap{min-height:56px;gap:8px}
+  .brand{gap:8px}
+  .brand__logo{width:34px;height:34px}
+  .brand h1{font-size:1.1rem}
+  .brand small{display:none}
+  .top .btn.sm{padding:6px 10px;font-size:.84rem}
+  /* onglets : deux rangées, tout visible, pas de défilement caché */
+  .tabs{flex-wrap:wrap;overflow:visible;border-radius:18px;gap:3px;padding:4px}
+  .tabs button{flex:1 1 auto;padding:8px 10px;font-size:.86rem}
+  .tabs button .n{margin-left:4px}
+  .state{padding:12px 14px;gap:12px;margin-top:12px}
+  .state small{font-size:.64rem}
+  h2{font-size:1.35rem}
+  .card{padding:14px}
+  section{padding-top:12px}
+  /* titre + bouton d'action : le bouton passe en pleine largeur sous le titre */
+  .sec-head{flex-direction:column;align-items:stretch;gap:10px}
+  .sec-head .btn{width:100%}
+  /* lignes de carte : le texte et l'interrupteur restent côte à côte */
+  .row{flex-wrap:nowrap}
+  .row>div:first-child{min-width:0;flex:1 1 auto}
+  .row>.sw,.row>.order{flex:none}
+  /* carte : actions d'une ligne, flèches à droite */
+  .bline{flex:1 1 auto}
+  .bline .name{font-size:.98rem}
+  .thumb{width:56px;height:56px}
+  .order button{width:40px;height:40px}
+  /* champs : étiquette et saisie numérique côte à côte, lisible d'un coup d'œil */
+  .grid{grid-template-columns:1fr;gap:10px}
+  #tab-tarifs label.f{grid-template-columns:1fr 104px;align-items:center;gap:12px;padding:6px 0;border-bottom:1px dashed var(--line)}
+  #tab-tarifs .grid label.f:last-child{border-bottom:0}
+  #tab-tarifs input[type=number]{width:100%;text-align:right}
+  #supplements .row{padding-block:4px}
+  #supplements input[type=number]{width:90px;text-align:right}
+  /* boutons d'action : ils se partagent la largeur, alignés */
+  .demande .actions,.ag .actions{display:flex;gap:8px}
+  .demande .actions .btn,.ag .actions .btn{flex:1 1 calc(50% - 4px);justify-content:center;min-width:0;white-space:nowrap}
+  .demande .actions select{flex:1 1 100%;width:auto;min-width:0}
+  .demande .actions--devis .btn{flex:1 1 100%}
+  .demande .contact{grid-template-columns:minmax(0,1fr) 34px}
+  .demande .contact .btn{width:100%;justify-content:flex-start}
+  .demande .head .name{font-size:1rem}
+  .ag{grid-template-columns:52px 1fr;gap:12px}
+  .ag .day{padding:6px 2px}.ag .day b{font-size:1.4rem}
+  .ag .actions .btn[data-opendevis]{flex:1 1 100%}
+  /* emplacements : formulaire de modification sur une colonne */
+  details .grid{grid-template-columns:1fr}
+  /* fenêtres : plein écran calées en haut, stables avec le clavier */
+  dialog{width:100%;height:100vh;height:100dvh;max-height:none;margin:0;inset:0;overflow:hidden}
+  dialog>.card,dialog>form.card{width:100%!important;height:100%;max-height:none;max-width:none;border-radius:0;border:0;overflow:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:16px 16px calc(28px + env(safe-area-inset-bottom,0px))}
+  .sheet{max-width:none;max-height:none}
+  .sheet .row>div{flex-wrap:wrap}
+  .sheet .row:not(:first-child),#burgerForm .row:not(:first-child){flex-wrap:wrap}
+  .sheet .grid{grid-template-columns:1fr}
+  .sheet>.row:first-child,#burgerForm>.row:first-child{position:sticky;top:-16px;z-index:3;margin:-16px -16px 4px;padding:12px 16px;background:var(--brun-2);border-bottom:1px solid var(--line)}
+  .sheet>.row:first-child h2,#burgerForm>.row:first-child h2{font-size:1.1rem}
+  #dvSub{font-size:.76rem}
+  .sheet>.row:first-child>div{flex-wrap:nowrap}
+  #dvStatut{max-width:132px;padding-right:28px}
+  .photoPick{display:grid;grid-template-columns:120px 1fr;gap:12px;align-items:center}
+  .photoPick img,.photoPick__empty{width:120px;height:120px}
+  .photoPick .btn{margin-top:0!important}
+  .photoPick .muted{display:block;margin:6px 0 0!important;grid-column:1/-1}
+  /* rangées de boutons dans les fenêtres : pleine largeur, 2 par ligne */
+  .sheet .row>div .btn,.sheet .row>div .btn.sm{flex:1 1 calc(50% - 4px);justify-content:center;min-width:0;white-space:nowrap}
+  .sheet .row>div .btn.primary{flex-basis:100%}
+  #dvValider{flex-basis:100%}
+  #burgerForm>.row:last-of-type{flex-wrap:wrap}
+  #burgerForm>.row:last-of-type .btn{flex:1 1 auto;justify-content:center}
+}
+@media (max-width:400px){.tabs button{padding:8px 8px;font-size:.82rem}.top .btn.sm{padding:6px 8px}}
 </style>
 </head>
 <body>
@@ -194,7 +274,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
     <div class="state" title="Ce que les visiteurs voient en ce moment sur le site (service du soir / prochaine escale)"><span class="dot" id="stDot"></span><div><small>Affiché sur le site en ce moment</small><b id="stTitle">…</b><span id="stText"></span></div></div>
 
     <section id="tab-carte" class="is-on">
-      <div class="row" style="margin-bottom:14px;align-items:end"><h2 style="margin:0">La carte<small>Le premier de la liste est mis en avant sur le site</small></h2><button class="btn primary sm" id="addBurger" type="button">+ Ajouter un burger</button></div>
+      <div class="row sec-head"><h2 style="margin:0">La carte<small>Le premier de la liste est mis en avant sur le site</small></h2><button class="btn primary sm" id="addBurger" type="button">+ Ajouter un burger</button></div>
       <div id="burgers"></div>
       <p class="help">« Retiré » masque le burger sur le site. « Épuisé ce soir » le laisse visible avec la mention, jusqu'à minuit.</p>
     </section>
@@ -292,12 +372,12 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
     </section>
 
     <section id="tab-devis">
-      <div class="row" style="margin-bottom:14px;align-items:end"><h2 style="margin:0">Devis<small>Brouillons, envoyés, acceptés</small></h2><button class="btn primary sm" id="newDevis" type="button">+ Nouveau devis</button></div>
+      <div class="row sec-head"><h2 style="margin:0">Devis<small>Brouillons, envoyés, acceptés</small></h2><button class="btn primary sm" id="newDevis" type="button">+ Nouveau devis</button></div>
       <div id="devisList"></div>
     </section>
 
     <section id="tab-agenda">
-      <div class="row" style="margin-bottom:14px;align-items:end"><h2 style="margin:0">Agenda<small>Les privatisations à venir : devis envoyés, confirmées, demandes datées</small></h2></div>
+      <div class="row sec-head"><h2 style="margin:0">Agenda<small>Les privatisations à venir : devis envoyés, confirmées, demandes datées</small></h2></div>
       <div class="filters" id="agFilters"><button data-agf="all" class="is-on">Tout</button><button data-agf="conf">Confirmées (payées)</button><button data-agf="attente">En attente</button></div>
       <div id="agenda"></div>
     </section>
@@ -494,11 +574,11 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
         '<div class="head"><div><div class="name">'+esc(d.nom)+'</div><div class="muted">n°'+d.id+(d.page&&d.page!=='/'?' · via '+esc(d.page):'')+'</div></div><span class="when">'+esc(quand)+'</span></div>'+
         '<div class="meta">'+(d.type?'<span><b>'+esc(d.type)+'</b></span>':'')+(d.date_event?'<span>'+esc(d.date_event)+'</span>':'')+(d.moment?'<span>'+esc(d.moment)+'</span>':'')+(d.convives?'<span>'+esc(d.convives)+' convives</span>':'')+(d.lieu?'<span>📍 '+esc(d.lieu)+'</span>':'')+'</div>'+
         (d.message?'<div class="msg">'+esc(d.message)+'</div>':'')+
-        '<div class="actions"><a class="btn sm" href="tel:'+esc(d.tel)+'">📞 '+esc(d.tel)+'</a><button class="copy" type="button" data-copy="'+esc(d.tel)+'" title="Copier le numéro" aria-label="Copier le numéro">⧉</button><a class="btn sm" href="mailto:'+esc(d.email)+'">✉️ '+esc(d.email)+'</a><button class="copy" type="button" data-copy="'+esc(d.email)+'" title="Copier l\'email" aria-label="Copier l\'email">⧉</button><span class="spacer"></span>'+
-        '<select data-statut="'+d.id+'">'+Object.keys(libel).map(function(k){return '<option value="'+k+'"'+(d.statut===k?' selected':'')+'>'+libel[k]+'</option>';}).join('')+'</select>'+
+        '<div class="contact"><a class="btn sm" href="tel:'+esc(d.tel)+'"><span class="ell">📞 '+esc(d.tel)+'</span></a><button class="copy" type="button" data-copy="'+esc(d.tel)+'" title="Copier le numéro" aria-label="Copier le numéro">⧉</button><a class="btn sm" href="mailto:'+esc(d.email)+'"><span class="ell">✉️ '+esc(d.email)+'</span></a><button class="copy" type="button" data-copy="'+esc(d.email)+'" title="Copier l\'email" aria-label="Copier l\'email">⧉</button></div>'+
+        '<div class="actions"><select data-statut="'+d.id+'" aria-label="Statut">'+Object.keys(libel).map(function(k){return '<option value="'+k+'"'+(d.statut===k?' selected':'')+'>'+libel[k]+'</option>';}).join('')+'</select>'+
+        (d.date_event?'<button class="btn sm ghost" type="button" data-agenda="'+d.id+'" data-kind="google">📅 Google Agenda</button>':'')+
         '<button class="btn sm danger" data-del="'+d.id+'" type="button">Supprimer</button></div>'+
-        (d.date_event?'<div class="actions"><button class="btn sm ghost" type="button" data-agenda="'+d.id+'" data-kind="google">📅 Google Agenda</button></div>':'')+
-        '<div class="actions">'+(function(){var dv=devisForDemande(d.id);return dv.length?dv.map(function(x){return '<button class="btn sm" data-opendevis="'+x.id+'" type="button">Devis n°'+esc(x.numero)+' · '+eur(x.total_ttc)+' <span class="tag s-'+esc(x.statut)+'">'+STATUTS[x.statut]+'</span></button>';}).join('')+'<button class="btn sm ghost" data-mkdevis="'+d.id+'" type="button">+ Autre devis</button>':'<button class="btn sm primary" data-mkdevis="'+d.id+'" type="button">Préparer le devis</button>';})()+'</div></div>';
+        '<div class="actions actions--devis">'+(function(){var dv=devisForDemande(d.id);return dv.length?dv.map(function(x){return '<button class="btn sm" data-opendevis="'+x.id+'" type="button">Devis n°'+esc(x.numero)+' · '+eur(x.total_ttc)+' <span class="tag s-'+esc(x.statut)+'">'+STATUTS[x.statut]+'</span></button>';}).join('')+'<button class="btn sm ghost" data-mkdevis="'+d.id+'" type="button">+ Autre devis</button>':'<button class="btn sm primary" data-mkdevis="'+d.id+'" type="button">Préparer le devis</button>';})()+'</div></div>';
     }).join(''):'<p class="empty">'+(filter==='nouveau'?'Aucune nouvelle demande.':filter==='encours'?'Aucune demande en cours.':'Aucune demande pour le moment.')+'</p>';
   }
   $('#filters').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;filter=b.dataset.filter;renderDemandes();});
