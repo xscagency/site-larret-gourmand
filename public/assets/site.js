@@ -178,6 +178,81 @@
   }
 })();
 
+// ---------- Thème saisonnier : banderoles et décorations (fanions, guirlande de sapin, houx, toiles d'araignée, cocarde, herbe de Pâques…) ----------
+(function () {
+  var root = document.documentElement, theme = root.getAttribute('data-theme');
+  if (!theme) return;
+  var hero = document.querySelector('.hero, .page-hero'); if (!hero) return;
+  var svgUrl = function (s) { return 'url("data:image/svg+xml,' + encodeURIComponent(s) + '")'; };
+  // point sur l'arc de la corde (quadratique) : t de 0 à 1, largeur w, creux h
+  var pt = function (t, w, h) { return [2 * (1 - t) * t * (w / 2) + t * t * w, (1 - t) * (1 - t) * 8 + 2 * (1 - t) * t * h + t * t * 8]; };
+  var ang = function (t, w, h) { var a = pt(t - .01, w, h), b = pt(t + .01, w, h); return Math.atan2(b[1] - a[1], b[0] - a[0]) * 180 / Math.PI; };
+
+  // Une « vague » de banderole (tuile répétée horizontalement). kind : pennant | heart | egg | pine
+  function bunting(kind, colors) {
+    var w = 260, h = 60, items = '', rope = '<path d="M0 8 Q130 ' + (h + 8) + ' 260 8" fill="none" stroke="' + (kind === 'pine' ? '#1B5E20' : '#8B6B4E') + '" stroke-width="' + (kind === 'pine' ? 9 : 2) + '" stroke-linecap="round"/>';
+    if (kind === 'pine') rope += '<path d="M0 8 Q130 ' + (h + 8) + ' 260 8" fill="none" stroke="#43A047" stroke-width="6" stroke-dasharray="2 5" stroke-linecap="round"/>';
+    var ts = [.1, .3, .5, .7, .9];
+    for (var i = 0; i < ts.length; i++) {
+      var p = pt(ts[i], w, h), a = ang(ts[i], w, h), c = colors[i % colors.length], x = p[0].toFixed(1), y = p[1].toFixed(1);
+      var g = '<g transform="translate(' + x + ' ' + y + ') rotate(' + a.toFixed(1) + ')">';
+      if (kind === 'pennant') g += '<path d="M-15 0 L15 0 L0 36 Z" fill="' + c + '"/><path d="M-15 0 L15 0 L11 5 L-11 5 Z" fill="rgba(0,0,0,.12)"/>';
+      else if (kind === 'heart') g += '<path d="M0 30 C-16 18 -16 4 -7 3 C-3 3 -1 6 0 9 C1 6 3 3 7 3 C16 4 16 18 0 30Z" fill="' + c + '"/><line x1="0" y1="0" x2="0" y2="5" stroke="#8B6B4E" stroke-width="1.5"/>';
+      else if (kind === 'egg') g += '<line x1="0" y1="0" x2="0" y2="6" stroke="#8B6B4E" stroke-width="1.5"/><path d="M0 6 C-11 6 -14 22 -11 30 C-8 38 8 38 11 30 C14 22 11 6 0 6Z" fill="' + c + '"/><path d="M-9 18 Q0 14 9 18 M-10 24 Q0 28 10 24" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="2"/>';
+      else if (kind === 'pine') g += '<line x1="0" y1="0" x2="0" y2="8" stroke="#C9A24A" stroke-width="1.5"/><circle cx="0" cy="17" r="9" fill="' + c + '"/><circle cx="-3" cy="14" r="3" fill="rgba(255,255,255,.35)"/>';
+      items += g + '</g>';
+    }
+    return svgUrl('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + w + ' 100" width="' + w + '" height="100">' + rope + items + '</svg>');
+  }
+  // Toile d'araignée dans un coin (rayons + anneaux légèrement creusés)
+  function cobweb() {
+    var s = '', R = [22, 44, 66, 88, 110], A = [];
+    for (var a = 0; a <= 90; a += 15) A.push(a * Math.PI / 180);
+    for (var i = 0; i < A.length; i++) s += '<line x1="0" y1="0" x2="' + (Math.cos(A[i]) * 120).toFixed(1) + '" y2="' + (Math.sin(A[i]) * 120).toFixed(1) + '"/>';
+    for (var r = 0; r < R.length; r++) for (var j = 0; j < A.length - 1; j++) {
+      var p1 = [Math.cos(A[j]) * R[r], Math.sin(A[j]) * R[r]], p2 = [Math.cos(A[j + 1]) * R[r], Math.sin(A[j + 1]) * R[r]], m = (A[j] + A[j + 1]) / 2, cr = R[r] * .88;
+      s += '<path d="M' + p1[0].toFixed(1) + ' ' + p1[1].toFixed(1) + ' Q' + (Math.cos(m) * cr).toFixed(1) + ' ' + (Math.sin(m) * cr).toFixed(1) + ' ' + p2[0].toFixed(1) + ' ' + p2[1].toFixed(1) + '"/>';
+    }
+    return '<svg class="deco-web" viewBox="0 0 120 120" aria-hidden="true"><g fill="none" stroke="#EDE7F6" stroke-opacity=".55" stroke-width="1.1">' + s + '</g></svg>';
+  }
+  var SPIDER = '<div class="deco-spider" aria-hidden="true"><svg viewBox="0 0 40 40"><g stroke="#111" stroke-width="2" stroke-linecap="round" fill="none"><path d="M14 20 L4 12 M14 23 L3 22 M14 26 L5 33 M16 28 L10 38 M26 20 L36 12 M26 23 L37 22 M26 26 L35 33 M24 28 L30 38"/></g><ellipse cx="20" cy="24" rx="8" ry="10" fill="#161616"/><circle cx="20" cy="12" r="5" fill="#161616"/><circle cx="18" cy="11" r="1.2" fill="#F3AD3F"/><circle cx="22" cy="11" r="1.2" fill="#F3AD3F"/></svg></div>';
+  var HOLLY = '<svg class="deco-holly" viewBox="0 0 120 80" aria-hidden="true"><path d="M12 42 C22 8 54 8 60 36 C44 44 26 52 12 42Z" fill="#2E7D32"/><path d="M108 42 C98 8 66 8 60 36 C76 44 94 52 108 42Z" fill="#388E3C"/><path d="M60 36 C44 44 26 52 12 42" fill="none" stroke="#1B5E20" stroke-width="1.5"/><path d="M60 36 C76 44 94 52 108 42" fill="none" stroke="#1B5E20" stroke-width="1.5"/><circle cx="52" cy="46" r="7" fill="#D32F2F"/><circle cx="68" cy="47" r="7" fill="#C62828"/><circle cx="60" cy="58" r="7" fill="#E53935"/><circle cx="50" cy="43" r="2" fill="rgba(255,255,255,.5)"/></svg>';
+  var HAT = '<svg class="deco-hat" viewBox="0 0 64 52" aria-hidden="true"><path d="M8 40 C4 18 24 4 46 9 C38 14 40 24 54 30 L56 38 Z" fill="#D32F2F"/><path d="M4 36 h52 a6 6 0 0 1 0 12 h-52 a6 6 0 0 1 0 -12z" fill="#fff"/><circle cx="47" cy="9" r="6" fill="#fff"/></svg>';
+  var EARS = '<svg class="deco-ears" viewBox="0 0 64 60" aria-hidden="true"><path d="M18 58 C6 40 4 14 14 6 C24 -2 30 30 30 56Z" fill="#F5E6D3"/><path d="M19 52 C12 38 11 18 16 12 C21 8 25 32 25 52Z" fill="#F8BBD0"/><path d="M46 58 C58 40 60 14 50 6 C40 -2 34 30 34 56Z" fill="#F5E6D3"/><path d="M45 52 C52 38 53 18 48 12 C43 8 39 32 39 52Z" fill="#F8BBD0"/></svg>';
+  var COCARDE = '<svg class="deco-cocarde" viewBox="0 0 80 100" aria-hidden="true"><path d="M30 60 L18 98 L30 90 L40 98 Z" fill="#2457C5"/><path d="M50 60 L62 98 L50 90 L40 98 Z" fill="#E53935"/><circle cx="40" cy="40" r="36" fill="#2457C5"/><circle cx="40" cy="40" r="25" fill="#fff"/><circle cx="40" cy="40" r="13" fill="#E53935"/></svg>';
+  function grass() {
+    var s = '', i;
+    for (i = 0; i < 26; i++) { var x = 4 + i * 10 + (i % 3) * 2, hh = 18 + (i * 7) % 16; s += '<path d="M' + x + ' 46 Q' + (x + 3) + ' ' + (46 - hh / 2) + ' ' + (x + (i % 2 ? 6 : -4)) + ' ' + (46 - hh) + '" stroke="' + (i % 2 ? '#66BB6A' : '#43A047') + '" stroke-width="3" fill="none" stroke-linecap="round"/>'; }
+    [[40, '#F48FB1'], [120, '#FFF176'], [200, '#CE93D8']].forEach(function (f) { s += '<path d="M' + f[0] + ' 46 L' + f[0] + ' 24" stroke="#43A047" stroke-width="2.5"/><path d="M' + (f[0] - 7) + ' 26 L' + (f[0] - 7) + ' 14 Q' + f[0] + ' 20 ' + (f[0] + 7) + ' 14 L' + (f[0] + 7) + ' 26 Q' + f[0] + ' 32 ' + (f[0] - 7) + ' 26Z" fill="' + f[1] + '"/>'; });
+    return svgUrl('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 46" width="260" height="46">' + s + '</svg>');
+  }
+
+  var DECO = {
+    'noel': { bunting: bunting('pine', ['#E53935', '#F2C14E', '#E53935', '#43A047', '#F2C14E']), ribbon: 'Joyeuses fêtes !', hat: HAT, corner: HOLLY, snowcap: true },
+    'halloween': { bunting: bunting('pennant', ['#FF7A1A', '#1A1A1A', '#9C4DCC', '#FF7A1A', '#1A1A1A']), ribbon: 'Halloween au food-truck !', webs: true, spider: true },
+    'fete-nationale': { bunting: bunting('pennant', ['#2457C5', '#FFFFFF', '#E53935', '#2457C5', '#FFFFFF']), ribbon: 'Vive le 14 juillet !', corner: COCARDE },
+    'saint-valentin': { bunting: bunting('heart', ['#E53935', '#F48FB1', '#D81B60', '#F8A5C2', '#E53935']), ribbon: 'Avec amour ♥', corner: '<svg class="deco-hearts" viewBox="0 0 80 60" aria-hidden="true"><path d="M22 52 C0 36 2 14 14 13 C19 13 21 17 22 21 C23 17 25 13 30 13 C42 14 44 36 22 52Z" fill="#E53935"/><path d="M52 40 C36 28 38 12 46 12 C50 12 51 15 52 17 C53 15 54 12 58 12 C66 12 68 28 52 40Z" fill="#F48FB1"/><path d="M66 56 C56 48 57 38 62 38 C64 38 65 40 66 41 C67 40 68 38 70 38 C75 38 76 48 66 56Z" fill="#D81B60"/></svg>' },
+    'paques': { bunting: bunting('egg', ['#F48FB1', '#FFF176', '#A5D6A7', '#90CAF9', '#CE93D8']), ribbon: 'Joyeuses Pâques !', hat: EARS, grass: grass() }
+  };
+  var d = DECO[theme]; if (!d) return;
+
+  // banderole sous la guirlande
+  if (d.bunting) { var bt = document.createElement('div'); bt.className = 'deco-bunting'; bt.setAttribute('aria-hidden', 'true'); bt.style.backgroundImage = d.bunting; hero.appendChild(bt); }
+  if (d.snowcap) { var sc = document.createElement('div'); sc.className = 'deco-snowcap'; sc.setAttribute('aria-hidden', 'true'); hero.appendChild(sc); }
+  if (d.webs) { hero.insertAdjacentHTML('beforeend', '<div class="deco-webs" aria-hidden="true">' + cobweb() + cobweb() + '</div>'); }
+  if (d.spider) hero.insertAdjacentHTML('beforeend', SPIDER);
+  if (d.grass) { var gr = document.createElement('div'); gr.className = 'deco-grass'; gr.setAttribute('aria-hidden', 'true'); gr.style.backgroundImage = d.grass; hero.appendChild(gr); }
+  // ruban avec le mot de circonstance, au-dessus du titre
+  var kicker = hero.querySelector('.hero__kicker');
+  if (d.ribbon && kicker) { var rb = document.createElement('div'); rb.className = 'deco-ribbon'; rb.innerHTML = '<span>' + d.ribbon + '</span>'; kicker.parentNode.insertBefore(rb, kicker); }
+  // petite déco dans le coin de la carte « ce soir »
+  var card = document.querySelector('.hero .tonight');
+  if (d.corner && card) { card.classList.add('has-deco'); card.insertAdjacentHTML('beforeend', '<span class="deco-corner" aria-hidden="true">' + d.corner + '</span>'); }
+  // bonnet ou oreilles sur le logo de la barre de navigation
+  var logo = document.querySelector('.nav .brand .brand__logo');
+  if (d.hat && logo) { var wr = document.createElement('span'); wr.className = 'deco-logowrap'; logo.parentNode.insertBefore(wr, logo); wr.appendChild(logo); wr.insertAdjacentHTML('beforeend', d.hat); }
+})();
+
 // ---------- Thème saisonnier : particules (flocons, confettis, citrouilles, cœurs, poussins) ----------
 (function () {
   var root = document.documentElement, theme = root.getAttribute('data-theme');

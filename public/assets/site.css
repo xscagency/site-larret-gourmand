@@ -573,7 +573,6 @@ html.dlg-open body{position:fixed;left:0;right:0;width:100%}
 
 /* ---------- thèmes saisonniers (choisis dans l'admin : data-theme sur <html>) ---------- */
 .fx-canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:60}
-html[data-theme] .hero__kicker::before{content:var(--theme-kicker);margin-right:.35em}
 /* Noël : rouge et or, guirlande multicolore, flocons */
 html[data-theme=noel]{--ketchup:#C62828;--ketchup-2:#A51F1F;--cheddar:#F2C14E;--theme-kicker:"🎄 Joyeuses fêtes ·"}
 html[data-theme=noel] .lights .b:nth-child(3n) .h,html[data-theme=noel] .lights .b:nth-child(3n) ellipse{fill:#E53935}
@@ -601,3 +600,38 @@ html[data-theme=paques] .lights .b:nth-child(4n+1) .h,html[data-theme=paques] .l
 html[data-theme=paques] .lights .b:nth-child(4n+2) .h,html[data-theme=paques] .lights .b:nth-child(4n+2) ellipse{fill:#FFF59D}
 html[data-theme=paques] .lights .b:nth-child(4n+3) .h,html[data-theme=paques] .lights .b:nth-child(4n+3) ellipse{fill:#90CAF9}
 @media (prefers-reduced-motion:reduce){.fx-canvas{display:none}}
+
+/* ---------- décorations de thème (ajoutées par site.js) ---------- */
+.page-hero{position:relative;overflow:hidden;isolation:isolate}
+.page-hero>.wrap{position:relative;z-index:1}
+.deco-bunting{position:absolute;left:0;right:0;top:84px;height:100px;background-repeat:repeat-x;background-size:260px 100px;background-position:center top;pointer-events:none;z-index:1;filter:drop-shadow(0 6px 8px rgba(0,0,0,.35))}
+.page-hero .deco-bunting{top:0}
+.deco-snowcap{position:absolute;left:0;right:0;top:0;height:18px;pointer-events:none;z-index:2;background:#F7F9FC;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 18' preserveAspectRatio='none'%3E%3Cpath d='M0 0h120v6c-8 0-10 9-20 9s-10-8-20-8-10 10-20 10-9-7-19-7-11 8-21 8-11-8-20-8z'/%3E%3C/svg%3E") repeat-x;-webkit-mask-size:120px 18px;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 18' preserveAspectRatio='none'%3E%3Cpath d='M0 0h120v6c-8 0-10 9-20 9s-10-8-20-8-10 10-20 10-9-7-19-7-11 8-21 8-11-8-20-8z'/%3E%3C/svg%3E") repeat-x;mask-size:120px 18px;opacity:.95}
+.deco-webs{position:absolute;inset:0;pointer-events:none;z-index:1}
+.deco-web{position:absolute;top:0;left:0;width:min(150px,32vw);height:auto}
+.deco-web+.deco-web{left:auto;right:0;transform:scaleX(-1)}
+.deco-spider{position:absolute;top:0;right:14%;width:34px;pointer-events:none;z-index:2;transform-origin:50% 0;animation:spiderSwing 5.5s ease-in-out infinite}
+.deco-spider::before{content:"";position:absolute;left:50%;top:0;width:1px;height:150px;background:rgba(237,231,246,.6)}
+.deco-spider svg{position:absolute;top:150px;left:0;width:34px;height:34px;filter:drop-shadow(0 2px 3px rgba(0,0,0,.5))}
+@keyframes spiderSwing{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}
+.deco-grass{position:absolute;left:0;right:0;bottom:0;height:46px;background-repeat:repeat-x;background-size:260px 46px;background-position:center bottom;pointer-events:none;z-index:1;opacity:.95}
+.deco-ribbon{position:relative;display:inline-block;margin:0 0 16px;padding:8px 22px;background:var(--ketchup);color:#fff;font-family:var(--display);font-size:1.08rem;letter-spacing:.02em;line-height:1.2;box-shadow:0 8px 20px -10px rgba(0,0,0,.7);z-index:1}
+.deco-ribbon::before,.deco-ribbon::after{content:"";position:absolute;top:7px;width:24px;height:100%;background:var(--ketchup-2);z-index:-1}
+.deco-ribbon::before{left:-16px;clip-path:polygon(0 0,100% 0,100% 100%,0 100%,38% 50%)}
+.deco-ribbon::after{right:-16px;clip-path:polygon(0 0,100% 0,62% 50%,100% 100%,0 100%)}
+html[data-theme=fete-nationale] .deco-ribbon{background:#C8102E;color:#fff;border-top:3px solid #2457C5;border-bottom:3px solid #F5F0E6}
+html[data-theme=fete-nationale] .deco-ribbon::before,html[data-theme=fete-nationale] .deco-ribbon::after{background:#1a3f93}
+html[data-theme=paques] .deco-ribbon{color:#2A1A10}
+.tonight.has-deco{position:relative;overflow:visible}
+.deco-corner{position:absolute;top:-22px;left:-12px;width:74px;height:auto;pointer-events:none;filter:drop-shadow(0 3px 4px rgba(0,0,0,.4))}
+.deco-corner svg{display:block;width:100%;height:auto}
+.deco-corner .deco-cocarde{width:50px;margin-left:auto}
+html[data-theme=fete-nationale] .deco-corner{left:auto;right:-8px;top:-26px;width:50px}
+.deco-logowrap{position:relative;display:inline-flex;flex:none}
+.deco-hat{position:absolute;top:-13px;left:-8px;width:36px;height:auto;transform:rotate(-18deg);filter:drop-shadow(0 1px 2px rgba(0,0,0,.4))}
+.deco-ears{position:absolute;top:-24px;left:4px;width:32px;height:auto}
+html[data-theme=fete-nationale] .ticker{border-top:3px solid;border-image:linear-gradient(90deg,#2457C5 0 33.3%,#F5F0E6 33.3% 66.6%,#E53935 66.6%) 1}
+html[data-theme=noel] .ticker{border-top:3px solid;border-image:repeating-linear-gradient(135deg,#E53935 0 14px,#F5F0E6 14px 28px) 1}
+@media (max-width:900px){.deco-bunting{top:52px;background-size:200px 77px;height:77px}.deco-spider{right:10%}.deco-spider::before{height:110px}.deco-spider svg{top:110px}}
+@media (max-width:600px){.deco-ribbon{font-size:.98rem;padding:7px 18px}.deco-corner{width:62px;top:-18px;left:-8px}}
+@media (prefers-reduced-motion:reduce){.deco-spider{animation:none}}
