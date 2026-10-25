@@ -575,36 +575,22 @@ html.dlg-open body{position:fixed;left:0;right:0;width:100%}
 .fx-canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:60}
 /* Noël : rouge et or, guirlande multicolore, flocons */
 html[data-theme=noel]{--ketchup:#C62828;--ketchup-2:#A51F1F;--cheddar:#F2C14E;--theme-kicker:"🎄 Joyeuses fêtes ·"}
-html[data-theme=noel] .lights .b:nth-child(3n) .h,html[data-theme=noel] .lights .b:nth-child(3n) ellipse{fill:#E53935}
-html[data-theme=noel] .lights .b:nth-child(3n+1) .h,html[data-theme=noel] .lights .b:nth-child(3n+1) ellipse{fill:#43A047}
-html[data-theme=noel] .lights .b:nth-child(3n+2) .h,html[data-theme=noel] .lights .b:nth-child(3n+2) ellipse{fill:#FFD54F}
 html[data-theme=noel] .hero::after{background:linear-gradient(90deg,rgba(28,22,30,.9) 0,rgba(28,22,30,.72) 38%,rgba(28,22,30,.22) 62%,rgba(28,22,30,.3) 100%),linear-gradient(180deg,rgba(28,22,30,.62) 0,rgba(28,22,30,.1) 28%,rgba(42,26,16,.12) 58%,var(--brun) 100%)}
 /* Halloween : orange vif et violet, citrouilles et chauves-souris */
 html[data-theme=halloween]{--ketchup:#FF7A1A;--ketchup-2:#D95F08;--cheddar:#FFA726;--theme-kicker:"🎃 Halloween ·"}
-html[data-theme=halloween] .lights .b:nth-child(2n) .h,html[data-theme=halloween] .lights .b:nth-child(2n) ellipse{fill:#FF7A1A}
-html[data-theme=halloween] .lights .b:nth-child(2n+1) .h,html[data-theme=halloween] .lights .b:nth-child(2n+1) ellipse{fill:#9C4DCC}
 html[data-theme=halloween] .hero::after{background:linear-gradient(90deg,rgba(38,18,48,.9) 0,rgba(38,18,48,.72) 38%,rgba(38,18,48,.25) 62%,rgba(38,18,48,.32) 100%),linear-gradient(180deg,rgba(38,18,48,.66) 0,rgba(38,18,48,.14) 28%,rgba(42,26,16,.12) 58%,var(--brun) 100%)}
 /* 14 juillet : bleu, blanc, rouge et confettis */
 html[data-theme=fete-nationale]{--ketchup:#C8102E;--ketchup-2:#9E0C24;--cheddar:#F5F0E6;--theme-kicker:"🇫🇷 Fête nationale ·"}
-html[data-theme=fete-nationale] .lights .b:nth-child(3n) .h,html[data-theme=fete-nationale] .lights .b:nth-child(3n) ellipse{fill:#2457C5}
-html[data-theme=fete-nationale] .lights .b:nth-child(3n+1) .h,html[data-theme=fete-nationale] .lights .b:nth-child(3n+1) ellipse{fill:#FFFFFF}
-html[data-theme=fete-nationale] .lights .b:nth-child(3n+2) .h,html[data-theme=fete-nationale] .lights .b:nth-child(3n+2) ellipse{fill:#E53935}
 /* Saint-Valentin : rose et rouge, cœurs */
 html[data-theme=saint-valentin]{--ketchup:#D81B60;--ketchup-2:#AD1457;--cheddar:#F8A5C2;--theme-kicker:"💝 Saint-Valentin ·"}
-html[data-theme=saint-valentin] .lights .b:nth-child(2n) .h,html[data-theme=saint-valentin] .lights .b:nth-child(2n) ellipse{fill:#F06292}
-html[data-theme=saint-valentin] .lights .b:nth-child(2n+1) .h,html[data-theme=saint-valentin] .lights .b:nth-child(2n+1) ellipse{fill:#E53935}
 /* Pâques : pastels, poussins et œufs */
 html[data-theme=paques]{--ketchup:#E08E1B;--ketchup-2:#B8730F;--cheddar:#A5D6A7;--theme-kicker:"🐣 Joyeuses Pâques ·"}
-html[data-theme=paques] .lights .b:nth-child(4n) .h,html[data-theme=paques] .lights .b:nth-child(4n) ellipse{fill:#F48FB1}
-html[data-theme=paques] .lights .b:nth-child(4n+1) .h,html[data-theme=paques] .lights .b:nth-child(4n+1) ellipse{fill:#A5D6A7}
-html[data-theme=paques] .lights .b:nth-child(4n+2) .h,html[data-theme=paques] .lights .b:nth-child(4n+2) ellipse{fill:#FFF59D}
-html[data-theme=paques] .lights .b:nth-child(4n+3) .h,html[data-theme=paques] .lights .b:nth-child(4n+3) ellipse{fill:#90CAF9}
 @media (prefers-reduced-motion:reduce){.fx-canvas{display:none}}
 
 /* ---------- décorations de thème (ajoutées par site.js) ---------- */
 .page-hero{position:relative;overflow:hidden;isolation:isolate}
 .page-hero>.wrap{position:relative;z-index:1}
-.deco-bunting{position:absolute;left:0;right:0;top:84px;height:100px;background-repeat:repeat-x;background-size:260px 100px;background-position:center top;pointer-events:none;z-index:1;filter:drop-shadow(0 6px 8px rgba(0,0,0,.35))}
+.deco-bunting{position:absolute;left:0;right:0;top:12px;height:100px;background-repeat:repeat-x;background-size:260px 100px;background-position:center top;pointer-events:none;z-index:1;filter:drop-shadow(0 6px 8px rgba(0,0,0,.35))}
 .page-hero .deco-bunting{top:0}
 .deco-snowcap{position:absolute;left:0;right:0;top:0;height:18px;pointer-events:none;z-index:2;background:#F7F9FC;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 18' preserveAspectRatio='none'%3E%3Cpath d='M0 0h120v6c-8 0-10 9-20 9s-10-8-20-8-10 10-20 10-9-7-19-7-11 8-21 8-11-8-20-8z'/%3E%3C/svg%3E") repeat-x;-webkit-mask-size:120px 18px;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 18' preserveAspectRatio='none'%3E%3Cpath d='M0 0h120v6c-8 0-10 9-20 9s-10-8-20-8-10 10-20 10-9-7-19-7-11 8-21 8-11-8-20-8z'/%3E%3C/svg%3E") repeat-x;mask-size:120px 18px;opacity:.95}
 .deco-webs{position:absolute;inset:0;pointer-events:none;z-index:1}
@@ -614,7 +600,7 @@ html[data-theme=paques] .lights .b:nth-child(4n+3) .h,html[data-theme=paques] .l
 .deco-spider::before{content:"";position:absolute;left:50%;top:0;width:1px;height:150px;background:rgba(237,231,246,.6)}
 .deco-spider svg{position:absolute;top:150px;left:0;width:34px;height:34px;filter:drop-shadow(0 2px 3px rgba(0,0,0,.5))}
 @keyframes spiderSwing{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}
-.deco-grass{position:absolute;left:0;right:0;bottom:0;height:46px;background-repeat:repeat-x;background-size:260px 46px;background-position:center bottom;pointer-events:none;z-index:1;opacity:.95}
+.deco-grass{position:absolute;left:0;right:0;bottom:52px;height:46px;background-repeat:repeat-x;background-size:260px 46px;background-position:center bottom;pointer-events:none;z-index:0;opacity:.95}
 .deco-ribbon{position:relative;display:inline-block;margin:0 0 16px;padding:8px 22px;background:var(--ketchup);color:#fff;font-family:var(--display);font-size:1.08rem;letter-spacing:.02em;line-height:1.2;box-shadow:0 8px 20px -10px rgba(0,0,0,.7);z-index:1}
 .deco-ribbon::before,.deco-ribbon::after{content:"";position:absolute;top:7px;width:24px;height:100%;background:var(--ketchup-2);z-index:-1}
 .deco-ribbon::before{left:-16px;clip-path:polygon(0 0,100% 0,100% 100%,0 100%,38% 50%)}
@@ -632,6 +618,46 @@ html[data-theme=fete-nationale] .deco-corner{left:auto;right:-8px;top:-26px;widt
 .deco-ears{position:absolute;top:-24px;left:4px;width:32px;height:auto}
 html[data-theme=fete-nationale] .ticker{border-top:3px solid;border-image:linear-gradient(90deg,#2457C5 0 33.3%,#F5F0E6 33.3% 66.6%,#E53935 66.6%) 1}
 html[data-theme=noel] .ticker{border-top:3px solid;border-image:repeating-linear-gradient(135deg,#E53935 0 14px,#F5F0E6 14px 28px) 1}
-@media (max-width:900px){.deco-bunting{top:52px;background-size:200px 77px;height:77px}.deco-spider{right:10%}.deco-spider::before{height:110px}.deco-spider svg{top:110px}}
+@media (max-width:900px){.deco-bunting{top:6px;background-size:200px 77px;height:77px}.deco-spider{right:10%}.deco-spider::before{height:110px}.deco-spider svg{top:110px}}
 @media (max-width:600px){.deco-ribbon{font-size:.98rem;padding:7px 18px}.deco-corner{width:62px;top:-18px;left:-8px}}
 @media (prefers-reduced-motion:reduce){.deco-spider{animation:none}}
+
+/* thème actif : la banderole remplace la guirlande d'ampoules (plus de chevauchement) */
+html[data-theme] .hero .lights{display:none}
+/* scènes animées */
+.deco-runner{position:absolute;left:0;pointer-events:none;z-index:0;animation:runLtr 30s linear infinite;will-change:transform}
+.deco-runner.rtl{left:auto;right:0;animation-name:runRtl}
+.deco-runner svg{display:block;width:100%;height:auto;overflow:visible}
+@keyframes runLtr{0%{transform:translateX(-110%)}72%{transform:translateX(calc(100vw + 12%))}100%{transform:translateX(calc(100vw + 12%))}}
+@keyframes runRtl{0%{transform:translateX(110%)}72%{transform:translateX(calc(-100vw - 12%))}100%{transform:translateX(calc(-100vw - 12%))}}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes hop{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+@keyframes puff{0%{opacity:.75;transform:translate(0,0) scale(.5)}100%{opacity:0;transform:translate(-18px,-34px) scale(1.5)}}
+.deco-runner.train{bottom:58px;width:330px;filter:drop-shadow(0 4px 6px rgba(0,0,0,.45))}
+.deco-runner.train .wheel{animation:spin 1.1s linear infinite}
+.deco-runner.train .smoke circle{fill:rgba(255,255,255,.75);transform-box:fill-box;transform-origin:center;animation:puff 2.2s ease-out infinite}
+.deco-runner.train .smoke circle:nth-child(2){animation-delay:.7s}.deco-runner.train .smoke circle:nth-child(3){animation-delay:1.4s}
+.deco-ground{position:absolute;left:0;right:0;bottom:52px;height:14px;background:#F7F9FC;z-index:0;opacity:.96;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 14' preserveAspectRatio='none'%3E%3Cpath d='M0 14V8c8 0 10-7 20-7s10 6 20 6 10-8 20-8 9 5 19 5 11-6 21-6 11 6 20 6v10z'/%3E%3C/svg%3E") repeat-x;-webkit-mask-size:120px 14px;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 14' preserveAspectRatio='none'%3E%3Cpath d='M0 14V8c8 0 10-7 20-7s10 6 20 6 10-8 20-8 9 5 19 5 11-6 21-6 11 6 20 6v10z'/%3E%3C/svg%3E") repeat-x;mask-size:120px 14px}
+.deco-runner.witch{top:112px;width:170px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
+.deco-runner.witch svg{animation:bob 3.2s ease-in-out infinite}
+.deco-moon{position:absolute;top:120px;right:9%;width:90px;height:90px;border-radius:50%;z-index:0;opacity:.95;background:radial-gradient(circle at 30% 30%,rgba(255,255,255,.35),transparent 40%),radial-gradient(circle at 62% 58%,rgba(0,0,0,.08) 0 10%,transparent 11%),radial-gradient(circle at 36% 66%,rgba(0,0,0,.07) 0 7%,transparent 8%),radial-gradient(circle at 70% 30%,rgba(0,0,0,.06) 0 6%,transparent 7%),radial-gradient(circle at 40% 40%,#FFF8DC,#F1E2A2 65%,#D8C070);box-shadow:0 0 50px 14px rgba(255,240,190,.22)}
+.deco-runner.jets{top:22%;width:min(520px,72vw)}
+.deco-runner.balloon{top:14%;width:112px;filter:drop-shadow(0 6px 10px rgba(0,0,0,.4))}
+.deco-runner.balloon svg{animation:bob 5s ease-in-out infinite}
+.deco-runner.bunny{bottom:64px;width:170px}
+.deco-runner.bunny .hop{transform-box:fill-box;transform-origin:50% 100%;animation:hop .75s ease-in-out infinite}
+.deco-runner.bunny .chick{transform-box:fill-box;transform-origin:50% 100%;animation:hop .5s ease-in-out infinite .2s}
+/* mobile : les scènes au sol se jouent sur le bitume de la photo (bandeau de 340 px, puis 290 px) */
+@media (max-width:900px){
+  .deco-runner.train{width:210px;bottom:auto;top:268px}.deco-ground{height:10px;bottom:auto;top:330px}
+  .deco-runner.witch{top:56px;width:100px}.deco-moon{top:84px;right:7%;width:58px;height:58px}
+  .deco-runner.jets{top:54px;width:72vw}.deco-runner.balloon{top:40px;width:70px}
+  .deco-runner.bunny{width:120px;bottom:auto;top:266px}.deco-grass{bottom:auto;top:296px;height:42px;background-size:240px 42px}
+}
+@media (max-width:600px){
+  .deco-runner.train{top:222px;width:190px}.deco-ground{top:280px}
+  .deco-runner.bunny{top:222px;width:110px}.deco-grass{top:248px}
+  .deco-moon{top:70px;width:50px;height:50px}.deco-runner.witch{top:48px;width:90px}.deco-runner.jets{top:46px}.deco-runner.balloon{top:36px;width:62px}
+}
+@media (prefers-reduced-motion:reduce){.deco-runner{display:none}}

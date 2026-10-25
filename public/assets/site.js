@@ -253,6 +253,129 @@
   if (d.hat && logo) { var wr = document.createElement('span'); wr.className = 'deco-logowrap'; logo.parentNode.insertBefore(wr, logo); wr.appendChild(logo); wr.insertAdjacentHTML('beforeend', d.hat); }
 })();
 
+// ---------- Thème saisonnier : motifs de fond et scènes animées (train de Noël, sorcière, Patrouille de France, montgolfière, lapin) ----------
+(function () {
+  var root = document.documentElement, theme = root.getAttribute('data-theme');
+  if (!theme) return;
+  var fx = root.getAttribute('data-theme-fx') !== '0' && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var svgUrl = function (s) { return 'url("data:image/svg+xml,' + encodeURIComponent(s) + '")'; };
+
+  // --- motifs ton sur ton (tracés fins), répartis sur une tuile de 240 px
+  var MOTIFS = {
+    'noel': [
+      '<path d="M0 -17 L11 -3 L5 -3 L15 11 L-15 11 L-5 -3 L-11 -3 Z"/><path d="M-3 11 V17 H3 V11"/>',
+      '<rect x="-12" y="-6" width="24" height="18" rx="2"/><rect x="-14" y="-11" width="28" height="6" rx="1"/><path d="M0 -11 V12 M-6 -11 C-11 -20 -1 -19 0 -11 C1 -19 11 -20 6 -11"/>',
+      '<path d="M0 -16 V16 M-14 -8 L14 8 M-14 8 L14 -8 M0 -16 L-4 -11 M0 -16 L4 -11 M0 16 L-4 11 M0 16 L4 11 M-14 -8 L-13 -2 M-14 -8 L-8 -9 M14 8 L13 2 M14 8 L8 9 M-14 8 L-8 9 M-14 8 L-13 2 M14 -8 L8 -9 M14 -8 L13 -2"/>',
+      '<path d="M-12 7 C-12 -8 0 -16 12 -12 C6 -8 7 -2 13 3"/><rect x="-14" y="6" width="28" height="6" rx="3"/><circle cx="13" cy="-11" r="3"/>',
+      '<path d="M-5 15 V-6 A7 7 0 0 1 9 -6 V-1" stroke-width="4"/>',
+      '<path d="M0 -15 L4 -5 L15 -5 L6 2 L9 13 L0 6 L-9 13 L-6 2 L-15 -5 L-4 -5 Z"/>'
+    ],
+    'halloween': [
+      '<ellipse cx="0" cy="3" rx="15" ry="12"/><path d="M-5 -9 C-7 1 -7 7 -5 15 M5 -9 C7 1 7 7 5 15 M0 -9 V-15 Q4 -17 6 -13"/><path d="M-7 1 L-3 4 L-7 5Z M7 1 L3 4 L7 5Z M-6 8 L-3 11 L0 8 L3 11 L6 8" />',
+      '<path d="M0 -2 C-3 -8 -8 -9 -16 -4 C-12 -3 -11 1 -13 5 C-9 3 -5 4 -3 8 L0 5 L3 8 C5 4 9 3 13 5 C11 1 12 -3 16 -4 C8 -9 3 -8 0 -2Z"/>',
+      '<path d="M-11 14 V-2 A11 11 0 0 1 11 -2 V14 L7 10 L3 14 L0 10 L-3 14 L-7 10 Z"/><circle cx="-4" cy="-3" r="1.6"/><circle cx="4" cy="-3" r="1.6"/>',
+      '<circle cx="0" cy="2" r="6"/><circle cx="0" cy="-7" r="3.5"/><path d="M-5 0 L-14 -6 M-6 3 L-15 3 M-5 6 L-13 12 M5 0 L14 -6 M6 3 L15 3 M5 6 L13 12 M0 -11 V-18"/>',
+      '<path d="M4 -15 A14 14 0 1 0 12 10 A10 10 0 1 1 4 -15Z"/>'
+    ],
+    'fete-nationale': [
+      '<path d="M0 -15 L4 -5 L15 -5 L6 2 L9 13 L0 6 L-9 13 L-6 2 L-15 -5 L-4 -5 Z"/>',
+      '<path d="M0 -16 V-6 M11 -11 L5 -4 M16 0 H7 M11 11 L5 4 M0 16 V6 M-11 11 L-5 4 M-16 0 H-7 M-11 -11 L-5 -4"/><circle cx="0" cy="0" r="2"/>',
+      '<circle cx="0" cy="-3" r="13"/><circle cx="0" cy="-3" r="8"/><circle cx="0" cy="-3" r="3"/><path d="M-5 9 L-8 17 L-3 15 L0 18 L3 15 L8 17 L5 9"/>',
+      '<path d="M-3 -17 H3 L5 -6 Q6 2 12 10 H-12 Q-6 2 -5 -6 Z M-7 2 H7 M-5 -6 H5 M-12 10 L-16 18 M12 10 L16 18 M-9 18 Q0 10 9 18"/>',
+      '<path d="M-10 -16 V16"/><path d="M-10 -14 H12 L8 -6 L12 2 H-10Z"/>'
+    ],
+    'saint-valentin': [
+      '<path d="M0 13 C-18 1 -14 -14 -5 -12 C-2 -11 -1 -8 0 -6 C1 -8 2 -11 5 -12 C14 -14 18 1 0 13Z"/>',
+      '<path d="M-15 12 L13 -10 M13 -10 L4 -11 M13 -10 L14 -1 M-15 12 L-10 4 M-15 12 L-7 11"/>',
+      '<rect x="-14" y="-9" width="28" height="19" rx="2"/><path d="M-14 -9 L0 3 L14 -9"/>',
+      '<circle cx="0" cy="-4" r="7"/><path d="M0 -4 m-3 0 a3 3 0 1 1 3 3 M0 3 V16 M0 9 C-5 7 -7 9 -8 12 M0 11 C5 9 7 11 8 14"/>',
+      '<path d="M-12 6 C-12 -4 -4 -6 0 0 C4 -6 12 -4 12 6 M-12 6 Q0 2 12 6 M-12 6 Q0 10 12 6"/>'
+    ],
+    'paques': [
+      '<path d="M0 -16 C-10 -16 -13 -2 -11 6 C-9 14 9 14 11 6 C13 -2 10 -16 0 -16Z"/><path d="M-10 -2 L-6 2 L-2 -2 L2 2 L6 -2 L10 2 M-11 6 Q0 2 11 6"/>',
+      '<circle cx="0" cy="5" r="9"/><path d="M-5 -3 C-9 -12 -8 -19 -4 -18 C-1 -17 -1 -8 -2 -3 M5 -3 C9 -12 8 -19 4 -18 C1 -17 1 -8 2 -3"/><circle cx="-3" cy="4" r="1.2"/><circle cx="3" cy="4" r="1.2"/>',
+      '<circle cx="2" cy="4" r="9"/><circle cx="-6" cy="-6" r="6"/><path d="M-12 -5 L-16 -4 L-12 -2 M11 4 L16 1 M11 7 L16 9"/><circle cx="-7" cy="-7" r="1"/>',
+      '<path d="M-3 -2 L0 16 L3 -2 Z M0 -2 V-12 M0 -6 L-6 -11 M0 -6 L6 -11"/>',
+      '<path d="M-8 -4 L-8 -14 L-4 -9 L0 -15 L4 -9 L8 -14 L8 -4 Q0 6 -8 -4Z M0 2 V16 M0 8 C-6 6 -8 8 -9 12 M0 10 C6 8 8 10 9 14"/>'
+    ]
+  };
+  function pattern(color, alpha) {
+    var m = MOTIFS[theme]; if (!m) return '';
+    var pos = [[40, 44, -12], [150, 30, 10], [96, 120, 6], [206, 110, -8], [48, 196, 14], [168, 200, -5]];
+    var s = '';
+    for (var i = 0; i < pos.length; i++) s += '<g transform="translate(' + pos[i][0] + ' ' + pos[i][1] + ') rotate(' + pos[i][2] + ')">' + m[i % m.length] + '</g>';
+    return svgUrl('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="240" height="240"><g fill="none" stroke="' + color + '" stroke-opacity="' + alpha + '" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round">' + s + '</g></svg>');
+  }
+  var css = '';
+  if (MOTIFS[theme]) {
+    css += 'html[data-theme] .band:not(.band--kraft):not(.band--photo),html[data-theme] .foot,html[data-theme] .page-hero{background-image:' + pattern('#FCF3E3', .13) + ';background-size:240px 240px}';
+    css += 'html[data-theme] .band--kraft{background-image:' + pattern('#2A1A10', .11) + ',radial-gradient(rgba(255,255,255,.22) 1px,transparent 1.5px),radial-gradient(rgba(60,30,10,.07) 1px,transparent 1.5px);background-size:240px 240px,7px 7px,11px 11px;background-position:0 0,0 0,4px 6px}';
+  }
+
+  // --- scènes animées
+  var SCENES = {
+    'noel': { cls: 'train', html:
+      '<svg viewBox="0 0 330 96" aria-hidden="true">' +
+      '<g class="smoke"><circle cx="46" cy="18" r="6"/><circle cx="54" cy="8" r="8"/><circle cx="66" cy="-4" r="10"/></g>' +
+      '<rect x="20" y="40" width="70" height="30" rx="4" fill="#B71C1C"/><rect x="24" y="30" width="36" height="22" rx="3" fill="#212121"/><rect x="40" y="14" width="12" height="20" rx="2" fill="#212121"/><rect x="36" y="12" width="20" height="6" rx="2" fill="#424242"/>' +
+      '<rect x="64" y="26" width="30" height="44" rx="3" fill="#C62828"/><rect x="69" y="31" width="20" height="16" rx="2" fill="#FFE0B2"/>' +
+      '<g transform="translate(79 40)"><circle r="7" fill="#FFE0B2"/><path d="M-7 -1 C-7 -12 3 -13 8 -7 L7 -3 Z" fill="#E53935"/><circle cx="8" cy="-6" r="2.5" fill="#fff"/><path d="M-7 -1 h14 v3 h-14z" fill="#fff"/><path d="M-6 2 C-5 9 5 9 6 2 Z" fill="#fff"/></g>' +
+      '<rect x="60" y="70" width="36" height="6" rx="2" fill="#424242"/><path d="M10 70 L20 56 L20 70Z" fill="#424242"/>' +
+      '<g class="wheel" style="transform-origin:34px 76px"><circle cx="34" cy="76" r="9" fill="#212121"/><circle cx="34" cy="76" r="5" fill="#FBC02D"/><path d="M34 67 V85 M25 76 H43" stroke="#212121" stroke-width="2"/></g>' +
+      '<g class="wheel" style="transform-origin:58px 76px"><circle cx="58" cy="76" r="9" fill="#212121"/><circle cx="58" cy="76" r="5" fill="#FBC02D"/><path d="M58 67 V85 M49 76 H67" stroke="#212121" stroke-width="2"/></g>' +
+      '<g class="wheel" style="transform-origin:82px 76px"><circle cx="82" cy="76" r="9" fill="#212121"/><circle cx="82" cy="76" r="5" fill="#FBC02D"/></g>' +
+      '<path d="M94 58 H106" stroke="#424242" stroke-width="4"/>' +
+      // wagon 1 : cadeaux
+      '<rect x="106" y="46" width="70" height="26" rx="3" fill="#2E7D32"/><rect x="104" y="42" width="74" height="6" rx="2" fill="#1B5E20"/>' +
+      '<rect x="114" y="26" width="20" height="18" fill="#FBC02D"/><rect x="112" y="24" width="24" height="5" fill="#F9A825"/><path d="M124 24 V44 M114 33 H134" stroke="#C62828" stroke-width="3"/>' +
+      '<rect x="140" y="30" width="16" height="14" fill="#1E88E5"/><path d="M148 30 V44 M140 37 H156" stroke="#fff" stroke-width="2.5"/>' +
+      '<rect x="158" y="34" width="12" height="10" fill="#E53935"/><path d="M164 34 V44" stroke="#FBC02D" stroke-width="2"/>' +
+      '<g class="wheel" style="transform-origin:120px 76px"><circle cx="120" cy="76" r="7" fill="#212121"/><circle cx="120" cy="76" r="3" fill="#FBC02D"/></g><g class="wheel" style="transform-origin:162px 76px"><circle cx="162" cy="76" r="7" fill="#212121"/><circle cx="162" cy="76" r="3" fill="#FBC02D"/></g>' +
+      '<path d="M176 58 H188" stroke="#424242" stroke-width="4"/>' +
+      // wagon 2 : bonhomme de neige + sapin
+      '<rect x="188" y="46" width="76" height="26" rx="3" fill="#1565C0"/><rect x="186" y="42" width="80" height="6" rx="2" fill="#0D47A1"/>' +
+      '<g transform="translate(212 30)"><circle cy="10" r="11" fill="#fff"/><circle cy="-6" r="8" fill="#fff"/><rect x="-7" y="-20" width="14" height="10" fill="#212121"/><rect x="-10" y="-11" width="20" height="3" fill="#212121"/><circle cx="-3" cy="-7" r="1.3" fill="#212121"/><circle cx="3" cy="-7" r="1.3" fill="#212121"/><path d="M1 -5 L10 -3 L1 -1Z" fill="#FB8C00"/><circle cy="6" r="1.3" fill="#212121"/><circle cy="11" r="1.3" fill="#212121"/><path d="M-8 -1 H8" stroke="#E53935" stroke-width="3"/></g>' +
+      '<g transform="translate(244 24)"><path d="M0 -14 L10 0 L5 0 L14 14 L-14 14 L-5 0 L-10 0Z" fill="#2E7D32"/><path d="M0 -14 L10 0 L5 0 L14 14 L-14 14 L-5 0 L-10 0Z" fill="none" stroke="#1B5E20"/><circle cx="-4" cy="4" r="1.8" fill="#FBC02D"/><circle cx="5" cy="9" r="1.8" fill="#E53935"/><circle cx="0" cy="-5" r="1.5" fill="#E53935"/><rect x="-2" y="14" width="4" height="6" fill="#5D4037"/></g>' +
+      '<g class="wheel" style="transform-origin:204px 76px"><circle cx="204" cy="76" r="7" fill="#212121"/><circle cx="204" cy="76" r="3" fill="#FBC02D"/></g><g class="wheel" style="transform-origin:248px 76px"><circle cx="248" cy="76" r="7" fill="#212121"/><circle cx="248" cy="76" r="3" fill="#FBC02D"/></g>' +
+      '</svg>', dur: 30, dir: 1, ground: true },
+    'halloween': { cls: 'witch', html:
+      '<svg viewBox="0 0 160 110" aria-hidden="true"><g fill="#1A1026" stroke="#EDE7F6" stroke-opacity=".75" stroke-width="1.4" stroke-linejoin="round">' +
+      '<path d="M10 78 L92 70 L94 76 L12 86Z"/><path d="M92 68 L126 58 L136 66 L132 76 L100 80Z"/><path d="M126 58 L150 50 L156 58 L150 66 L138 70Z" opacity=".85"/>' +
+      '<path d="M44 76 C40 60 48 46 60 44 L72 46 C80 48 84 60 82 74Z"/><path d="M56 46 C50 40 54 28 62 26 C64 14 78 12 82 20 C90 18 96 26 92 34 L66 44Z"/><path d="M58 28 L46 20 L50 32Z"/>' +
+      '<path d="M48 48 C34 50 26 60 22 72 C34 66 44 64 50 58Z"/><path d="M78 72 L90 84 L84 86 L74 76Z M70 74 L76 88 L70 88 L64 76Z"/></g>' +
+      '<circle cx="40" cy="46" r="6" fill="#1A1026" stroke="#EDE7F6" stroke-opacity=".75" stroke-width="1.2"/><circle cx="36" cy="44" r="1.4" fill="#FF7A1A"/>' +
+      '</svg>', dur: 26, dir: -1, moon: true },
+    'fete-nationale': { cls: 'jets', html:
+      '<svg viewBox="0 0 520 120" aria-hidden="true">' +
+      '<defs><linearGradient id="tb" x1="0" x2="1"><stop offset="0" stop-color="#2457C5" stop-opacity="0"/><stop offset="1" stop-color="#2457C5" stop-opacity=".9"/></linearGradient><linearGradient id="tw" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#fff" stop-opacity=".9"/></linearGradient><linearGradient id="tr" x1="0" x2="1"><stop offset="0" stop-color="#E53935" stop-opacity="0"/><stop offset="1" stop-color="#E53935" stop-opacity=".9"/></linearGradient></defs>' +
+      '<rect x="0" y="44" width="400" height="10" rx="5" fill="url(#tb)"/><rect x="40" y="62" width="400" height="10" rx="5" fill="url(#tw)"/><rect x="0" y="80" width="400" height="10" rx="5" fill="url(#tr)"/>' +
+      '<g fill="#F5F0E6"><path d="M400 49 L440 44 L452 49 L440 54Z M416 49 L404 38 L412 38 L428 47Z M416 49 L404 60 L412 60 L428 51Z"/><path d="M440 67 L480 62 L492 67 L480 72Z M456 67 L444 56 L452 56 L468 65Z M456 67 L444 78 L452 78 L468 69Z"/><path d="M400 85 L440 80 L452 85 L440 90Z M416 85 L404 74 L412 74 L428 83Z M416 85 L404 96 L412 96 L428 87Z"/></g>' +
+      '</svg>', dur: 22, dir: 1 },
+    'saint-valentin': { cls: 'balloon', html:
+      '<svg viewBox="0 0 120 170" aria-hidden="true">' +
+      '<path d="M60 112 C8 76 12 22 38 22 C50 22 56 32 60 42 C64 32 70 22 82 22 C108 22 112 76 60 112Z" fill="#E53935"/><path d="M60 112 C30 90 24 60 32 42 C36 56 44 76 60 112Z" fill="#C62828" opacity=".6"/><path d="M44 34 C38 38 36 46 38 54" stroke="#FFCDD2" stroke-width="4" fill="none" stroke-linecap="round"/>' +
+      '<path d="M48 108 L44 140 M72 108 L76 140 M56 112 L54 140 M64 112 L66 140" stroke="#8D6E63" stroke-width="1.5"/>' +
+      '<rect x="42" y="138" width="36" height="22" rx="4" fill="#A1887F"/><path d="M42 146 H78 M42 152 H78 M50 138 V160 M60 138 V160 M70 138 V160" stroke="#6D4C41" stroke-width="1.2"/>' +
+      '<g transform="translate(60 134)"><circle r="6" fill="#FFE0B2"/><path d="M-6 -1 C-6 -8 6 -8 6 -1Z" fill="#5D4037"/></g><g transform="translate(70 136)"><circle r="5" fill="#FFE0B2"/><path d="M-5 -1 C-5 -7 5 -7 5 -1Z" fill="#8D6E63"/></g>' +
+      '</svg>', dur: 34, dir: 1 },
+    'paques': { cls: 'bunny', html:
+      '<svg viewBox="0 0 170 90" aria-hidden="true">' +
+      '<g class="hop"><ellipse cx="60" cy="62" rx="30" ry="20" fill="#F5E6D3"/><circle cx="92" cy="48" r="16" fill="#F5E6D3"/><path d="M84 36 C78 18 82 6 90 8 C96 10 96 26 94 36Z" fill="#F5E6D3"/><path d="M86 34 C82 20 85 10 90 12 C93 14 93 26 92 34Z" fill="#F8BBD0"/><path d="M98 36 C100 16 108 8 112 14 C114 20 106 32 102 38Z" fill="#F5E6D3"/><path d="M100 36 C102 20 108 12 110 16 C111 20 105 30 102 36Z" fill="#F8BBD0"/>' +
+      '<circle cx="98" cy="46" r="1.8" fill="#4E342E"/><circle cx="106" cy="52" r="2.2" fill="#F48FB1"/><path d="M103 56 Q106 59 109 56" stroke="#4E342E" stroke-width="1" fill="none"/><circle cx="32" cy="58" r="7" fill="#fff"/>' +
+      '<ellipse cx="46" cy="80" rx="10" ry="5" fill="#F5E6D3"/><ellipse cx="78" cy="80" rx="9" ry="5" fill="#F5E6D3"/>' +
+      '<path d="M112 60 L144 60 L140 80 L116 80Z" fill="#C8A165"/><path d="M114 60 Q128 36 142 60" fill="none" stroke="#8D6E63" stroke-width="3"/><ellipse cx="122" cy="58" rx="5" ry="7" fill="#90CAF9"/><ellipse cx="130" cy="56" rx="5" ry="7" fill="#F48FB1"/><ellipse cx="138" cy="58" rx="5" ry="7" fill="#FFF176"/></g>' +
+      '<g class="chick" transform="translate(14 68)"><ellipse rx="9" ry="7" fill="#FFEE58"/><circle cx="7" cy="-6" r="6" fill="#FFEE58"/><path d="M12 -6 L18 -4 L12 -2Z" fill="#FB8C00"/><circle cx="8" cy="-7" r="1" fill="#4E342E"/><path d="M-4 7 L-6 12 M2 7 L2 12" stroke="#FB8C00" stroke-width="1.5"/></g>' +
+      '</svg>', dur: 28, dir: 1 }
+  };
+  var sc = SCENES[theme], hero = document.querySelector('.hero');
+  if (sc && hero) {
+    if (sc.moon) hero.insertAdjacentHTML('beforeend', '<div class="deco-moon" aria-hidden="true"></div>');
+    if (sc.ground) hero.insertAdjacentHTML('beforeend', '<div class="deco-ground" aria-hidden="true"></div>');
+    if (fx) { var r = document.createElement('div'); r.className = 'deco-runner ' + sc.cls + (sc.dir < 0 ? ' rtl' : ''); r.setAttribute('aria-hidden', 'true'); r.style.animationDuration = sc.dur + 's'; r.innerHTML = sc.html; hero.appendChild(r); }
+  }
+  if (css) { var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st); }
+})();
+
 // ---------- Thème saisonnier : particules (flocons, confettis, citrouilles, cœurs, poussins) ----------
 (function () {
   var root = document.documentElement, theme = root.getAttribute('data-theme');
@@ -261,14 +384,14 @@
   var CFG = {
     'noel': { kind: 'snow', n: 110 },
     'halloween': { kind: 'glyph', glyphs: ['🎃', '🦇', '👻', '🦇'], n: 12, size: [18, 30], vy: [.25, .6], sway: 1.2 },
-    'fete-nationale': { kind: 'confetti', colors: ['#2457C5', '#FFFFFF', '#E53935'], n: 80 },
+    'fete-nationale': { kind: 'confetti', colors: ['#2457C5', '#FFFFFF', '#E53935'], n: 60, fireworks: ['#2457C5', '#FFFFFF', '#E53935', '#FFD54F'] },
     'saint-valentin': { kind: 'glyph', glyphs: ['❤️', '💕', '💗'], n: 16, size: [14, 26], vy: [-.35, -.15], sway: .8 },
     'paques': { kind: 'glyph', glyphs: ['🐣', '🥚', '🌷', '🐰'], n: 12, size: [18, 28], vy: [.2, .45], sway: .9 }
   };
   var cfg = CFG[theme]; if (!cfg) return;
   var canvas = document.createElement('canvas'); canvas.className = 'fx-canvas'; canvas.setAttribute('aria-hidden', 'true');
   document.body.appendChild(canvas);
-  var ctx = canvas.getContext('2d'), W = 0, H = 0, dpr = Math.min(window.devicePixelRatio || 1, 2), parts = [], raf = null, last = 0;
+  var ctx = canvas.getContext('2d'), W = 0, H = 0, dpr = Math.min(window.devicePixelRatio || 1, 2), parts = [], raf = null, last = 0, bursts = [], fwT = 40;
   var small = window.innerWidth < 700, N = Math.round(cfg.n * (small ? .55 : 1));
   var rnd = function (a, b) { return a + Math.random() * (b - a); };
   function resize() { W = window.innerWidth; H = window.innerHeight; canvas.width = W * dpr; canvas.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); }
@@ -288,6 +411,11 @@
       else if (cfg.kind === 'confetti') { p.rot += p.vr * dt; ctx.globalAlpha = .9; ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot); ctx.fillStyle = p.c; ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h * (0.4 + Math.abs(Math.cos(p.phase * 2)) * 0.6)); ctx.restore(); }
       else { ctx.globalAlpha = p.a; ctx.font = p.s + 'px system-ui, "Apple Color Emoji", "Segoe UI Emoji", sans-serif'; ctx.textBaseline = 'middle'; ctx.textAlign = 'center'; ctx.fillText(p.g, p.x, p.y); }
       if (p.y > H + 40 || p.y < -40 || p.x < -40 || p.x > W + 40) spawn(p, true);
+    }
+    if (cfg.fireworks) { // bouquets : une gerbe toutes les 1 à 2,5 s dans le haut de l'écran
+      fwT -= dt;
+      if (fwT <= 0) { fwT = 60 + Math.random() * 90; var bx = rnd(W * .15, W * .85), by = rnd(H * .12, H * .42), col = cfg.fireworks[Math.floor(Math.random() * cfg.fireworks.length)], n = small ? 26 : 42; for (var k = 0; k < n; k++) { var an = (k / n) * Math.PI * 2 + rnd(-.1, .1), sp = rnd(1.4, 3.6); bursts.push({ x: bx, y: by, vx: Math.cos(an) * sp, vy: Math.sin(an) * sp, life: rnd(55, 85), max: 85, c: col, r: rnd(1.4, 2.6) }); } }
+      for (var q = bursts.length - 1; q >= 0; q--) { var f = bursts[q]; f.x += f.vx * dt; f.y += f.vy * dt; f.vy += .045 * dt; f.vx *= .985; f.vy *= .985; f.life -= dt; if (f.life <= 0) { bursts.splice(q, 1); continue; } ctx.globalAlpha = Math.max(0, f.life / f.max); ctx.fillStyle = f.c; ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2); ctx.fill(); }
     }
     ctx.globalAlpha = 1;
     raf = requestAnimationFrame(step);
