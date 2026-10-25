@@ -56,7 +56,8 @@ section.is-on{display:block}
 .btn:disabled{opacity:.5;cursor:default}
 .btn.done{background:var(--mesclun)!important;border-color:var(--mesclun)!important;color:#1c2a12!important}
 .btn.busy{opacity:.7;pointer-events:none}
-.btn.ok{background:var(--mesclun);border-color:var(--mesclun);color:#13200c;font-weight:600}
+.btn.ok{background:transparent;border-color:rgba(123,166,86,.6);color:#B9DBA0;font-weight:600}
+.btn.ok.armed{background:var(--mesclun);border-color:var(--mesclun);color:#13200c}
 .btn.sm{padding:7px 12px;font-size:.88rem}
 label.f{display:grid;gap:5px;font-size:.86rem;color:var(--creme-2);min-width:0}
 input,select,textarea{font:inherit;color:var(--creme);background:var(--brun);border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:100%;min-width:0}
@@ -354,7 +355,6 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
           <div style="display:flex;gap:8px;flex-wrap:wrap;width:100%;align-items:center">
             <button class="btn ok sm" type="button" id="dvValider">✓ Valider : acompte reçu</button>
             <button class="btn sm" type="button" data-agenda="devis" data-kind="google">📅 Ajouter à Google Agenda</button>
-            <button class="btn sm" type="button" data-agenda="devis" data-kind="ics">📅 Fichier agenda (.ics)</button>
             <span class="muted" id="dvPdfLink" style="font-size:.85rem"></span>
           </div>
           <button class="btn danger sm" type="button" id="dvDelete">Supprimer</button>
@@ -497,7 +497,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
         '<div class="actions"><a class="btn sm" href="tel:'+esc(d.tel)+'">📞 '+esc(d.tel)+'</a><button class="copy" type="button" data-copy="'+esc(d.tel)+'" title="Copier le numéro" aria-label="Copier le numéro">⧉</button><a class="btn sm" href="mailto:'+esc(d.email)+'">✉️ '+esc(d.email)+'</a><button class="copy" type="button" data-copy="'+esc(d.email)+'" title="Copier l\'email" aria-label="Copier l\'email">⧉</button><span class="spacer"></span>'+
         '<select data-statut="'+d.id+'">'+Object.keys(libel).map(function(k){return '<option value="'+k+'"'+(d.statut===k?' selected':'')+'>'+libel[k]+'</option>';}).join('')+'</select>'+
         '<button class="btn sm danger" data-del="'+d.id+'" type="button">Supprimer</button></div>'+
-        (d.date_event?'<div class="actions"><button class="btn sm ghost" type="button" data-agenda="'+d.id+'" data-kind="google">📅 Google Agenda</button><button class="btn sm ghost" type="button" data-agenda="'+d.id+'" data-kind="ics">📅 .ics</button></div>':'')+
+        (d.date_event?'<div class="actions"><button class="btn sm ghost" type="button" data-agenda="'+d.id+'" data-kind="google">📅 Google Agenda</button></div>':'')+
         '<div class="actions">'+(function(){var dv=devisForDemande(d.id);return dv.length?dv.map(function(x){return '<button class="btn sm" data-opendevis="'+x.id+'" type="button">Devis n°'+esc(x.numero)+' · '+eur(x.total_ttc)+' <span class="tag s-'+esc(x.statut)+'">'+STATUTS[x.statut]+'</span></button>';}).join('')+'<button class="btn sm ghost" data-mkdevis="'+d.id+'" type="button">+ Autre devis</button>':'<button class="btn sm primary" data-mkdevis="'+d.id+'" type="button">Préparer le devis</button>';})()+'</div></div>';
     }).join(''):'<p class="empty">'+(filter==='nouveau'?'Aucune nouvelle demande.':filter==='encours'?'Aucune demande en cours.':'Aucune demande pour le moment.')+'</p>';
   }
@@ -625,8 +625,8 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
   $('#dv_event_date').addEventListener('change',syncIntro0);$('#dv_event_moment').addEventListener('change',syncIntro0);
   $('#dvStatut').addEventListener('change',refreshValider);
   $('#dvValider').addEventListener('click',function(){
-    var b=this;if(b.dataset.confirm!=='1'){b.dataset.confirm='1';b.textContent='Confirmer : acompte reçu, privatisation validée';setTimeout(function(){b.dataset.confirm='';b.textContent='✓ Valider : acompte reçu';},4000);return;}
-    b.dataset.confirm='';b.textContent='✓ Valider : acompte reçu';b.classList.add('busy');$('#dvStatut').value='solde';
+    var b=this;if(b.dataset.confirm!=='1'){b.dataset.confirm='1';b.classList.add('armed');b.textContent='Confirmer : acompte reçu, privatisation validée';setTimeout(function(){if(b.dataset.confirm==='1'){b.dataset.confirm='';b.classList.remove('armed');b.textContent='✓ Valider : acompte reçu';}},4000);return;}
+    b.dataset.confirm='';b.classList.remove('armed');b.textContent='✓ Valider : acompte reçu';b.classList.add('busy');$('#dvStatut').value='solde';
     saveDevis(true).then(function(){toast('Privatisation confirmée ✓ — pensez à mettre l\'agenda à jour');return api('demandes');}).then(function(r){demandes=r.demandes;renderDemandes();}).catch(function(e){toast(e.message,true);}).finally(function(){b.classList.remove('busy');});
   });
   $('#dvLines').addEventListener('input',function(e){var t=e.target;if(!t.dataset.l)return;var l=curDevis.lignes[+t.dataset.i];l[t.dataset.l]=(t.dataset.l==='qte'||t.dataset.l==='prix')?Number(t.value):t.value;t.closest('.dvline').querySelector('.tot').textContent=eur((l.qte||0)*(l.prix||0));renderTotals();});
@@ -769,7 +769,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
       var ag=i.kind==='devis'?'d:'+i.d.id:String(i.dem.id);
       var acts='<div class="actions">'+(i.kind==='devis'?'<button class="btn sm" type="button" data-opendevis="'+i.d.id+'">Devis n°'+esc(i.d.numero)+' · '+eur(i.d.total_ttc)+'</button>'+(i.conf?'':'<button class="btn ok sm" type="button" data-valider="'+i.d.id+'">✓ Acompte reçu</button>'):'<button class="btn sm primary" type="button" data-mkdevis="'+i.dem.id+'">Préparer le devis</button>')+
         (i.dem?'<button class="btn sm ghost" type="button" data-godemande="'+i.dem.id+'">Voir la demande</button>':'')+
-        '<button class="btn sm ghost" type="button" data-agenda="'+ag+'" data-kind="google">📅 Google Agenda</button><button class="btn sm ghost" type="button" data-agenda="'+ag+'" data-kind="ics">📅 .ics</button></div>';
+        '<button class="btn sm ghost" type="button" data-agenda="'+ag+'" data-kind="google">📅 Google Agenda</button></div>';
       var tel=i.dem?i.dem.tel:i.d.client_tel;
       html+='<div class="card ag'+(i.conf?' conf':i.kind==='demande'?' dem':'')+'"><div class="day"><b>'+(+p[2])+'</b><span>'+JC[dt.getUTCDay()]+'</span></div><div class="body">'+
         '<div><div class="name">'+esc(i.nom)+' '+tag+'</div><div class="in">'+inTxt+(i.moment?' · '+esc(i.moment):'')+'</div></div>'+
@@ -782,7 +782,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
   document.addEventListener('click',function(e){
     var b=e.target.closest('button');if(!b)return;
     if(b.dataset.valider){
-      if(b.dataset.confirm!=='1'){b.dataset.confirm='1';b.textContent='Confirmer la validation';setTimeout(function(){b.dataset.confirm='';b.textContent='✓ Acompte reçu';},4000);return;}
+      if(b.dataset.confirm!=='1'){b.dataset.confirm='1';b.classList.add('armed');b.textContent='Confirmer la validation';setTimeout(function(){if(b.dataset.confirm==='1'){b.dataset.confirm='';b.classList.remove('armed');b.textContent='✓ Acompte reçu';}},4000);return;}
       b.classList.add('busy');api('devis/'+b.dataset.valider,{method:'PUT',body:{statut:'solde'}}).then(function(){toast('Privatisation confirmée ✓');return api('demandes');}).then(function(r){demandes=r.demandes;return loadDevis();}).then(function(){renderDemandes();}).catch(function(err){toast(err.message,true);});
     }
     if(b.dataset.godemande){filter='all';document.querySelector('#tabs button[data-tab="demandes"]').click();renderDemandes();var el=document.getElementById('dem-'+b.dataset.godemande);if(el){el.scrollIntoView({behavior:'smooth',block:'start'});el.style.outline='2px solid var(--cheddar)';setTimeout(function(){el.style.outline='';},2500);}}
