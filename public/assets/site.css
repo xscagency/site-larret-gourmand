@@ -2,7 +2,7 @@
 :root{
   --brun:#3A2619; --brun-2:#4A3224; --brun-3:#5C4133; --brun-line:#6B4E3D;
   --kraft:#EFDCBC; --kraft-2:#DCC49C; --encre:#2A1A10; --encre-2:#6A4D3A;
-  --ketchup:#D6402F; --ketchup-2:#B72F22;
+  --ketchup:#E86010; --ketchup-2:#C24F0A; --orange-text:#A8440A;
   --cheddar:#F3AD3F; --mesclun:#7BA656;
   --creme:#FCF3E3; --creme-2:#EAD8BC;
   --bun:#E2A054; --bun-2:#C97B33;
@@ -31,11 +31,11 @@ img{max-width:100%;display:block}
 .stack{display:grid;gap:16px}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;font:500 1rem var(--body);padding:14px 22px;border-radius:999px;border:2px solid transparent;text-decoration:none;cursor:pointer;transition:transform .18s ease,background-color .18s ease,color .18s ease,border-color .18s ease}
 .btn:active{transform:translateY(1px)}
-.btn--primary{background:var(--ketchup);color:var(--creme);border-color:var(--ketchup)}
+.btn--primary{background:var(--ketchup);color:#2A1A10;border-color:var(--ketchup)}
 .btn--primary:hover{background:var(--ketchup-2);border-color:var(--ketchup-2)}
 .btn--ghost{background:transparent;color:var(--creme);border-color:var(--creme-2)}
 .btn--ghost:hover{background:var(--creme);color:var(--brun)}
-.btn--creme{background:var(--creme);color:var(--ketchup-2);border-color:var(--creme)}
+.btn--creme{background:var(--creme);color:var(--orange-text);border-color:var(--creme)}
 .btn--creme:hover{background:var(--creme-2);border-color:var(--creme-2)}
 
 /* ---------- nav ---------- */
@@ -126,12 +126,12 @@ img{max-width:100%;display:block}
 @media (max-width:600px){.dish--featured .dish__img{aspect-ratio:1/1}}
 .dish__img img{width:100%;height:100%;object-fit:cover;transition:transform .7s ease}
 .dish:hover .dish__img img{transform:scale(1.04)}
-.dish__price{position:absolute;top:14px;left:14px;background:var(--ketchup);color:var(--creme);font-family:var(--display);font-size:1rem;padding:6px 12px;border-radius:999px;box-shadow:0 6px 16px -6px rgba(0,0,0,.5)}
-.dish__price.sup{background:var(--encre)}
+.dish__price{position:absolute;top:14px;left:14px;background:var(--ketchup);color:#2A1A10;font-family:var(--display);font-size:1rem;padding:6px 12px;border-radius:999px;box-shadow:0 6px 16px -6px rgba(0,0,0,.5)}
+.dish__price.sup{background:var(--cheddar);color:#2A1A10}
 .dish__body{padding:18px 20px 22px;display:grid;gap:8px;align-content:start}
 .dish h3{font-size:clamp(1.45rem,2.2vw,1.8rem);color:var(--encre)}
 .dish--featured h3{font-size:clamp(1.7rem,2.8vw,2.3rem)}
-.dish .tag{color:var(--ketchup-2);font-size:.98rem;font-weight:500}
+.dish .tag{color:var(--orange-text);font-size:.98rem;font-weight:500}
 .dish .ing{color:var(--encre);font-size:.98rem;line-height:1.5}
 .dish .vg{justify-self:start;font-size:.82rem;font-weight:500;padding:3px 10px;border:1.5px solid var(--encre-2);border-radius:999px;color:var(--encre-2);margin-top:4px}
 .menu-note{margin-top:28px;color:var(--encre-2);max-width:72ch}
@@ -147,7 +147,7 @@ img{max-width:100%;display:block}
 .price-list .p{font-family:var(--display);font-size:1.15rem;color:var(--creme);font-variant-numeric:tabular-nums;white-space:nowrap}
 .price-list .big .p{font-size:1.5rem;color:var(--cheddar)}
 .price-list small{display:block;color:var(--creme-2);font-size:.88rem;margin-top:2px}
-.nouveau{display:inline-block;background:var(--ketchup);color:var(--creme);font-size:.72rem;font-weight:700;padding:2px 7px;border-radius:4px;margin-right:8px;letter-spacing:.04em;vertical-align:middle}
+.nouveau{display:inline-block;background:var(--cheddar);color:#2A1A10;font-size:.72rem;font-weight:700;padding:2px 7px;border-radius:4px;margin-right:8px;letter-spacing:.04em;vertical-align:middle}
 .ardoise__foot{margin-top:28px;padding-top:20px;border-top:1px solid var(--brun-line);color:var(--creme-2);max-width:72ch}
 .ardoise__foot b{color:var(--creme)}
 
@@ -188,7 +188,7 @@ img{max-width:100%;display:block}
 .about{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.9fr);gap:clamp(28px,5vw,72px);align-items:start}
 @media (max-width:860px){.about{grid-template-columns:1fr}}
 .about .prose{display:grid;gap:16px;max-width:62ch}
-.about .prose a{color:var(--ketchup-2)}
+.about .prose a{color:var(--orange-text)}
 .towns{display:flex;flex-wrap:wrap;gap:10px;list-style:none;margin:0;padding:0}
 .towns a{display:inline-block;padding:8px 14px;border:1.5px solid var(--encre-2);border-radius:999px;text-decoration:none;font-weight:500;color:var(--encre)}
 .towns a:hover{background:var(--encre);color:var(--kraft)}
@@ -202,7 +202,7 @@ img{max-width:100%;display:block}
 .g h3{font-size:1.1rem;font-family:var(--body);font-weight:700}
 .g p{font-size:.92rem;color:var(--encre-2);margin-top:2px}
 .closing{margin-top:clamp(40px,6vw,72px);font-family:var(--display);font-size:clamp(1.7rem,4vw,2.8rem);line-height:1.15;max-width:22ch}
-.closing span{color:var(--ketchup-2)}
+.closing span{color:var(--orange-text)}
 
 /* ---------- footer ---------- */
 .foot{border-top:1px solid var(--brun-line);padding-block:48px 36px;color:var(--creme-2);font-size:.94rem}
@@ -254,7 +254,7 @@ dialog[open]{animation:pop .3s cubic-bezier(.2,.9,.3,1.1)}
 .dish[data-rupture] .dish__img::after{content:"Épuisé ce soir";position:absolute;inset:auto 14px 14px auto;background:var(--encre);color:var(--kraft);font:500 .85rem var(--body);padding:6px 12px;border-radius:999px}
 .dish[data-rupture] .dish__img img{filter:saturate(.6) brightness(.85)}
 .ticket[data-annule]{opacity:.85}
-.ticket[data-annule] .ticket__flag{display:block;background:var(--ketchup);color:var(--creme)}
+.ticket[data-annule] .ticket__flag{display:block;background:var(--ketchup);color:#2A1A10}
 .ticket__exception{color:var(--cheddar);font-size:.92rem;font-weight:500}
 /* pages intérieures */
 .page-hero{padding-top:clamp(56px,8vw,96px);padding-bottom:clamp(40px,6vw,64px);background:radial-gradient(60% 55% at 78% 30%,rgba(243,173,63,.18),transparent 70%),linear-gradient(180deg,#3F2A1B,var(--brun))}
@@ -264,12 +264,12 @@ dialog[open]{animation:pop .3s cubic-bezier(.2,.9,.3,1.1)}
 .prose h2{font-size:clamp(1.6rem,3.2vw,2.3rem);margin-top:28px}
 .prose h3{font-size:1.25rem;margin-top:10px}
 .prose ul{margin:0;padding-left:22px;display:grid;gap:8px}
-.prose a{color:var(--ketchup-2)}
+.prose a{color:var(--orange-text)}
 .faq{display:grid;gap:10px;max-width:72ch}
 .faq details{border:1.5px solid var(--kraft-2);border-radius:12px;background:rgba(255,255,255,.3);padding:0 18px}
 .faq summary{cursor:pointer;font-weight:700;padding:16px 0;list-style:none;display:flex;justify-content:space-between;gap:12px;align-items:center}
 .faq summary::-webkit-details-marker{display:none}
-.faq summary::after{content:"+";font-family:var(--display);font-size:1.3rem;color:var(--ketchup-2);flex:none}
+.faq summary::after{content:"+";font-family:var(--display);font-size:1.3rem;color:var(--orange-text);flex:none}
 .faq details[open] summary::after{content:"–"}
 .faq details p{padding-bottom:16px;color:var(--encre);line-height:1.55}
 .tel{color:var(--cheddar);font-weight:500;text-decoration:none;white-space:nowrap}
@@ -292,7 +292,7 @@ dialog[open]{animation:pop .3s cubic-bezier(.2,.9,.3,1.1)}
 .page-hero .hero__cta{margin-top:26px}
 .prose--page h2:first-child{margin-top:0}
 .prose--page ul{display:grid;gap:10px}
-.prose--page li b{color:var(--ketchup-2)}
+.prose--page li b{color:var(--orange-text)}
 .btn--ghost-ink{color:var(--encre);border-color:var(--encre-2)}
 .btn--ghost-ink:hover{background:var(--encre);color:var(--kraft)}
 .strip{display:grid;grid-template-columns:repeat(3,1fr);background:var(--brun)}
@@ -486,3 +486,38 @@ html.js .hero .show{animation:rise 1s .2s cubic-bezier(.2,.7,.2,1) both}
 /* lisibilité du texte sur la photo : panneau légèrement teinté */
 .priv__grid>div:first-child{background:rgba(42,26,16,.5);border:1px solid rgba(252,243,227,.14);border-radius:18px;padding:clamp(18px,3vw,28px);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
 .priv .more{margin-top:26px}
+
+
+/* =====================================================================
+   Corrections : bandeau continu, guirlande, épuisé, typographie, formulaire
+   ===================================================================== */
+/* Bandeau défilant : deux groupes identiques, défilement d'exactement un groupe */
+.ticker__track{display:flex;width:max-content;animation:scroll 40s linear infinite;will-change:transform}
+.ticker__group{display:flex;flex:none}
+@keyframes scroll{from{transform:translate3d(0,0,0)}to{transform:translate3d(-50%,0,0)}}
+
+/* Guirlande : ampoules qui scintillent chacune à leur rythme */
+.lights{height:96px}
+.lights svg{position:absolute;inset:0;width:100%;height:96px;display:block}
+.lights .b .h{opacity:.55}
+.lights .b{animation:twinkle 3.2s ease-in-out infinite alternate;animation-delay:calc(var(--d) * -.37s);transform-origin:center}
+@keyframes twinkle{from{opacity:.7}to{opacity:1}}
+.lights .b:nth-child(3n) .h{animation:halo 2.6s ease-in-out infinite alternate;animation-delay:calc(var(--d) * -.5s)}
+@keyframes halo{from{opacity:.3}to{opacity:.8}}
+.hero .wrap{padding-top:clamp(96px,11vw,128px)}
+
+/* Épuisé : ruban en travers de la photo */
+.dish[data-rupture] .dish__img::after{content:"Épuisé ce soir";position:absolute;inset:50% auto auto -25%;width:150%;height:auto;margin:0;transform:translateY(-50%) rotate(-10deg);background:var(--cheddar);color:#2A1A10;font:500 1rem/1 var(--body);letter-spacing:.14em;text-transform:uppercase;text-align:center;padding:13px 0;border-radius:0;box-shadow:0 10px 30px -10px rgba(0,0,0,.6);border-top:2px solid rgba(255,255,255,.45);border-bottom:2px solid rgba(0,0,0,.15)}
+.dish[data-rupture] .dish__img img{filter:saturate(.45) brightness(.7)}
+.show figure[data-rupture]::after{content:"Épuisé ce soir";position:absolute;left:-25%;width:150%;top:50%;transform:translateY(-50%) rotate(-10deg);background:var(--cheddar);color:#2A1A10;font:500 1.05rem/1 var(--body);letter-spacing:.14em;text-transform:uppercase;text-align:center;padding:12px 0;z-index:2;box-shadow:0 10px 30px -10px rgba(0,0,0,.6)}
+.show figure[data-rupture] img{filter:saturate(.45) brightness(.7)}
+
+/* Sauts de ligne élégants : pas de ponctuation orpheline, pas de mot seul */
+p,li,.tag,.lede,.ing,h1,h2,h3,summary{text-wrap:pretty}
+h1,h2,h3{text-wrap:balance}
+
+/* Formulaire : code postal + ville */
+.form .row--cp{grid-template-columns:140px 1fr}
+@media (max-width:520px){.form .row--cp{grid-template-columns:120px 1fr}}
+.field input:invalid:not(:placeholder-shown),.field select:invalid{border-color:var(--brun-line)}
+.form.was-validated :invalid{border-color:var(--ketchup)}

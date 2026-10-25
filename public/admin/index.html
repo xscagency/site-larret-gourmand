@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Rubik:wght@400;500;700&display=swap">
 <style>
-:root{--brun:#3A2619;--brun-2:#4A3224;--brun-3:#5C4133;--line:#6B4E3D;--line-2:#7E5F4C;--creme:#FCF3E3;--creme-2:#EAD8BC;--creme-3:#C9B193;--cheddar:#F3AD3F;--ketchup:#D6402F;--mesclun:#7BA656;--display:'DM Serif Display',Georgia,serif;--body:'Rubik','Segoe UI',Arial,sans-serif;color-scheme:dark}
+:root{--brun:#3A2619;--brun-2:#4A3224;--brun-3:#5C4133;--line:#6B4E3D;--line-2:#7E5F4C;--creme:#FCF3E3;--creme-2:#EAD8BC;--creme-3:#C9B193;--cheddar:#F3AD3F;--ketchup:#E86010;--mesclun:#7BA656;--display:'DM Serif Display',Georgia,serif;--body:'Rubik','Segoe UI',Arial,sans-serif;color-scheme:dark}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html{background:var(--brun)}
@@ -26,6 +26,7 @@ h2 small{display:block;font:400 .9rem var(--body);color:var(--creme-3);margin-to
 .top .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:62px}
 .brand{display:flex;align-items:center;gap:10px;min-width:0}
 .brand h1{white-space:nowrap;font-size:1.25rem}
+.brand__logo{width:40px;height:40px;border-radius:50%;background:#fff;object-fit:contain;padding:2px;flex:none;box-shadow:0 2px 10px rgba(0,0,0,.35)}
 .top .btn.sm{padding:7px 11px;white-space:nowrap}
 .brand__bun{width:24px;height:15px;border-radius:50% 50% 25% 25%/90% 90% 25% 25%;background:linear-gradient(#E2A054,#C97B33);position:relative;flex:none}
 .brand__bun::after{content:"";position:absolute;inset:4px 6px auto 6px;height:3px;background:var(--cheddar);border-radius:2px}
@@ -48,7 +49,7 @@ section.is-on{display:block}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font:500 .95rem var(--body);padding:10px 16px;border-radius:999px;border:1px solid var(--line-2);background:var(--brun-3);color:var(--creme);cursor:pointer;text-decoration:none;transition:filter .15s,transform .05s}
 .btn:hover{filter:brightness(1.08)}
 .btn:active{transform:translateY(1px)}
-.btn.primary{background:var(--ketchup);border-color:var(--ketchup)}
+.btn.primary{background:var(--ketchup);border-color:var(--ketchup);color:#2A1A10}
 .btn.ghost{background:transparent}
 .btn.danger{background:transparent;color:#F5A097;border-color:#8a4a42}
 .btn:disabled{opacity:.5;cursor:default}
@@ -116,6 +117,10 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
 .photoPick img{width:160px;height:160px;object-fit:cover;border-radius:14px;border:1px solid var(--line)}
 .photoPick__empty{width:160px;height:160px;border-radius:14px;border:1px dashed var(--line-2);display:grid;place-items:center;color:var(--creme-3);font-size:.85rem}
 .help{color:var(--creme-3);font-size:.88rem;margin-top:8px}
+.sub{font:500 .8rem var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--cheddar);margin:16px 0 10px}
+.sub:first-child{margin-top:0}
+.copy{border:1px solid var(--line);background:var(--brun);color:var(--creme-2);border-radius:999px;width:34px;height:34px;display:inline-grid;place-items:center;cursor:pointer;font-size:.95rem;flex:none}
+.copy:hover{border-color:var(--cheddar);color:var(--creme)}
 .sw.disabled{opacity:.4;pointer-events:none}
 @media (max-width:480px){.tabs button{padding:8px 11px;font-size:.86rem}h2{font-size:1.35rem}.card{padding:14px}}
 </style>
@@ -123,7 +128,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
 <body>
 
 <div id="login" class="login" hidden>
-  <div class="brand"><span class="brand__bun" aria-hidden="true"></span><div><h1>L'Arrêt Gourmand</h1><small>Tableau de contrôle</small></div></div>
+  <div class="brand"><img class="brand__logo" src="/img/logo.jpg" alt="" width="40" height="40"><div><h1>L'Arrêt Gourmand</h1><small>Tableau de contrôle</small></div></div>
   <p class="muted">Carte, emplacements, tarifs, bandeau et demandes de devis.</p>
   <div class="card">
     <label class="f">Jeton d'accès<input id="token" type="password" autocomplete="current-password" placeholder="Collez votre jeton"></label>
@@ -135,7 +140,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
 <div id="app" hidden>
   <header class="top">
     <div class="wrap">
-      <div class="brand"><span class="brand__bun" aria-hidden="true"></span><div><h1>L'Arrêt Gourmand</h1><small>Tableau de contrôle</small></div></div>
+      <div class="brand"><img class="brand__logo" src="/img/logo.jpg" alt="" width="40" height="40"><div><h1>L'Arrêt Gourmand</h1><small>Tableau de contrôle</small></div></div>
       <div style="display:flex;gap:8px;align-items:center">
         <a class="btn sm" href="/" target="_blank" rel="noopener">Site ↗</a>
         <button class="btn sm" id="logout" type="button">Quitter</button>
@@ -209,17 +214,30 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
     <section id="tab-tarifs">
       <h2>Tarifs<small>Les prix affichés sur l'ardoise du site</small></h2>
       <div class="card">
+        <h3 class="sub">Formules</h3>
         <div class="grid">
           <label class="f">Burger seul (€)<input id="p_burger" type="number" step="0.5" min="0"></label>
           <label class="f">Burger + Frites (€)<input id="p_menu_frites" type="number" step="0.5" min="0"></label>
           <label class="f">Burger + Frites + Boisson (€)<input id="p_menu_complet" type="number" step="0.5" min="0"></label>
           <label class="f">Frites seules (€)<input id="p_frites" type="number" step="0.5" min="0"></label>
         </div>
-        <div style="margin-top:12px"><button class="btn primary" id="prixSave" type="button">Enregistrer les prix</button></div>
+        <h3 class="sub">Suppléments burger (€ en plus)</h3>
+        <div class="grid">
+          <label class="f">Double steak et double fromage<input id="p_sup_double" type="number" step="0.5" min="0"></label>
+          <label class="f">Fromage, bacon ou œuf<input id="p_sup_garniture" type="number" step="0.5" min="0"></label>
+        </div>
+        <h3 class="sub">Suppléments frites (€ en plus)</h3>
+        <div class="grid">
+          <label class="f">Frites cheddar<input id="p_frites_cheddar" type="number" step="0.5" min="0"></label>
+          <label class="f">Frites cheddar + bacon<input id="p_frites_cheddar_bacon" type="number" step="0.5" min="0"></label>
+          <label class="f">Frites cheddar + oignons frits<input id="p_frites_cheddar_oignons" type="number" step="0.5" min="0"></label>
+          <label class="f">Frites cheddar + bacon + oignons<input id="p_frites_complet" type="number" step="0.5" min="0"></label>
+          <label class="f">Frites truffées au parmesan<input id="p_frites_truffe" type="number" step="0.5" min="0"></label>
+        </div>
+        <div style="margin-top:14px"><button class="btn primary" id="prixSave" type="button">Enregistrer les prix</button></div>
       </div>
       <h2 style="margin-top:28px">Supplément par burger</h2>
       <div id="supplements"></div>
-      <p class="help">Les suppléments frites et fromage / bacon / œuf se modifient dans la page elle-même (demandez-le-moi).</p>
     </section>
 
     <section id="tab-bandeau">
@@ -258,6 +276,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
   var toastT;
   function toast(msg,err){var t=$('#toast');t.textContent=msg;t.className='toast is-on'+(err?' err':'');clearTimeout(toastT);toastT=setTimeout(function(){t.className='toast';},2200);}
 
+  function fallbackCopy(t){var ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');}catch(e){}document.body.removeChild(ta);}
   function api(path,opts){
     opts=opts||{};
     return fetch('/api/admin/'+path,{method:opts.method||'GET',headers:{'authorization':'Bearer '+token,'content-type':'application/json'},body:opts.body?JSON.stringify(opts.body):undefined})
@@ -340,6 +359,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
 
     // tarifs & bandeau
     $('#p_burger').value=state.prix.burger;$('#p_menu_frites').value=state.prix.menu_frites;$('#p_menu_complet').value=state.prix.menu_complet;$('#p_frites').value=state.prix.frites;
+    Object.keys(state.supplements||{}).forEach(function(k){var i=document.getElementById('p_'+k);if(i)i.value=state.supplements[k];});
     $('#bandeau').value=state.bandeau||'';
   }
 
@@ -354,9 +374,9 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
       var quand=dateHeure(d.recu_le||'');
       return '<div class="card demande s-'+esc(d.statut)+'">'+
         '<div class="head"><div><div class="name">'+esc(d.nom)+'</div><div class="muted">n°'+d.id+(d.page&&d.page!=='/'?' · via '+esc(d.page):'')+'</div></div><span class="when">'+esc(quand)+'</span></div>'+
-        '<div class="meta">'+(d.type?'<span><b>'+esc(d.type)+'</b></span>':'')+(d.date_event?'<span>'+esc(d.date_event)+'</span>':'')+(d.moment?'<span>'+esc(d.moment)+'</span>':'')+(d.convives?'<span>'+esc(d.convives)+' convives</span>':'')+(d.lieu?'<span>'+esc(d.lieu)+'</span>':'')+'</div>'+
+        '<div class="meta">'+(d.type?'<span><b>'+esc(d.type)+'</b></span>':'')+(d.date_event?'<span>'+esc(d.date_event)+'</span>':'')+(d.moment?'<span>'+esc(d.moment)+'</span>':'')+(d.convives?'<span>'+esc(d.convives)+' convives</span>':'')+(d.lieu?'<span>📍 '+esc(d.lieu)+'</span>':'')+'</div>'+
         (d.message?'<div class="msg">'+esc(d.message)+'</div>':'')+
-        '<div class="actions"><a class="btn sm" href="tel:'+esc(d.tel)+'">📞 '+esc(d.tel)+'</a><a class="btn sm" href="mailto:'+esc(d.email)+'">✉️ '+esc(d.email)+'</a><span class="spacer"></span>'+
+        '<div class="actions"><a class="btn sm" href="tel:'+esc(d.tel)+'">📞 '+esc(d.tel)+'</a><button class="copy" type="button" data-copy="'+esc(d.tel)+'" title="Copier le numéro" aria-label="Copier le numéro">⧉</button><a class="btn sm" href="mailto:'+esc(d.email)+'">✉️ '+esc(d.email)+'</a><button class="copy" type="button" data-copy="'+esc(d.email)+'" title="Copier l\'email" aria-label="Copier l\'email">⧉</button><span class="spacer"></span>'+
         '<select data-statut="'+d.id+'">'+Object.keys(libel).map(function(k){return '<option value="'+k+'"'+(d.statut===k?' selected':'')+'>'+libel[k]+'</option>';}).join('')+'</select>'+
         '<button class="btn sm danger" data-del="'+d.id+'" type="button">Supprimer</button></div></div>';
     }).join(''):'<p class="empty">'+(filter==='nouveau'?'Aucune nouvelle demande.':filter==='encours'?'Aucune demande en cours.':'Aucune demande pour le moment.')+'</p>';
@@ -435,6 +455,12 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
       save('burgers/ordre',{ids:ids},'Ordre modifié');
     }
     if(b.dataset.empsave){var id=b.dataset.empsave,body={};document.querySelectorAll('[data-empf][data-id="'+id+'"]').forEach(function(i){body[i.dataset.empf]=i.value;});save('emplacements/'+id,body);}
+    if(b.dataset.copy!==undefined){
+      var txt=b.dataset.copy;
+      var done=function(){toast('Copié : '+txt);};
+      if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done).catch(function(){fallbackCopy(txt);done();});}
+      else{fallbackCopy(txt);done();}
+    }
     if(b.dataset.del){
       if(b.dataset.confirm!=='1'){b.dataset.confirm='1';b.textContent='Confirmer ?';setTimeout(function(){b.dataset.confirm='';b.textContent='Supprimer';},3000);return;}
       api('demandes/'+b.dataset.del,{method:'DELETE'}).then(function(){toast('Demande supprimée');return api('demandes');}).then(function(d){demandes=d.demandes;renderDemandes();}).catch(function(err){toast(err.message,true);});
@@ -446,7 +472,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
       save('exceptions/'+d,{annule:annule,message:$('#excMsg').value,ville:annule?null:$('#excVille').value,lieu:annule?null:$('#excLieu').value,map_url:annule?null:$('#excMap').value,heures:annule?null:$('#excHeures').value},annule?'Date annulée':'Date déplacée')
         .then(function(){$('#excDate').value='';$('#excMsg').value='';});
     }
-    if(b.id==='prixSave')save('reglages',{prix_burger:$('#p_burger').value,prix_menu_frites:$('#p_menu_frites').value,prix_menu_complet:$('#p_menu_complet').value,prix_frites:$('#p_frites').value},'Prix enregistrés');
+    if(b.id==='prixSave'){var body={prix_burger:$('#p_burger').value,prix_menu_frites:$('#p_menu_frites').value,prix_menu_complet:$('#p_menu_complet').value,prix_frites:$('#p_frites').value};['sup_double','sup_garniture','frites_cheddar','frites_cheddar_bacon','frites_cheddar_oignons','frites_complet','frites_truffe'].forEach(function(k){var i=document.getElementById('p_'+k);if(i)body[k]=i.value;});save('reglages',body,'Prix enregistrés');}
     if(b.id==='supSave'){var inputs=document.querySelectorAll('[data-sup]');Promise.all(Array.prototype.map.call(inputs,function(i){return api('burgers/'+i.dataset.sup,{method:'PUT',body:{supplement:i.value}});})).then(function(){toast('Suppléments enregistrés');load();}).catch(function(err){toast(err.message,true);});}
     if(b.id==='bandeauSave')save('reglages',{bandeau:$('#bandeau').value},'Bandeau enregistré');
     if(b.id==='bandeauClear'){$('#bandeau').value='';save('reglages',{bandeau:''},'Bandeau retiré');}

@@ -148,9 +148,10 @@
     form.addEventListener('submit', function (e) {
       e.preventDefault();
       status.className = 'status';
-      var required = form.querySelectorAll('[required]'), ok = true;
-      required.forEach(function (f) { if (!f.value.trim()) { ok = false; f.focus(); } });
-      if (!ok) { status.textContent = 'Nom, téléphone et email sont nécessaires pour vous répondre.'; status.classList.add('is-on', 'is-error'); return; }
+      var required = form.querySelectorAll('[required]'), first = null;
+      required.forEach(function (f) { var bad = !f.value.trim() || (f.checkValidity && !f.checkValidity()); if (bad && !first) first = f; });
+      form.classList.add('was-validated');
+      if (first) { first.focus(); status.textContent = 'Merci de remplir tous les champs : ils nous permettent de vous faire une proposition précise.'; status.classList.add('is-on', 'is-error'); return; }
       var data = Object.fromEntries(new FormData(form).entries());
       data.page = location.pathname;
       submit.disabled = true; submit.textContent = 'Envoi…';
@@ -158,7 +159,7 @@
         .then(function (r) { return r.json(); })
         .then(function (r) {
           if (!r.ok) throw new Error(r.error || 'Erreur');
-          form.reset();
+          form.reset(); form.classList.remove('was-validated');
           if (sent) { form.hidden = true; sent.hidden = false; sent.scrollIntoView({ block: 'nearest' }); }
           else { status.textContent = 'Demande envoyée. Nous vous contacterons par mail ou téléphone dans les plus brefs délais.'; status.classList.add('is-on'); }
           if (window.dataLayer) window.dataLayer.push({ event: 'demande_devis', page: data.page, type: data.type });

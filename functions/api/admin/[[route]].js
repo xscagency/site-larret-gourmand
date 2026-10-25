@@ -140,10 +140,10 @@ export async function onRequest({ request, env, params }) {
 
   // ---- Réglages (prix, bandeau)
   if (route === 'reglages' && method === 'PUT') {
-    const allowed = ['prix_burger', 'prix_menu_frites', 'prix_menu_complet', 'prix_frites', 'bandeau'];
+    const allowed = ['prix_burger', 'prix_menu_frites', 'prix_menu_complet', 'prix_frites', 'sup_double', 'sup_garniture', 'frites_cheddar', 'frites_cheddar_bacon', 'frites_cheddar_oignons', 'frites_complet', 'frites_truffe', 'bandeau'];
     const stmts = allowed.filter((k) => body[k] !== undefined).map((k) =>
       env.DB.prepare('INSERT INTO reglages (cle, valeur) VALUES (?, ?) ON CONFLICT(cle) DO UPDATE SET valeur = excluded.valeur')
-        .bind(k, k.startsWith('prix_') ? String(num(body[k])) : str(body[k], 300))
+        .bind(k, k === 'bandeau' ? str(body[k], 300) : String(num(body[k])))
     );
     if (stmts.length) await env.DB.batch(stmts);
     return json({ ok: true });

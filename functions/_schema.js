@@ -42,13 +42,13 @@ export const STATEMENTS = [
     recu_le TEXT NOT NULL DEFAULT (datetime('now')),
     nom TEXT, tel TEXT, email TEXT,
     type TEXT, date_event TEXT, convives TEXT, lieu TEXT, message TEXT,
-    moment TEXT,
+    moment TEXT, adresse TEXT, code_postal TEXT, ville TEXT,
     page TEXT,
     statut TEXT NOT NULL DEFAULT 'nouveau',
     mail_envoye INTEGER NOT NULL DEFAULT 0
   )`,
   `INSERT OR IGNORE INTO burgers (id, nom, accroche, description, photo, supplement, ordre) VALUES
-    ('poulet',     'Burger au poulet', 'Votre nouveau burger au poulet préféré !',
+    ('poulet',     'Le Poulet', 'Votre nouveau burger au poulet préféré !',
      'Un bun boulanger, du Poulet Français croustillant maison, du cheddar, une sauce Ranch maison, des oignons frits et du mesclun !', '/img/poulet.jpg', 0, 1),
     ('americain',  'L''Américain', 'Can I get some Burger ?',
      'Un bun boulanger, 150g de Bœuf Charolais Français, double cheddar, de la poitrine fumée, des oignons frits et une sauce burger !', '/img/americain.jpg', 1, 2),
@@ -72,6 +72,13 @@ export const STATEMENTS = [
     ('prix_menu_frites',   '13.5'),
     ('prix_menu_complet',  '15.5'),
     ('prix_frites',        '3.5'),
+    ('sup_double',         '5'),
+    ('sup_garniture',      '2'),
+    ('frites_cheddar',     '2'),
+    ('frites_cheddar_bacon', '3'),
+    ('frites_cheddar_oignons', '2.5'),
+    ('frites_complet',     '3.5'),
+    ('frites_truffe',      '2'),
     ('bandeau',            '')`,
 ];
 
@@ -81,13 +88,21 @@ export async function ensureSchema(env) {
   await applyMigrations(env);
 }
 
-// Colonnes ajoutées après la première mise en ligne. Chaque ligne est ignorée si la colonne existe déjà.
-export const MIGRATIONS = [
-  'ALTER TABLE demandes ADD COLUMN moment TEXT',
-];
-export async function applyMigrations(env) {
-  for (const sql of MIGRATIONS) {
-    try { await env.DB.prepare(sql).run(); }
-    catch (e) { if (!/duplicate column/i.test(String(e?.message || e))) throw e; }
+// Mises à jour appliquées une seule fois sur une base déjà en ligne (numérotées, dans l'ordre).
+// Une base neuve reçoit directement le schéma complet ; une base existante rattrape les versions manquantes.
+export const SCHEMA_VERSION = 3;
+export const MIGRATIONS = {
+  1: ['ALTER TABLE demandes ADD COLUMN moment TEXT'],
+  2: ['ALTER TABLE demandes ADD COLUMN adresse TEXT', 'ALTER TABLE demandes ADD COLUMN code_postal TEXT', 'ALTER TABLE demandes ADD COLUMN ville TEXT',
+      `INSERT OR IGNORE INTO reglages (cle, valeur) VALUES ('sup_double','5'),('sup_garniture','2'),('frites_cheddar','2'),('frites_cheddar_bacon','3'),('frites_cheddar_oignons','2.5'),('frites_complet','3.5'),('frites_truffe','2')`],
+  3: [`UPDATE burgers SET nom = 'Le Poulet' WHERE id = 'poulet' AND nom = 'Burger au poulet'`],
+};
+export async function applyMigrations(env, from = 0) {
+  for (let v = from + 1; v <= SCHEMA_VERSION; v++) {
+    for (const sql of MIGRATIONS[v] || []) {
+      try { await env.DB.prepare(sql).run(); }
+      catch (e) { if (!/duplicate column/i.test(String(e?.message || e))) throw e; }
+    }
   }
+  await env.DB.prepare("INSERT INTO reglages (cle, valeur) VALUES ('schema_version', ?) ON CONFLICT(cle) DO UPDATE SET valeur = excluded.valeur").bind(String(SCHEMA_VERSION)).run();
 }

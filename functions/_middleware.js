@@ -8,10 +8,10 @@
 // Résultat : Google voit le HTML final, sans JavaScript à exécuter.
 // Si la base est injoignable, la page est servie telle quelle (contenu de secours écrit dans index.html).
 
-import { loadState, computeTonight, altPhoto } from './_lib.js';
+import { loadState, computeTonight, altPhoto, typo } from './_lib.js';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const fmt = (n) => (Number.isInteger(n) ? String(n) : String(n).replace('.', ',')) + ' €';
+const fmt = (n) => (Number.isInteger(n) ? String(n) : n.toFixed(2).replace('.', ',')) + ' €';
 const fmtSup = (n) => '+' + fmt(n);
 
 // ---- HTML de la carte (section Menu)
@@ -27,7 +27,7 @@ function renderMenu(state) {
     const prix = b.supplement ? fmtSup(b.supplement) : fmt(state.prix.burger);
     return `<li class="${cls}" data-burger="${esc(b.id)}"${b.rupture ? ' data-rupture="1"' : ''}>
   <div class="dish__img"><img src="${esc(b.photo || '/img/og.jpg')}" alt="${esc(altPhoto(b.nom))}" width="1100" height="1100" loading="lazy"><span class="dish__price${b.supplement ? ' sup' : ''}">${prix}</span></div>
-  <div class="dish__body"><h3>${esc(b.nom)}</h3>${b.accroche ? `<span class="tag">${esc(b.accroche)}</span>` : ''}<p class="ing">${esc(b.description)}</p></div>
+  <div class="dish__body"><h3>${esc(typo(b.nom))}</h3>${b.accroche ? `<span class="tag">${esc(typo(b.accroche))}</span>` : ''}<p class="ing">${esc(typo(b.description))}</p></div>
 </li>`;
   }).join('\n');
 }
@@ -37,7 +37,7 @@ function renderShow(state) {
   const list = state.burgers.filter((b) => b.actif && b.photo);
   return list.map((b, i) => {
     const prix = fmt(state.prix.burger + b.supplement);
-    return `<figure${i === 0 ? ' class="is-on"' : ''} data-burger="${esc(b.id)}"${b.rupture ? ' data-rupture="1"' : ''} data-name="${esc(b.nom)}" data-sub="${esc(b.accroche || b.description.slice(0, 70))}" data-prix="${prix}"><img src="${esc(b.photo)}" alt="${esc(altPhoto(b.nom))}" width="1100" height="1100"${i === 0 ? ' fetchpriority="high"' : ' loading="lazy"'}></figure>`;
+    return `<figure${i === 0 ? ' class="is-on"' : ''} data-burger="${esc(b.id)}"${b.rupture ? ' data-rupture="1"' : ''} data-name="${esc(typo(b.nom))}" data-sub="${esc(typo(b.accroche || b.description.slice(0, 70)))}" data-prix="${prix}"><img src="${esc(b.photo)}" alt="${esc(altPhoto(b.nom))}" width="1100" height="1100"${i === 0 ? ' fetchpriority="high"' : ' loading="lazy"'}></figure>`;
   }).join('\n');
 }
 
@@ -84,6 +84,13 @@ export async function onRequest(context) {
     .on('#showName', { element(el) { if (first) el.setInnerContent(`${esc(first.nom)}<small id="showSub">${esc(first.rupture ? 'Épuisé ce soir' : (first.accroche || first.description.slice(0, 70)))}</small>`, { html: true }); } })
     .on('#showPrice', { element(el) { if (first) el.setInnerContent(fmt(state.prix.burger + first.supplement)); } })
     .on('script[data-ld-menu]', { element(el) { el.setInnerContent(renderMenuLd(state), { html: true }); } })
+    // ---- Prix des suppléments (ardoise)
+    .on('[data-prix-sup]', {
+      element(el) {
+        const v = state.supplements[el.getAttribute('data-prix-sup')];
+        if (v !== undefined) el.setInnerContent(fmtSup(v));
+      },
+    })
     // ---- Prix des formules (ardoise)
     .on('[data-prix-formule]', {
       element(el) {

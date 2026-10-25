@@ -1,5 +1,5 @@
 // Fonctions partagées par les routes.
-import { ensureSchema } from './_schema.js';
+import { ensureSchema, applyMigrations, SCHEMA_VERSION } from './_schema.js';
 
 export const json = (data, status = 200, headers = {}) =>
   new Response(JSON.stringify(data), {
@@ -49,8 +49,14 @@ export async function loadState(env) {
     await ensureSchema(env);
     rows = await readAll(env);
   }
-  const [burgers, emplacements, exceptions, reglages] = rows;
-  const r = Object.fromEntries(reglages.results.map((x) => [x.cle, x.valeur]));
+  let [burgers, emplacements, exceptions, reglages] = rows;
+  let r = Object.fromEntries(reglages.results.map((x) => [x.cle, x.valeur]));
+  // base plus ancienne que le code : on applique les mises à jour manquantes puis on relit
+  if (Number(r.schema_version || 0) < SCHEMA_VERSION) {
+    await applyMigrations(env, Number(r.schema_version || 0));
+    [burgers, emplacements, exceptions, reglages] = await readAll(env);
+    r = Object.fromEntries(reglages.results.map((x) => [x.cle, x.valeur]));
+  }
   const today = todayParis();
   return {
     today,
@@ -59,6 +65,15 @@ export async function loadState(env) {
       menu_frites: Number(r.prix_menu_frites || 13.5),
       menu_complet: Number(r.prix_menu_complet || 15.5),
       frites: Number(r.prix_frites || 3.5),
+    },
+    supplements: {
+      sup_double: Number(r.sup_double ?? 5),
+      sup_garniture: Number(r.sup_garniture ?? 2),
+      frites_cheddar: Number(r.frites_cheddar ?? 2),
+      frites_cheddar_bacon: Number(r.frites_cheddar_bacon ?? 3),
+      frites_cheddar_oignons: Number(r.frites_cheddar_oignons ?? 2.5),
+      frites_complet: Number(r.frites_complet ?? 3.5),
+      frites_truffe: Number(r.frites_truffe ?? 2),
     },
     bandeau: r.bandeau || '',
     burgers: burgers.results.map((b) => ({
@@ -74,6 +89,9 @@ export async function loadState(env) {
     })),
   };
 }
+
+// Ponctuation française : espace fine insécable avant ! ? : ; et à l'intérieur des guillemets
+export const typo = (s) => String(s ?? '').replace(/ ([!?;:»])/g, '\u202F$1').replace(/« /g, '«\u202F');
 
 // Texte alternatif des photos, sur le modèle SEO du site
 export const altPhoto = (nom) => `${nom} – Meilleur Restaurant Burger Carrières Poissy Verneuil Triel sur Seine – L'Arrêt Gourmand`;

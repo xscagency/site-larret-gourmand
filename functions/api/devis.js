@@ -35,11 +35,14 @@ export async function onRequestPost({ request, env }) {
     type: String(data.type || '').trim().slice(0, 60),
     date_event: String(data.date || data.date_event || '').trim().slice(0, 20),
     convives: String(data.convives || '').trim().slice(0, 20),
-    lieu: String(data.lieu || '').trim().slice(0, 160),
-    moment: String(data.moment || '').trim().slice(0, 40),
+    adresse: String(data.adresse || '').trim().slice(0, 200),
+    code_postal: String(data.code_postal || data.cp || '').trim().slice(0, 12),
+    ville: String(data.ville || '').trim().slice(0, 120),
+    moment: String(data.moment || '').trim().slice(0, 60),
     message: String(data.message || '').trim().slice(0, 4000),
     page: String(data.page || request.headers.get('referer') || '').slice(0, 200),
   };
+  d.lieu = [d.adresse, [d.code_postal, d.ville].filter(Boolean).join(' ')].filter(Boolean).join(', ') || String(data.lieu || '').trim().slice(0, 160);
   if (!d.nom || !d.tel || !d.email) return json({ ok: false, error: 'Nom, téléphone et email sont nécessaires pour vous répondre.' }, 400);
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(d.email)) return json({ ok: false, error: 'Adresse email invalide.' }, 400);
 
@@ -56,12 +59,12 @@ export async function onRequestPost({ request, env }) {
 
   // 1. Enregistrement (si la colonne "moment" manque sur une base plus ancienne, on l'ajoute et on réessaie)
   const insert = () => env.DB.prepare(
-    `INSERT INTO demandes (nom, tel, email, type, date_event, convives, lieu, moment, message, page) VALUES (?,?,?,?,?,?,?,?,?,?)`
-  ).bind(d.nom, d.tel, d.email, d.type, d.date_event, d.convives, d.lieu, d.moment, d.message, d.page).run();
+    `INSERT INTO demandes (nom, tel, email, type, date_event, convives, lieu, moment, adresse, code_postal, ville, message, page) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`
+  ).bind(d.nom, d.tel, d.email, d.type, d.date_event, d.convives, d.lieu, d.moment, d.adresse, d.code_postal, d.ville, d.message, d.page).run();
   let ins;
   try { ins = await insert(); }
   catch (e) {
-    if (!/no column named moment|has no column named/i.test(String(e?.message || e))) throw e;
+    if (!/has no column named|no column named/i.test(String(e?.message || e))) throw e;
     await applyMigrations(env);
     ins = await insert();
   }
@@ -72,7 +75,7 @@ export async function onRequestPost({ request, env }) {
   if (env.RESEND_API_KEY && env.MAIL_TO && env.MAIL_FROM) {
     const lignes = [
       ['Nom', d.nom], ['Téléphone', d.tel], ['Email', d.email], ['Type d\'événement', d.type],
-      ['Date souhaitée', d.date_event], ['Moment', d.moment], ['Nombre de convives', d.convives], ['Lieu', d.lieu], ['Page', d.page],
+      ['Date souhaitée', d.date_event], ['Moment', d.moment], ['Nombre de convives', d.convives], ['Adresse', d.lieu], ['Page', d.page],
     ].filter(([, v]) => v);
     const htmlEquipe = `
       <h2 style="font-family:sans-serif">Nouvelle demande n°${id}</h2>
