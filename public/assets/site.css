@@ -404,3 +404,85 @@ h2{font-size:clamp(2rem,4.4vw,3.2rem)}
 .sent__urgent .tel{font-size:1.15rem;white-space:nowrap}
 .sent .btn{margin-top:6px}
 .form .lede{margin-bottom:8px}
+
+
+/* =====================================================================
+   Version vivante : photos en fond, logo, animations, survols
+   ===================================================================== */
+/* Logo dans la navigation et le pied de page */
+.brand__logo{width:40px;height:40px;border-radius:50%;background:#fff;object-fit:contain;padding:2px;flex:none;box-shadow:0 2px 10px rgba(0,0,0,.35)}
+.foot .brand__logo{width:56px;height:56px}
+.nav{transition:box-shadow .3s ease,background-color .3s ease}
+.nav.is-scrolled{box-shadow:0 10px 30px -18px rgba(0,0,0,.8);background:rgba(58,38,25,.96)}
+
+/* Bandes photo (remplacent le bloc rouge) */
+.band--photo{position:relative;color:var(--creme);background-color:var(--brun);background-size:cover;background-position:center;isolation:isolate}
+.band--photo::before{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,rgba(42,26,16,.82),rgba(42,26,16,.66) 40%,rgba(42,26,16,.9))}
+.band--photo .lede{color:rgba(252,243,227,.88)}
+.band--photo .section-head h2::after{background:var(--cheddar)}
+.priv{background-image:url("/img/truck-mariage.jpg")}
+.priv p{color:var(--creme)}
+.priv .btn--creme{background:var(--cheddar);border-color:var(--cheddar);color:#2A1A10}
+.priv .btn--creme:hover{background:#F7BD5F;border-color:#F7BD5F}
+.priv .btn--ghost{border-color:rgba(252,243,227,.6)}
+.priv .btn--ghost:hover{background:var(--creme);color:var(--brun)}
+.priv .more a{color:var(--creme)}
+.pillars>div{background:rgba(42,26,16,.55);border:1px solid rgba(252,243,227,.18);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);transition:transform .3s ease,border-color .3s ease}
+.pillars>div:hover{transform:translateY(-3px);border-color:rgba(243,173,63,.6)}
+.pillars h3{color:var(--cheddar)}
+.cta-band{background-image:url("/img/service.jpg")}
+.cta-band .btn--creme{background:var(--cheddar);border-color:var(--cheddar);color:#2A1A10}
+.cta-band .btn--creme:hover{background:#F7BD5F;border-color:#F7BD5F}
+.cta-band h2::after{background:var(--cheddar)}
+
+/* Photo de service dans la section À propos */
+.about__photo{margin:0 0 16px;border-radius:16px;overflow:hidden;aspect-ratio:4/3;box-shadow:0 20px 50px -24px rgba(42,26,16,.6)}
+.about__photo img{width:100%;height:100%;object-fit:cover;transition:transform 1.2s ease}
+.about__photo:hover img{transform:scale(1.04)}
+
+/* Survols : cartes qui se soulèvent, boutons réactifs */
+.dish{transition:transform .35s cubic-bezier(.2,.7,.2,1),box-shadow .35s ease}
+.dish:hover{transform:translateY(-6px);box-shadow:0 24px 50px -24px rgba(42,26,16,.55)}
+.ticket{transition:transform .3s ease,border-color .3s ease,box-shadow .3s ease}
+.ticket:hover{transform:translateY(-4px);border-color:var(--cheddar)}
+.g{transition:transform .3s ease}
+.g:hover{transform:translateX(4px)}
+.btn{transition:transform .18s ease,background-color .18s ease,color .18s ease,border-color .18s ease,box-shadow .18s ease}
+.btn:hover{transform:translateY(-1px);box-shadow:0 10px 24px -14px rgba(0,0,0,.6)}
+.btn:active{transform:translateY(1px);box-shadow:none}
+.claims li{transition:border-color .2s ease,transform .2s ease}
+.claims li:hover{border-color:var(--cheddar);transform:translateY(-1px)}
+.towns a{transition:background .2s ease,color .2s ease,transform .2s ease}
+.towns a:hover{transform:translateY(-1px)}
+
+/* Apparition au défilement (désactivée sans JavaScript et si l'utilisateur préfère moins d'animation) */
+html.js .reveal{opacity:0;transform:translateY(22px);transition:opacity .7s ease,transform .8s cubic-bezier(.2,.7,.2,1)}
+html.js .reveal.in{opacity:1;transform:none}
+html.js .reveal-stagger>*{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .7s cubic-bezier(.2,.7,.2,1)}
+html.js .reveal-stagger.in>*{opacity:1;transform:none}
+html.js .reveal-stagger.in>*:nth-child(1){transition-delay:.05s}
+html.js .reveal-stagger.in>*:nth-child(2){transition-delay:.12s}
+html.js .reveal-stagger.in>*:nth-child(3){transition-delay:.19s}
+html.js .reveal-stagger.in>*:nth-child(4){transition-delay:.26s}
+html.js .reveal-stagger.in>*:nth-child(5){transition-delay:.33s}
+html.js .reveal-stagger.in>*:nth-child(6){transition-delay:.40s}
+html.js .reveal-stagger.in>*:nth-child(7){transition-delay:.47s}
+html.js .reveal-stagger.in>*:nth-child(n+8){transition-delay:.54s}
+/* le hero apparaît en douceur au chargement */
+html.js .hero .wrap>div:first-child>*{animation:rise .8s cubic-bezier(.2,.7,.2,1) both}
+html.js .hero .wrap>div:first-child>*:nth-child(2){animation-delay:.08s}
+html.js .hero .wrap>div:first-child>*:nth-child(3){animation-delay:.16s}
+html.js .hero .wrap>div:first-child>*:nth-child(4){animation-delay:.24s}
+html.js .hero .wrap>div:first-child>*:nth-child(5){animation-delay:.32s}
+html.js .hero .show{animation:rise 1s .2s cubic-bezier(.2,.7,.2,1) both}
+@keyframes rise{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){
+  html.js .reveal,html.js .reveal-stagger>*{opacity:1!important;transform:none!important;transition:none!important}
+  html.js .hero .wrap>div:first-child>*,html.js .hero .show{animation:none!important}
+}
+.page-hero__photo--wide{aspect-ratio:3/2}
+@media (max-width:900px){.page-hero__photo--wide{max-width:100%}}
+.section-head.reveal+.faq{margin-top:22px}
+/* lisibilité du texte sur la photo : panneau légèrement teinté */
+.priv__grid>div:first-child{background:rgba(42,26,16,.5);border:1px solid rgba(252,243,227,.14);border-radius:18px;padding:clamp(18px,3vw,28px);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.priv .more{margin-top:26px}

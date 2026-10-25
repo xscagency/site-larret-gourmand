@@ -70,6 +70,22 @@
     });
   }
 
+  // ---------- Apparitions au défilement + barre compacte ----------
+  var reveals = document.querySelectorAll('.reveal, .reveal-stagger');
+  if ('IntersectionObserver' in window && reveals.length) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) { if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); } });
+    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
+    reveals.forEach(function (el) { io.observe(el); });
+    // sécurité : tout ce qui n'a pas été vu après 4 s apparaît quand même
+    setTimeout(function () { reveals.forEach(function (el) { el.classList.add('in'); }); }, 2500);
+  } else { reveals.forEach(function (el) { el.classList.add('in'); }); }
+  var navEl = document.getElementById('nav');
+  if (navEl) {
+    var onScroll = function () { navEl.classList.toggle('is-scrolled', window.scrollY > 24); };
+    window.addEventListener('scroll', onScroll, { passive: true }); onScroll();
+  }
+
   // ---------- Menu mobile ----------
   var nav = document.getElementById('nav'), burger = document.getElementById('navBurger');
   if (nav && burger) {
