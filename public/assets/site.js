@@ -138,8 +138,9 @@
   var dlg = document.getElementById('contact');
   if (dlg) {
     // la page derrière est figée tant que la fenêtre est ouverte (sinon elle défile sous le doigt sur mobile)
-    var openDlg = function () { try { dlg.showModal(); document.documentElement.classList.add('dlg-open'); } catch (e) {} };
-    dlg.addEventListener('close', function () { document.documentElement.classList.remove('dlg-open'); });
+    var savedY = 0;
+    var openDlg = function () { try { savedY = window.scrollY || 0; dlg.showModal(); document.body.style.top = (-savedY) + 'px'; document.documentElement.classList.add('dlg-open'); } catch (e) {} };
+    dlg.addEventListener('close', function () { document.documentElement.classList.remove('dlg-open'); document.body.style.top = ''; window.scrollTo(0, savedY); });
     document.querySelectorAll('[data-open-contact]').forEach(function (b) { b.addEventListener('click', openDlg); });
     document.querySelectorAll('[data-close-contact]').forEach(function (b) { b.addEventListener('click', function () { dlg.close(); }); });
     dlg.addEventListener('click', function (e) { if (e.target === dlg) dlg.close(); });

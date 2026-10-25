@@ -560,6 +560,7 @@ h1,h2,h3{text-wrap:balance}
 /* ---------- fenêtre de contact : stable sur mobile ---------- */
 .sheet{overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 html.dlg-open,html.dlg-open body{overflow:hidden;overscroll-behavior:none}
+html.dlg-open body{position:fixed;left:0;right:0;width:100%}
 @media (max-width:640px){
   /* plein écran, calé en haut : plus de recentrage à chaque apparition du clavier */
   dialog{max-width:none;width:100%;height:100vh;height:100dvh;max-height:none;margin:0;inset:0;overflow:hidden;border-radius:0}
