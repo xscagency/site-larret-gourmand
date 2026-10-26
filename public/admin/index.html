@@ -574,10 +574,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
 
       <h2 style="margin-top:30px" id="alFormTitle">Envoyer une alerte</h2>
       <div class="card al-form" id="alForm">
-        <div class="al-form__grid">
-          <label class="f">Sujet<select id="alSujet"><option value="service">Où est le camion ce soir</option><option value="annulation">Annulation / changement</option><option value="burger">Nouveau burger / burger du moment</option><option value="offres">Offre / bon plan</option><option value="concours">Concours</option></select></label>
-          <label class="f">Page ouverte au toucher<select id="alUrl"><option value="/#emplacements">Les emplacements</option><option value="/#menu">La carte</option><option value="/">L'accueil</option><option value="/contact">Demande de devis</option></select></label>
-        </div>
+        <label class="f">Sujet<select id="alSujet"><option value="service">Où est le camion ce soir</option><option value="annulation">Annulation / changement</option><option value="burger">Nouveau burger / burger du moment</option><option value="offres">Offre / bon plan</option><option value="concours">Concours</option></select></label>
         <label class="f">Titre <span class="cnt" id="alTitreN">0 / 60</span><input id="alTitre" type="text" maxlength="60" placeholder="Ex. : Ce soir : Triel-sur-Seine"></label>
         <label class="f">Message <span class="cnt" id="alCorpsN">0 / 180</span><textarea id="alCorps" rows="3" maxlength="180" placeholder="Ex. : Centre commercial des Châtelaines, de 19h à 20h30. À tout à l'heure !"></textarea></label>
         <div class="f"><span>Villes concernées</span><div class="al-villes" id="alVilles"></div><span class="muted" style="font-size:.84rem">Les abonnés « toutes les villes » reçoivent chaque alerte, quelle que soit la ville cochée.</span></div>
@@ -666,7 +663,6 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
 
   // ---------- alertes sur téléphone
   var SUJETS_LIB={service:'Où est le camion ce soir',annulation:'Annulation / changement',burger:'Nouveau burger',offres:'Offre',concours:'Concours'};
-  var SUJET_URL={service:'/#emplacements',annulation:'/#emplacements',burger:'/#menu',offres:'/',concours:'/'};
   var alData=null;
   function bars(obj,total,extra){var keys=Object.keys(obj);if(extra)keys=extra.concat(keys.filter(function(k){return extra.indexOf(k)<0;}));return '<div class="al-bars">'+keys.map(function(k){var n=obj[k]||0;return '<div class="al-bar"><span>'+esc(k)+'</span><b>'+n+'</b><i style="--w:'+(total?Math.round(n/total*100):0)+'%"></i></div>';}).join('')+'</div>';}
   function renderAlertes(){
@@ -732,7 +728,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
   }
   function prefillAlerte(o){
     document.querySelector('#tabs button[data-tab="alertes"]').click();
-    $('#alSujet').value=o.sujet||'service';$('#alTitre').value=o.titre||'';$('#alCorps').value=o.corps||'';$('#alUrl').value=o.url||SUJET_URL[o.sujet]||'/';
+    $('#alSujet').value=o.sujet||'service';$('#alTitre').value=o.titre||'';$('#alCorps').value=o.corps||'';
     document.querySelectorAll('#alVilles input').forEach(function(i){i.checked=!o.villes||!o.villes.length||o.villes.indexOf(i.value)>=0;});
     updateCible();
     var f=$('#alForm');f.classList.add('is-hl');setTimeout(function(){f.classList.remove('is-hl');},1600);
@@ -740,7 +736,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
     if(/…/.test($('#alTitre').value)){$('#alTitre').focus();$('#alTitre').setSelectionRange($('#alTitre').value.indexOf('…'),$('#alTitre').value.indexOf('…')+1);}
   }
   ['#alTitre','#alCorps'].forEach(function(id){$(id).addEventListener('input',updateCible);});
-  $('#alSujet').addEventListener('change',function(){$('#alUrl').value=SUJET_URL[$('#alSujet').value]||'/';updateCible();});
+  $('#alSujet').addEventListener('change',updateCible);
   $('#alVilles').addEventListener('change',updateCible);
   $('#alSend').addEventListener('click',function(){
     var titre=$('#alTitre').value.trim(),corps=$('#alCorps').value.trim();
@@ -748,7 +744,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
     var villes=alVillesChoisies();
     if(!confirm('Envoyer « '+titre+' » aux abonnés '+(villes.length?'de '+villes.join(', '):'de toutes les villes')+' ?'))return;
     var btn=$('#alSend'),prog=$('#alProgress');btn.disabled=true;prog.hidden=false;prog.textContent='Préparation…';
-    api('alertes',{method:'POST',body:{sujet:$('#alSujet').value,titre:titre,corps:corps,url:$('#alUrl').value,villes:villes}}).then(function(r){
+    api('alertes',{method:'POST',body:{sujet:$('#alSujet').value,titre:titre,corps:corps,villes:villes}}).then(function(r){
       if(!r.cibles){prog.textContent='Aucun abonné ne correspond : rien envoyé.';btn.disabled=false;return renderAlertes();}
       var total=r.cibles;
       function lot(){return api('alertes/'+r.id+'/lot',{method:'POST'}).then(function(l){prog.textContent='Envoi… '+l.envoyes+' / '+total+(l.echecs?' ('+l.echecs+' échec'+(l.echecs>1?'s':'')+')':'');if(!l.termine)return lot();return l;});}
