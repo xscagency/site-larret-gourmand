@@ -297,8 +297,8 @@ export async function onRequest({ request, env, params }) {
     const [tot, rows, hist, suivi] = await Promise.all([
       env.DB.prepare('SELECT COUNT(*) AS n FROM abonnes WHERE actif = 1').first(),
       env.DB.prepare('SELECT villes, sujets, appareil FROM abonnes WHERE actif = 1').all(),
-      env.DB.prepare('SELECT * FROM alertes ORDER BY id DESC LIMIT 40').all(),
-      env.DB.prepare('SELECT alerte_id, appareil, SUM(envoye) AS envoyes, SUM(recu) AS recus, SUM(ouvert) AS ouverts FROM alertes_suivi WHERE alerte_id IN (SELECT id FROM alertes ORDER BY id DESC LIMIT 40) GROUP BY alerte_id, appareil').all(),
+      env.DB.prepare('SELECT * FROM alertes ORDER BY id DESC LIMIT 300').all(),
+      env.DB.prepare('SELECT alerte_id, appareil, SUM(envoye) AS envoyes, SUM(recu) AS recus, SUM(ouvert) AS ouverts FROM alertes_suivi WHERE alerte_id IN (SELECT id FROM alertes ORDER BY id DESC LIMIT 300) GROUP BY alerte_id, appareil').all(),
     ]);
     const parAlerte = {};
     for (const r of suivi.results) { (parAlerte[r.alerte_id] ||= {})[r.appareil] = { envoyes: r.envoyes, recus: r.recus, ouverts: r.ouverts }; }
