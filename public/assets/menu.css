@@ -3,7 +3,7 @@ body.menu-app{background:var(--brun);color:var(--creme);padding-bottom:max(24px,
 .menu-app .mwrap{max-width:720px;margin-inline:auto;padding:0 16px 32px}
 /* en-tête */
 .menu-app .mh{position:static;padding-top:env(safe-area-inset-top,0px);background:var(--brun);backdrop-filter:none;-webkit-backdrop-filter:none;border-bottom:0}
-.menu-app .mtabs{position:sticky;top:0;z-index:40;background:rgba(var(--rgb-brun),.94);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--brun-line);padding-top:10px}
+
 .menu-app .mh__row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px 6px;max-width:720px;margin-inline:auto}
 .menu-app .mh__brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--creme);font-size:1rem;white-space:normal}
 .menu-app .mh__brand img{width:52px;height:52px;flex:none}
@@ -18,16 +18,18 @@ body.menu-app{background:var(--brun);color:var(--creme);padding-bottom:max(24px,
 .menu-app #tonightDot.is-off{background:var(--cheddar);box-shadow:0 0 0 4px rgba(243,173,63,.22);animation:none}
 @keyframes menuPulse{0%,100%{box-shadow:0 0 0 4px rgba(123,166,86,.25)}50%{box-shadow:0 0 0 7px rgba(123,166,86,.1)}}
 .menu-app .bandeau{margin:0 16px 8px;padding:8px 12px;border-radius:10px;background:var(--cheddar);color:#2A1A10;font-weight:500;font-size:.9rem;text-align:center;max-width:688px;margin-inline:auto}
-.menu-app .mtabs{display:flex;gap:6px;overflow-x:auto;padding:4px 16px 10px;scrollbar-width:none;-webkit-overflow-scrolling:touch;max-width:720px;margin-inline:auto}
-.menu-app .mtabs::-webkit-scrollbar{display:none}
-.menu-app .mtabs a{flex:none;padding:8px 14px;border-radius:999px;border:1px solid var(--brun-line);color:var(--creme-2);text-decoration:none;font-size:.9rem;font-weight:500;background:rgba(var(--rgb-brun2),.5);transition:background .15s,color .15s}
-.menu-app .mtabs a.is-on{background:var(--cheddar);color:#2A1A10;border-color:var(--cheddar)}
+/* barre d'onglets : en bas sur téléphone (comme une appli), tout tient sans défiler */
+.menu-app .mtabs{position:fixed;left:0;right:0;bottom:0;z-index:40;display:grid;grid-template-columns:repeat(5,1fr);gap:0;padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px));background:rgba(var(--rgb-brun),.96);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--brun-line);box-shadow:0 -10px 30px -16px rgba(0,0,0,.7)}
+.menu-app .mtabs a{display:grid;justify-items:center;gap:3px;padding:6px 2px 4px;border-radius:12px;color:var(--creme-2);text-decoration:none;font-size:.68rem;font-weight:500;letter-spacing:.01em;transition:color .15s,background .15s;min-width:0}
+.menu-app .mtabs svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.menu-app .mtabs a.is-on{color:var(--cheddar);background:rgba(243,173,63,.12)}
+body.menu-app{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
 /* bande décorative des thèmes (vide hors thème) */
 .menu-app .mdeco{display:none}
 html[data-theme] .menu-app .mdeco{display:block;position:relative;height:118px;margin:4px -16px 0;overflow:hidden;border-radius:0}
 html[data-theme] .menu-app .mdeco .deco-bunting-svg{top:0;height:118px}
 /* sections */
-.menu-app .msec{margin-top:30px;scroll-margin-top:70px}
+.menu-app .msec{margin-top:30px;scroll-margin-top:12px}
 .menu-app .msec h2{font-family:var(--display);font-weight:400;font-size:1.65rem;margin:0 0 6px;line-height:1.1}
 .menu-app .msec h2::after{content:"";display:block;width:34px;height:3px;border-radius:2px;background:var(--cheddar);margin-top:8px}
 .menu-app .mlede{color:var(--creme-2);font-size:.95rem;margin:10px 0 14px;line-height:1.45}
@@ -97,3 +99,12 @@ html[data-theme] .menu-app .mdeco .deco-bunting-svg{top:0;height:118px}
 .menu-app .mfoot a{color:var(--cheddar)}
 /* mode installé : on retire ce qui n'a plus de sens */
 @media (display-mode: standalone){.menu-app .minstall{display:none!important}.menu-app .mfoot a[href="/"]{display:none}}
+
+@media (min-width:721px){
+  .menu-app .mtabs{position:sticky;top:0;bottom:auto;display:flex;justify-content:center;gap:6px;padding:10px 16px;border-top:0;border-bottom:1px solid var(--brun-line);box-shadow:none}
+  .menu-app .mtabs a{grid-auto-flow:column;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;font-size:.9rem;border:1px solid var(--brun-line)}
+  .menu-app .mtabs svg{width:18px;height:18px}
+  .menu-app .mtabs a.is-on{background:var(--cheddar);color:#2A1A10;border-color:var(--cheddar)}
+  body.menu-app{padding-bottom:32px}
+  .menu-app .msec{scroll-margin-top:70px}
+}

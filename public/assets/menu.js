@@ -3,9 +3,10 @@
   'use strict';
   // ---- onglets
   var tabs = Array.prototype.slice.call(document.querySelectorAll('.mtabs a')), secs = tabs.map(function (a) { return document.querySelector(a.getAttribute('href')); });
-  function setTab(id) { tabs.forEach(function (a) { a.classList.toggle('is-on', a.getAttribute('href') === '#' + id); }); var on = document.querySelector('.mtabs a.is-on'); if (on && on.scrollIntoView) on.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' }); }
+  // (pas de scrollIntoView ici : sur une barre fixe, il ferait remonter toute la page)
+  function setTab(id) { tabs.forEach(function (a) { a.classList.toggle('is-on', a.getAttribute('href') === '#' + id); }); }
   if ('IntersectionObserver' in window && secs.length) {
-    var io = new IntersectionObserver(function (entries) { entries.forEach(function (e) { if (e.isIntersecting) setTab(e.target.id); }); }, { rootMargin: '-45% 0px -50% 0px', threshold: 0 });
+    var io = new IntersectionObserver(function (entries) { entries.forEach(function (e) { if (e.isIntersecting) setTab(e.target.id); }); }, { rootMargin: '-30% 0px -60% 0px', threshold: 0 });
     secs.forEach(function (s) { if (s) io.observe(s); });
   }
   tabs.forEach(function (a) { a.addEventListener('click', function () { setTab(a.getAttribute('href').slice(1)); }); });
