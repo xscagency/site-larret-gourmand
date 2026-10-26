@@ -372,7 +372,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
         <button data-tab="demandes">Demandes<span class="n" id="nNew" hidden></span></button>
         <button data-tab="devis">Devis</button>
         <button data-tab="agenda">Agenda<span class="n" id="nAg" hidden></span></button>
-        <button data-tab="alertes">Alertes<span class="n" id="nAl" hidden></span></button>
+        <button data-tab="alertes">Alertes</button>
         <button data-tab="bandeau">Réglages</button>
       </nav>
     </div>
@@ -678,7 +678,6 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
         '<div class="card"><div class="lab">Abonnés</div><div class="big">'+n+'</div><div class="sub">'+r.par_appareil.iphone+' iPhone · '+r.par_appareil.android+' Android'+(r.par_appareil.autre?' · '+r.par_appareil.autre+' autre':'')+'</div></div>'+
         '<div class="card"><div class="lab">Par ville</div>'+bars(villes,n)+'</div>'+
         '<div class="card"><div class="lab">Par sujet</div>'+bars(sujets,n)+'</div>';
-      $('#nAl').hidden=!n;$('#nAl').textContent=n;
       var vs=[];state.emplacements.forEach(function(e){if(vs.indexOf(e.ville)<0)vs.push(e.ville);});
       var cur=Array.prototype.slice.call(document.querySelectorAll('#alVilles input:checked')).map(function(i){return i.value;});
       $('#alVilles').innerHTML=vs.map(function(v){return '<label><input type="checkbox" value="'+esc(v)+'" '+(cur.length?(cur.indexOf(v)>=0?'checked':''):'checked')+'><span>'+esc(v)+'</span></label>';}).join('');
