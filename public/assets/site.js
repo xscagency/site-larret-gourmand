@@ -188,21 +188,63 @@
   var pt = function (t, w, h) { return [2 * (1 - t) * t * (w / 2) + t * t * w, (1 - t) * (1 - t) * 8 + 2 * (1 - t) * t * h + t * t * 8]; };
   var ang = function (t, w, h) { var a = pt(t - .01, w, h), b = pt(t + .01, w, h); return Math.atan2(b[1] - a[1], b[0] - a[0]) * 180 / Math.PI; };
 
-  // Une « vague » de banderole (tuile répétée horizontalement). kind : pennant | heart | egg | pine
-  function bunting(kind, colors) {
-    var w = 260, h = 60, items = '', rope = '<path d="M0 8 Q130 ' + (h + 8) + ' 260 8" fill="none" stroke="' + (kind === 'pine' ? '#1B5E20' : '#8B6B4E') + '" stroke-width="' + (kind === 'pine' ? 9 : 2) + '" stroke-linecap="round"/>';
-    if (kind === 'pine') rope += '<path d="M0 8 Q130 ' + (h + 8) + ' 260 8" fill="none" stroke="#43A047" stroke-width="6" stroke-dasharray="2 5" stroke-linecap="round"/>';
+  // Une « vague » de banderole (tuile répétée horizontalement), version travaillée : dégradés, ourlet, surpiqûres, motifs, corde torsadée.
+  // kind : pennant | heart | egg | pine — scale : 1 pour la grande banderole de l'entrée, ~.5 pour les petites sur les encarts
+  function mixc(hex, to, f) { var a = parseInt(hex.slice(1), 16), b = parseInt(to.slice(1), 16), r = [16, 8, 0].map(function (s) { var x = (a >> s) & 255, y = (b >> s) & 255; return Math.round(x + (y - x) * f); }); return '#' + r.map(function (v) { return ('0' + v.toString(16)).slice(-2); }).join(''); }
+  function bunting(kind, colors, opts) {
+    opts = opts || {}; var motif = opts.motif || '', w = 320, h = 92, flagH = 58, flagW = 46, defs = '', items = '', i;
+    var isLight = function (c) { var n = parseInt(c.slice(1), 16); return ((n >> 16) * .3 + ((n >> 8) & 255) * .59 + (n & 255) * .11) > 170; };
+    for (i = 0; i < colors.length; i++) defs += '<linearGradient id="g' + i + '" x1="0" y1="0" x2=".4" y2="1"><stop offset="0" stop-color="' + mixc(colors[i], '#ffffff', .28) + '"/><stop offset=".55" stop-color="' + colors[i] + '"/><stop offset="1" stop-color="' + mixc(colors[i], '#000000', .22) + '"/></linearGradient>';
+    defs += '<radialGradient id="hl" cx=".35" cy=".3" r=".7"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".6" stop-color="#fff" stop-opacity="0"/></radialGradient>';
+    var rope;
+    if (kind === 'pine') {
+      var d = 'M0 10 Q160 ' + (h + 10) + ' 320 10';
+      rope = '<path d="' + d + '" fill="none" stroke="#0E3A1A" stroke-width="17" stroke-linecap="round"/><path d="' + d + '" fill="none" stroke="#2E7D32" stroke-width="13" stroke-dasharray="2 4" stroke-linecap="round"/><path d="' + d + '" fill="none" stroke="#66BB6A" stroke-width="7" stroke-dasharray="1 8" stroke-dashoffset="3" stroke-linecap="round"/><path d="' + d + '" fill="none" stroke="#A5D6A7" stroke-width="3" stroke-dasharray="1 13" stroke-dashoffset="7" stroke-linecap="round"/>';
+      var tl = [.05, .2, .4, .6, .8, .95];
+      for (i = 0; i < tl.length; i++) { var q = pt(tl[i], w, h); rope += '<circle cx="' + q[0].toFixed(1) + '" cy="' + (q[1] + 2).toFixed(1) + '" r="5" fill="#FFE082" fill-opacity=".35"/><circle cx="' + q[0].toFixed(1) + '" cy="' + (q[1] + 2).toFixed(1) + '" r="2.4" fill="#FFF3C4"/>'; }
+    } else {
+      var dr = 'M0 8 Q160 ' + (h + 8) + ' 320 8';
+      rope = '<path d="' + dr + '" fill="none" stroke="#4E342E" stroke-width="4" stroke-linecap="round"/><path d="' + dr + '" fill="none" stroke="#A1887F" stroke-width="2" stroke-dasharray="5 4" stroke-linecap="round"/>';
+    }
     var ts = [.1, .3, .5, .7, .9];
-    for (var i = 0; i < ts.length; i++) {
-      var p = pt(ts[i], w, h), a = ang(ts[i], w, h), c = colors[i % colors.length], x = p[0].toFixed(1), y = p[1].toFixed(1);
-      var g = '<g transform="translate(' + x + ' ' + y + ') rotate(' + a.toFixed(1) + ')">';
-      if (kind === 'pennant') g += '<path d="M-15 0 L15 0 L0 36 Z" fill="' + c + '"/><path d="M-15 0 L15 0 L11 5 L-11 5 Z" fill="rgba(0,0,0,.12)"/>';
-      else if (kind === 'heart') g += '<path d="M0 30 C-16 18 -16 4 -7 3 C-3 3 -1 6 0 9 C1 6 3 3 7 3 C16 4 16 18 0 30Z" fill="' + c + '"/><line x1="0" y1="0" x2="0" y2="5" stroke="#8B6B4E" stroke-width="1.5"/>';
-      else if (kind === 'egg') g += '<line x1="0" y1="0" x2="0" y2="6" stroke="#8B6B4E" stroke-width="1.5"/><path d="M0 6 C-11 6 -14 22 -11 30 C-8 38 8 38 11 30 C14 22 11 6 0 6Z" fill="' + c + '"/><path d="M-9 18 Q0 14 9 18 M-10 24 Q0 28 10 24" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="2"/>';
-      else if (kind === 'pine') g += '<line x1="0" y1="0" x2="0" y2="8" stroke="#C9A24A" stroke-width="1.5"/><circle cx="0" cy="17" r="9" fill="' + c + '"/><circle cx="-3" cy="14" r="3" fill="rgba(255,255,255,.35)"/>';
+    for (i = 0; i < ts.length; i++) {
+      var p = pt(ts[i], w, h), a = ang(ts[i], w, h), c = colors[i % colors.length], gi = i % colors.length, x = p[0].toFixed(1), y = p[1].toFixed(1), sway = (i % 2 ? -3 : 3);
+      var g = '<g transform="translate(' + x + ' ' + y + ') rotate(' + (a + sway).toFixed(1) + ')">';
+      if (kind === 'pennant') {
+        var hw = flagW / 2, ink = isLight(c) ? 'rgba(0,0,0,.35)' : 'rgba(255,255,255,.55)';
+        g += '<path d="M' + (-hw) + ' 2 L' + hw + ' 2 L0 ' + flagH + ' Z" fill="rgba(0,0,0,.25)" transform="translate(2 3)"/>';
+        g += '<path d="M' + (-hw) + ' 2 L' + hw + ' 2 L0 ' + flagH + ' Z" fill="url(#g' + gi + ')"/><path d="M' + (-hw) + ' 2 L' + hw + ' 2 L0 ' + flagH + ' Z" fill="url(#hl)"/>';
+        g += '<path d="M' + (-hw + 6) + ' 9 L' + (hw - 6) + ' 9 L0 ' + (flagH - 10) + ' Z" fill="none" stroke="' + ink + '" stroke-width="1.3" stroke-dasharray="3 3"/>';
+        g += '<rect x="' + (-hw - 2) + '" y="-2" width="' + (flagW + 4) + '" height="7" rx="2" fill="' + mixc(c, '#000000', .35) + '"/><rect x="' + (-hw - 2) + '" y="-2" width="' + (flagW + 4) + '" height="3" rx="1.5" fill="rgba(255,255,255,.25)"/>';
+        if (motif === 'halloween') {
+          if (gi % 3 === 0) g += '<path d="M-7 20 L-2 26 L-9 26Z M7 20 L2 26 L9 26Z" fill="#1A1A1A"/><path d="M-8 31 L-5 35 L-2 31 L0 35 L2 31 L5 35 L8 31" fill="none" stroke="#1A1A1A" stroke-width="2.2" stroke-linejoin="round"/>';
+          else if (gi % 3 === 1) g += '<path d="M0 26 C-2 21 -6 20 -12 23 C-9 24 -8 27 -10 30 C-7 29 -4 29 -2 32 L0 30 L2 32 C4 29 7 29 10 30 C8 27 9 24 12 23 C6 20 2 21 0 26Z" fill="#FF7A1A"/>';
+          else g += '<path d="M-7 36 V24 A7 7 0 0 1 7 24 V36 L4 33 L2 36 L0 33 L-2 36 L-4 33Z" fill="#fff" fill-opacity=".9"/><circle cx="-2.5" cy="25" r="1.2" fill="#1A1A1A"/><circle cx="2.5" cy="25" r="1.2" fill="#1A1A1A"/>';
+        } else if (motif === 'france') {
+          if (gi % 3 === 1) g += '<path d="M0 17 L3 24 L10 25 L5 30 L6 37 L0 34 L-6 37 L-5 30 L-10 25 L-3 24Z" fill="#F2C14E" stroke="#B8860B" stroke-width=".8"/>';
+          else g += '<path d="M0 20 L2 26 L8 27 L4 31 L5 37 L0 34 L-5 37 L-4 31 L-8 27 L-2 26Z" fill="rgba(255,255,255,.85)"/>';
+        } else g += '<circle cy="24" r="5" fill="rgba(255,255,255,.55)"/>';
+      } else if (kind === 'heart') {
+        var hs = (i % 2 ? .82 : 1);
+        g += '<line x1="0" y1="0" x2="0" y2="7" stroke="#A1887F" stroke-width="1.6"/><circle cy="7" r="2" fill="#F2C14E"/>';
+        g += '<g transform="translate(0 7) scale(' + hs + ')"><path d="M0 44 C-24 28 -24 6 -10 4 C-4 4 -1 8 0 12 C1 8 4 4 10 4 C24 6 24 28 0 44Z" fill="rgba(0,0,0,.25)" transform="translate(2 3)"/><path d="M0 44 C-24 28 -24 6 -10 4 C-4 4 -1 8 0 12 C1 8 4 4 10 4 C24 6 24 28 0 44Z" fill="url(#g' + gi + ')"/><path d="M-14 12 C-16 16 -15 22 -12 26" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width="3.5" stroke-linecap="round"/><circle cx="-8" cy="10" r="2.2" fill="#fff" fill-opacity=".8"/></g>';
+      } else if (kind === 'egg') {
+        g += '<line x1="0" y1="0" x2="0" y2="8" stroke="#A1887F" stroke-width="1.6"/><path d="M-5 7 L0 10 L5 7 L3 13 L-3 13Z" fill="' + mixc(colors[(gi + 2) % colors.length], '#000000', .15) + '"/>';
+        g += '<path d="M0 10 C-16 10 -20 32 -15 44 C-10 56 10 56 15 44 C20 32 16 10 0 10Z" fill="rgba(0,0,0,.25)" transform="translate(2 3)"/><path d="M0 10 C-16 10 -20 32 -15 44 C-10 56 10 56 15 44 C20 32 16 10 0 10Z" fill="url(#g' + gi + ')"/>';
+        if (gi % 3 === 0) g += '<path d="M-15 28 L-10 23 L-5 28 L0 23 L5 28 L10 23 L15 28" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="2.4" stroke-linejoin="round"/><path d="M-14 38 Q0 44 14 38" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width="2.2"/>';
+        else if (gi % 3 === 1) g += '<circle cx="-7" cy="24" r="2.6" fill="#fff" fill-opacity=".85"/><circle cx="6" cy="29" r="2.6" fill="#fff" fill-opacity=".85"/><circle cx="-4" cy="38" r="2.6" fill="#fff" fill-opacity=".85"/><circle cx="8" cy="42" r="2" fill="#fff" fill-opacity=".85"/><circle cx="3" cy="18" r="1.8" fill="#fff" fill-opacity=".85"/>';
+        else g += '<path d="M-16 26 Q0 20 16 26 M-17 34 Q0 40 17 34 M-15 42 Q0 36 15 42" fill="none" stroke="#fff" stroke-opacity=".8" stroke-width="2.2"/>';
+        g += '<path d="M-9 17 C-12 21 -13 26 -12 30" fill="none" stroke="#fff" stroke-opacity=".6" stroke-width="3" stroke-linecap="round"/>';
+      } else if (kind === 'pine') {
+        var br = (i % 2 ? 9 : 11);
+        g += '<line x1="0" y1="4" x2="0" y2="14" stroke="#C9A24A" stroke-width="1.6"/><rect x="-3.5" y="12" width="7" height="5" rx="1" fill="#C9A24A"/>';
+        g += '<circle cy="' + (17 + br) + '" r="' + br + '" fill="rgba(0,0,0,.3)" transform="translate(2 3)"/><circle cx="0" cy="' + (17 + br) + '" r="' + br + '" fill="url(#g' + gi + ')"/><circle cx="0" cy="' + (17 + br) + '" r="' + br + '" fill="url(#hl)"/>';
+        if (i % 2) g += '<path d="M' + (-br + 1) + ' ' + (17 + br) + ' Q0 ' + (17 + br - 5) + ' ' + (br - 1) + ' ' + (17 + br) + '" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width="1.6"/>';
+        else g += '<circle cx="' + (-br * .35) + '" cy="' + (17 + br * .65) + '" r="' + (br * .25) + '" fill="#fff" fill-opacity=".85"/>';
+      }
       items += g + '</g>';
     }
-    return svgUrl('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + w + ' 100" width="' + w + '" height="100">' + rope + items + '</svg>');
+    return svgUrl('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + w + ' 175" width="' + w + '" height="175"><defs>' + defs + '</defs>' + rope + items + '</svg>');
   }
   // Toile d'araignée dans un coin (rayons + anneaux légèrement creusés)
   function cobweb() {
@@ -228,15 +270,16 @@
   }
 
   var DECO = {
-    'noel': { bunting: bunting('pine', ['#E53935', '#F2C14E', '#E53935', '#43A047', '#F2C14E']), ribbon: 'Joyeuses fêtes !', hat: HAT, corner: HOLLY, snowcap: true },
-    'halloween': { bunting: bunting('pennant', ['#FF7A1A', '#1A1A1A', '#9C4DCC', '#FF7A1A', '#1A1A1A']), ribbon: 'Halloween au food-truck !', webs: true, spider: true },
-    'fete-nationale': { bunting: bunting('pennant', ['#2457C5', '#FFFFFF', '#E53935', '#2457C5', '#FFFFFF']), ribbon: 'Vive le 14 juillet !', corner: COCARDE },
+    'noel': { bunting: bunting('pine', ['#E53935', '#F2C14E', '#1E88E5', '#E53935', '#F2C14E']), ribbon: 'Joyeuses fêtes !', hat: HAT, corner: HOLLY, snowcap: true },
+    'halloween': { bunting: bunting('pennant', ['#FF7A1A', '#2A2A2E', '#9C4DCC', '#FF7A1A', '#2A2A2E'], { motif: 'halloween' }), ribbon: 'Halloween au food-truck !', webs: true, spider: true },
+    'fete-nationale': { bunting: bunting('pennant', ['#2457C5', '#F7F7F7', '#E53935', '#2457C5', '#F7F7F7'], { motif: 'france' }), ribbon: 'Vive le 14 juillet !', corner: COCARDE },
     'saint-valentin': { bunting: bunting('heart', ['#E53935', '#F48FB1', '#D81B60', '#F8A5C2', '#E53935']), ribbon: 'Avec amour ♥', corner: '<svg class="deco-hearts" viewBox="0 0 80 60" aria-hidden="true"><path d="M22 52 C0 36 2 14 14 13 C19 13 21 17 22 21 C23 17 25 13 30 13 C42 14 44 36 22 52Z" fill="#E53935"/><path d="M52 40 C36 28 38 12 46 12 C50 12 51 15 52 17 C53 15 54 12 58 12 C66 12 68 28 52 40Z" fill="#F48FB1"/><path d="M66 56 C56 48 57 38 62 38 C64 38 65 40 66 41 C67 40 68 38 70 38 C75 38 76 48 66 56Z" fill="#D81B60"/></svg>' },
     'paques': { bunting: bunting('egg', ['#F48FB1', '#FFF176', '#A5D6A7', '#90CAF9', '#CE93D8']), ribbon: 'Joyeuses Pâques !', hat: EARS, grass: grass() }
   };
   var d = DECO[theme]; if (!d) return;
 
   // banderole sous la guirlande
+  if (d.bunting) root.style.setProperty('--mini-bunting', d.bunting);
   if (d.bunting) { var bt = document.createElement('div'); bt.className = 'deco-bunting'; bt.setAttribute('aria-hidden', 'true'); bt.style.backgroundImage = d.bunting; hero.appendChild(bt); }
   if (d.snowcap) { var sc = document.createElement('div'); sc.className = 'deco-snowcap'; sc.setAttribute('aria-hidden', 'true'); hero.appendChild(sc); }
   if (d.webs) { hero.insertAdjacentHTML('beforeend', '<div class="deco-webs" aria-hidden="true">' + cobweb() + cobweb() + '</div>'); }
