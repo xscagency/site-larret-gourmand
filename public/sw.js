@@ -1,7 +1,7 @@
 // Service worker : rend le site installable et consultable même sans réseau (dernière version vue),
 // et reçoit les alertes envoyées sur le téléphone (notifications).
-const CACHE = 'lag-site-v4';
-const SHELL = ['/', '/assets/site.css', '/assets/site.js', '/img/logo-t-192.png', '/img/icon-192.png'];
+const CACHE = 'lag-site-v5';
+const SHELL = ['/', '/assets/site.css', '/assets/site.js', '/img/logo-t-192.png', '/img/icon-192-v2.png'];
 self.addEventListener('install', (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL).catch(() => null)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', (e) => { e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim())); });
 self.addEventListener('fetch', (e) => {
@@ -19,8 +19,8 @@ self.addEventListener('push', (e) => {
   try { d = e.data ? e.data.json() : {}; } catch (err) { d = { title: "L'Arrêt Gourmand", body: e.data ? e.data.text() : '' }; }
   const opts = {
     body: d.body || '',
-    icon: '/img/icon-192.png',
-    badge: '/img/icon-192.png',
+    icon: '/img/icon-192-v2.png',
+    badge: '/img/icon-192-v2.png',
     tag: d.tag || 'lag',
     renotify: !!d.tag,
     data: { url: d.url || '/?source=push', id: d.id || 0 },

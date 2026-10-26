@@ -19,13 +19,15 @@
 //   PUT    /api/admin/devis/:id             champs du devis (client, intro, lignes, mode, statut, email_objet, email_corps)
 //   DELETE /api/admin/devis/:id
 //   POST   /api/admin/devis/:id/envoyer     { pdf_base64 } → e-mail au client avec le PDF (Resend)
+//   POST   /api/admin/devis/:id/facturer    crée la facture d'un devis validé (type 'facture', numéro F + date + compteur)
+//   POST   /api/admin/devis/:id/relancer    { email_objet, email_corps } → e-mail de relance avec le PDF archivé
 //   GET    /api/admin/distance?q=adresse    km routiers depuis Verneuil-sur-Seine
 //   GET    /api/admin/alertes               abonnés (compteurs) + historique des envois
 //   POST   /api/admin/alertes               { sujet, titre, corps, url, villes } → prépare un envoi, renvoie { id, cibles }
 //   POST   /api/admin/alertes/:id/lot       envoie au prochain paquet d'abonnés → { envoyes, echecs, restant, termine }
 
 import { json, loadState, computeTonight, slugify, todayParis } from '../../_lib.js';
-import { computeTotals, nextNumero, MOMENTS, dateFr, fillTemplate, distanceKm, sendDevisEmail } from '../../_devis.js';
+import { computeTotals, nextNumero, MOMENTS, dateFr, fillTemplate, distanceKm, sendDevisEmail, eur } from '../../_devis.js';
 import { getVapid, sendPush, SUJETS, cleAbonne, typeAppareil } from '../../_push.js';
 
 function authorized(request, env) {
@@ -56,7 +58,8 @@ export async function onRequest({ request, env, params }) {
     state.burgers = state.burgers.map((b) => ({ ...b, rupture_jusqua: rupt[b.id] || '' }));
     const rg = await env.DB.prepare("SELECT cle, valeur FROM reglages WHERE cle LIKE 'devis_%'").all();
     const d = Object.fromEntries(rg.results.map((x) => [x.cle, x.valeur]));
-    state.devis_reglages = { email_objet: d.devis_email_objet || '', email_corps: d.devis_email_corps || '', contact_email: d.devis_contact_email || '', km_tarif: Number(d.devis_km_tarif || 1) };
+    state.devis_reglages = { email_objet: d.devis_email_objet || '', email_corps: d.devis_email_corps || '', contact_email: d.devis_contact_email || '', km_tarif: Number(d.devis_km_tarif || 1),
+      facture_objet: d.devis_facture_objet || '', facture_corps: d.devis_facture_corps || '', relance_objet: d.devis_relance_objet || '', relance_corps: d.devis_relance_corps || '' };
     state.mail_configure = !!(env.RESEND_API_KEY && env.MAIL_FROM);
     return json({ ok: true, state: { ...state, tonight: computeTonight(state) } });
   }
@@ -162,13 +165,13 @@ export async function onRequest({ request, env, params }) {
 
   // ---- Réglages (prix, bandeau)
   if (route === 'reglages' && method === 'PUT') {
-    const allowed = ['prix_burger', 'prix_menu_frites', 'prix_menu_complet', 'prix_frites', 'sup_double', 'sup_garniture', 'frites_cheddar', 'frites_cheddar_bacon', 'frites_cheddar_oignons', 'frites_complet', 'frites_truffe', 'bandeau', 'devis_email_objet', 'devis_email_corps', 'devis_contact_email', 'devis_km_tarif', 'theme', 'theme_fx'];
-    const textKeys = ['bandeau', 'devis_email_objet', 'devis_email_corps', 'devis_contact_email', 'theme', 'theme_fx'];
+    const allowed = ['prix_burger', 'prix_menu_frites', 'prix_menu_complet', 'prix_frites', 'sup_double', 'sup_garniture', 'frites_cheddar', 'frites_cheddar_bacon', 'frites_cheddar_oignons', 'frites_complet', 'frites_truffe', 'bandeau', 'devis_email_objet', 'devis_email_corps', 'devis_facture_objet', 'devis_facture_corps', 'devis_relance_objet', 'devis_relance_corps', 'devis_contact_email', 'devis_km_tarif', 'theme', 'theme_fx'];
+    const textKeys = ['bandeau', 'devis_email_objet', 'devis_email_corps', 'devis_facture_objet', 'devis_facture_corps', 'devis_relance_objet', 'devis_relance_corps', 'devis_contact_email', 'theme', 'theme_fx'];
     if (body.theme !== undefined && !['', 'noel', 'halloween', 'fete-nationale', 'saint-valentin', 'paques'].includes(body.theme)) return json({ ok: false, error: 'Thème inconnu.' }, 400);
     if (body.theme_fx !== undefined) body.theme_fx = body.theme_fx && body.theme_fx !== '0' ? '1' : '0';
     const stmts = allowed.filter((k) => body[k] !== undefined).map((k) =>
       env.DB.prepare('INSERT INTO reglages (cle, valeur) VALUES (?, ?) ON CONFLICT(cle) DO UPDATE SET valeur = excluded.valeur')
-        .bind(k, textKeys.includes(k) ? str(body[k], k === 'devis_email_corps' ? 4000 : 300) : String(num(body[k])))
+        .bind(k, textKeys.includes(k) ? str(body[k], /_corps$/.test(k) ? 4000 : 300) : String(num(body[k])))
     );
     if (stmts.length) await env.DB.batch(stmts);
     return json({ ok: true });
@@ -193,7 +196,7 @@ export async function onRequest({ request, env, params }) {
   // ---- Devis
   const parseDevis = (row) => { if (!row) return row; const { pdf, ...rest } = row; return { ...rest, intro: JSON.parse(row.intro || '[]'), lignes: JSON.parse(row.lignes || '[]'), pdf_url: row.pdf_token ? `/devis/${row.numero}-${row.pdf_token}.pdf` : null }; };
   if (route === 'devis' && method === 'GET') {
-    const r = await env.DB.prepare('SELECT id, numero, demande_id, cree_le, date_devis, client_nom, client_email, client_tel, event_date, event_moment, lieu, intro, lignes, mode, total_ht, tva, total_ttc, arrhes, statut, email_objet, email_corps, envoye_le, pdf_token, pdf_maj FROM devis ORDER BY id DESC LIMIT 300').all();
+    const r = await env.DB.prepare('SELECT id, numero, demande_id, cree_le, date_devis, client_nom, client_email, client_tel, event_date, event_moment, lieu, intro, lignes, mode, total_ht, tva, total_ttc, arrhes, statut, email_objet, email_corps, envoye_le, type, facture_de, acompte, payee_le, relance_le, relances, pdf_token, pdf_maj FROM devis ORDER BY id DESC LIMIT 300').all();
     return json({ ok: true, devis: r.results.map(parseDevis) });
   }
   if (route === 'devis' && method === 'POST') {
@@ -231,7 +234,9 @@ export async function onRequest({ request, env, params }) {
     const mode = body.mode === 'ht' ? 'ht' : (body.mode === 'ttc' ? 'ttc' : cur.mode);
     const t = computeTotals(lignes, mode);
     const intro = Array.isArray(body.intro) ? body.intro.slice(0, 6).map((x) => str(x, 160)) : JSON.parse(cur.intro || '[]');
-    const statut = ['brouillon', 'envoye', 'accepte', 'solde', 'refuse'].includes(body.statut) ? body.statut : cur.statut;
+    const isFacture = cur.type === 'facture';
+    const statut = (isFacture ? ['emise', 'payee'] : ['brouillon', 'envoye', 'accepte', 'solde', 'refuse']).includes(body.statut) ? body.statut : cur.statut;
+    const acompte = isFacture ? Math.max(0, Math.min(t.total_ttc, body.acompte !== undefined ? num(body.acompte) : num(cur.acompte))) : 0;
     await env.DB.prepare(`UPDATE devis SET date_devis = ?, client_nom = ?, client_email = ?, client_tel = ?, event_date = ?, event_moment = ?, lieu = ?, intro = ?, lignes = ?, mode = ?, total_ht = ?, tva = ?, total_ttc = ?, arrhes = ?, statut = ?, email_objet = ?, email_corps = ? WHERE id = ?`).bind(
       isoDate(body.date_devis) || cur.date_devis,
       body.client_nom !== undefined ? str(body.client_nom, 120) : cur.client_nom,
@@ -246,6 +251,7 @@ export async function onRequest({ request, env, params }) {
       Number(m[1]),
     ).run();
     if ((statut === 'accepte' || statut === 'solde') && cur.demande_id) await env.DB.prepare("UPDATE demandes SET statut = 'signe' WHERE id = ?").bind(cur.demande_id).run();
+    if (isFacture) await env.DB.prepare("UPDATE devis SET acompte = ?, payee_le = CASE WHEN ? = 'payee' THEN COALESCE(payee_le, datetime('now')) ELSE NULL END WHERE id = ?").bind(acompte, statut, Number(m[1])).run();
     const row = await env.DB.prepare('SELECT * FROM devis WHERE id = ?').bind(Number(m[1])).first();
     return json({ ok: true, devis: parseDevis(row), totals: t });
   }
@@ -270,7 +276,7 @@ export async function onRequest({ request, env, params }) {
   }
   m = route.match(/^devis\/(\d+)\/envoyer$/);
   if (m && method === 'POST') {
-    const cur = await env.DB.prepare('SELECT id, numero, demande_id, client_email, email_objet, email_corps, pdf_token FROM devis WHERE id = ?').bind(Number(m[1])).first();
+    const cur = await env.DB.prepare('SELECT id, numero, demande_id, client_email, email_objet, email_corps, pdf_token, type FROM devis WHERE id = ?').bind(Number(m[1])).first();
     if (!cur) return json({ ok: false, error: 'Devis inconnu.' }, 404);
     if (!body.pdf_base64) return json({ ok: false, error: 'PDF manquant.' }, 400);
     const r = await sendDevisEmail(env, cur, body.pdf_base64);
@@ -280,6 +286,47 @@ export async function onRequest({ request, env, params }) {
     await env.DB.prepare("UPDATE devis SET statut = CASE WHEN statut = 'brouillon' THEN 'envoye' ELSE statut END, envoye_le = datetime('now') WHERE id = ?").bind(Number(m[1])).run();
     if (cur.demande_id) await env.DB.prepare("UPDATE demandes SET statut = CASE WHEN statut = 'nouveau' THEN 'repondu' ELSE statut END WHERE id = ?").bind(cur.demande_id).run();
     return json({ ok: true, pdf_url });
+  }
+  // ---- Facture d'un devis validé : même document, type 'facture', numéro F + date + compteur du jour
+  m = route.match(/^devis\/(\d+)\/facturer$/);
+  if (m && method === 'POST') {
+    const cur = await env.DB.prepare('SELECT * FROM devis WHERE id = ?').bind(Number(m[1])).first();
+    if (!cur) return json({ ok: false, error: 'Devis inconnu.' }, 404);
+    if (cur.type === 'facture') return json({ ok: false, error: 'Ceci est déjà une facture.' }, 400);
+    if (!['accepte', 'solde'].includes(cur.statut)) return json({ ok: false, error: 'Seul un devis validé (accepté ou acompte reçu) peut être facturé.' }, 400);
+    const existing = await env.DB.prepare("SELECT * FROM devis WHERE type = 'facture' AND facture_de = ?").bind(cur.id).first();
+    if (existing) return json({ ok: true, devis: parseDevis(existing), existante: true });
+    const rg = Object.fromEntries((await env.DB.prepare("SELECT cle, valeur FROM reglages WHERE cle LIKE 'devis_%'").all()).results.map((x) => [x.cle, x.valeur]));
+    const numero = await nextNumero(env, 'F');
+    const lignes = JSON.parse(cur.lignes || '[]');
+    const t = computeTotals(lignes, cur.mode || 'ttc');
+    const acompte = cur.statut === 'solde' ? t.arrhes : 0; // acompte reçu si la privatisation a été validée
+    const mom = MOMENTS[cur.event_moment] || { mail: '', devis: '' };
+    const vars = { date: dateFr(cur.event_date), moment: mom.mail, nom: cur.client_nom || '', convives: (lignes[0] && lignes[0].qte) || '', lieu: cur.lieu || '', numero, numero_devis: cur.numero, total: eur(t.total_ttc), acompte: eur(acompte), reste: eur(t.total_ttc - acompte) };
+    const email_objet = fillTemplate(rg.devis_facture_objet || "Votre facture L'Arrêt Gourmand", vars);
+    const email_corps = fillTemplate(rg.devis_facture_corps || '', vars);
+    const ins = await env.DB.prepare(`INSERT INTO devis (numero, demande_id, date_devis, client_nom, client_email, client_tel, event_date, event_moment, lieu, intro, lignes, mode, total_ht, tva, total_ttc, arrhes, statut, email_objet, email_corps, type, facture_de, acompte)
+      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'emise',?,?,'facture',?,?)`).bind(numero, cur.demande_id, todayParis(), cur.client_nom, cur.client_email, cur.client_tel, cur.event_date, cur.event_moment, cur.lieu, cur.intro, cur.lignes, cur.mode, t.total_ht, t.tva, t.total_ttc, t.arrhes, email_objet, email_corps, cur.id, acompte).run();
+    const row = await env.DB.prepare('SELECT * FROM devis WHERE id = ?').bind(ins.meta.last_row_id).first();
+    return json({ ok: true, devis: parseDevis(row) });
+  }
+  // ---- Relance d'un devis sans réponse : e-mail (texte fourni) avec le PDF archivé ou celui transmis
+  m = route.match(/^devis\/(\d+)\/relancer$/);
+  if (m && method === 'POST') {
+    const cur = await env.DB.prepare('SELECT id, numero, client_email, pdf, type FROM devis WHERE id = ?').bind(Number(m[1])).first();
+    if (!cur) return json({ ok: false, error: 'Devis inconnu.' }, 404);
+    if (body.sans_envoi) { // relance faite par téléphone ou depuis la messagerie : on la note seulement
+      await env.DB.prepare("UPDATE devis SET relances = relances + 1, relance_le = datetime('now') WHERE id = ?").bind(cur.id).run();
+      return json({ ok: true, notee: true });
+    }
+    const objet = str(body.email_objet, 200), corps = str(body.email_corps, 4000);
+    if (!objet || !corps) return json({ ok: false, error: 'Objet et message obligatoires.' }, 400);
+    let b64 = body.pdf_base64 && body.pdf_base64.length < 8_000_000 ? body.pdf_base64 : null;
+    if (!b64 && cur.pdf) { const bytes = Array.isArray(cur.pdf) ? new Uint8Array(cur.pdf) : new Uint8Array(cur.pdf); let bin = ''; for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000)); b64 = btoa(bin); }
+    const r = await sendDevisEmail(env, { ...cur, email_objet: objet, email_corps: corps }, b64);
+    if (!r.ok) return json(r, 400);
+    await env.DB.prepare("UPDATE devis SET relances = relances + 1, relance_le = datetime('now') WHERE id = ?").bind(cur.id).run();
+    return json({ ok: true });
   }
   if (route === 'distance' && method === 'GET') {
     const q = str(new URL(request.url).searchParams.get('q'), 200);

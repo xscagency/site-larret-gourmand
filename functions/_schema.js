@@ -116,7 +116,9 @@ export const STATEMENTS = [
     total_ht REAL NOT NULL DEFAULT 0, tva REAL NOT NULL DEFAULT 0, total_ttc REAL NOT NULL DEFAULT 0, arrhes REAL NOT NULL DEFAULT 0,
     statut TEXT NOT NULL DEFAULT 'brouillon',
     email_objet TEXT, email_corps TEXT, envoye_le TEXT,
-    pdf BLOB, pdf_token TEXT, pdf_maj TEXT
+    pdf BLOB, pdf_token TEXT, pdf_maj TEXT,
+    type TEXT NOT NULL DEFAULT 'devis', facture_de INTEGER, acompte REAL NOT NULL DEFAULT 0, payee_le TEXT,
+    relance_le TEXT, relances INTEGER NOT NULL DEFAULT 0
   )`,
   `INSERT OR IGNORE INTO burgers (id, nom, accroche, description, photo, supplement, ordre) VALUES
     ('poulet',     'Le Poulet', 'Votre nouveau burger au poulet préféré !',
@@ -166,9 +168,33 @@ Je reste à votre entière disposition pour toute question ou modification, par 
 
 Cordialement,
 Sylvain'),
+    ('devis_facture_objet', 'Votre facture L''Arrêt Gourmand – prestation du {date}'),
+    ('devis_facture_corps', 'Bonjour,
+
+Nous vous remercions pour votre confiance. Vous trouverez ci-joint la facture n° {numero} correspondant à la prestation du {date} {moment}.
+
+Montant total : {total}
+Acompte déjà versé : {acompte}
+**Reste à régler : {reste}**, par CB, chèque, espèces ou virement (coordonnées bancaires sur la facture).
+
+Nous espérons que vous et vos convives avez passé un excellent moment, et restons à votre disposition pour une prochaine occasion.
+
+Cordialement,
+Sylvain'),
+    ('devis_relance_objet', 'Votre devis L''Arrêt Gourmand – prestation du {date}'),
+    ('devis_relance_corps', 'Bonjour,
+
+Je me permets de revenir vers vous au sujet du devis n° {numero} pour votre prestation du {date} {moment}.
+
+La date est encore disponible à ce jour : si vous souhaitez la réserver, il suffit de nous retourner le devis daté et signé avec la mention « Bon pour accord » et de verser les arrhes indiquées. N''hésitez pas si vous avez la moindre question ou si vous souhaitez ajuster la proposition.
+
+Je reste à votre disposition par mail ou par téléphone au 06 83 82 71 49.
+
+Cordialement,
+Sylvain'),
     ('devis_contact_email','contact@larretgalette.com'),
     ('devis_km_tarif',     '1'),
-    ('schema_version',     '11')`,
+    ('schema_version',     '12')`,
 ];
 
 // Crée les tables et les données de départ (sans toucher à ce qui existe déjà)
@@ -179,7 +205,7 @@ export async function ensureSchema(env) {
 
 // Mises à jour appliquées une seule fois sur une base déjà en ligne (numérotées, dans l'ordre).
 // Une base neuve reçoit directement le schéma complet ; une base existante rattrape les versions manquantes.
-export const SCHEMA_VERSION = 11;
+export const SCHEMA_VERSION = 12;
 export const MIGRATIONS = {
   1: ['ALTER TABLE demandes ADD COLUMN moment TEXT'],
   2: ['ALTER TABLE demandes ADD COLUMN adresse TEXT', 'ALTER TABLE demandes ADD COLUMN code_postal TEXT', 'ALTER TABLE demandes ADD COLUMN ville TEXT',
@@ -241,6 +267,32 @@ Sylvain'`],
   9: [TABLE_SUIVI],
   10: ['ALTER TABLE alertes ADD COLUMN image TEXT'],
   11: [TABLE_FICHIERS],
+  12: ["ALTER TABLE devis ADD COLUMN type TEXT NOT NULL DEFAULT 'devis'", 'ALTER TABLE devis ADD COLUMN facture_de INTEGER', 'ALTER TABLE devis ADD COLUMN acompte REAL NOT NULL DEFAULT 0', 'ALTER TABLE devis ADD COLUMN payee_le TEXT', 'ALTER TABLE devis ADD COLUMN relance_le TEXT', 'ALTER TABLE devis ADD COLUMN relances INTEGER NOT NULL DEFAULT 0',
+    `INSERT OR IGNORE INTO reglages (cle, valeur) VALUES
+    ('devis_facture_objet', 'Votre facture L''Arrêt Gourmand – prestation du {date}'),
+    ('devis_facture_corps', 'Bonjour,
+
+Nous vous remercions pour votre confiance. Vous trouverez ci-joint la facture n° {numero} correspondant à la prestation du {date} {moment}.
+
+Montant total : {total}
+Acompte déjà versé : {acompte}
+**Reste à régler : {reste}**, par CB, chèque, espèces ou virement (coordonnées bancaires sur la facture).
+
+Nous espérons que vous et vos convives avez passé un excellent moment, et restons à votre disposition pour une prochaine occasion.
+
+Cordialement,
+Sylvain'),
+    ('devis_relance_objet', 'Votre devis L''Arrêt Gourmand – prestation du {date}'),
+    ('devis_relance_corps', 'Bonjour,
+
+Je me permets de revenir vers vous au sujet du devis n° {numero} pour votre prestation du {date} {moment}.
+
+La date est encore disponible à ce jour : si vous souhaitez la réserver, il suffit de nous retourner le devis daté et signé avec la mention « Bon pour accord » et de verser les arrhes indiquées. N''hésitez pas si vous avez la moindre question ou si vous souhaitez ajuster la proposition.
+
+Je reste à votre disposition par mail ou par téléphone au 06 83 82 71 49.
+
+Cordialement,
+Sylvain')`],
 };
 export async function applyMigrations(env, from = 0) {
   for (let v = from + 1; v <= SCHEMA_VERSION; v++) {

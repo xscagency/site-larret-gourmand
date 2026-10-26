@@ -15,11 +15,13 @@ export function computeTotals(lignes, mode = 'ttc') {
 }
 
 // Numéro du type 202609221 : date du jour + compteur du jour (comme le modèle)
-export async function nextNumero(env) {
-  const base = todayParis().replace(/-/g, '');
+export async function nextNumero(env, prefix = '') {
+  const base = prefix + todayParis().replace(/-/g, '');
   const row = await env.DB.prepare('SELECT COUNT(*) AS n FROM devis WHERE numero LIKE ?').bind(base + '%').first();
   return base + String((row?.n || 0) + 1);
 }
+// Montant en euros à la française : 1 234,50 €
+export const eur = (n) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(Number(n) || 0).replace(/\u202f/g, ' ');
 
 export const MOMENTS = {
   'Déjeuner / Brunch': { mail: 'à midi', devis: 'midi' },
@@ -61,11 +63,12 @@ export async function sendDevisEmail(env, devis, pdfBase64, fromName) {
   if (!env.RESEND_API_KEY || !env.MAIL_FROM) return { ok: false, error: 'Envoi d\'e-mails non configuré (RESEND_API_KEY / MAIL_FROM).' };
   if (!devis.client_email) return { ok: false, error: 'Pas d\'adresse e-mail client.' };
   const html = emailHtml(devis.email_corps);
+  const kind = devis.type === 'facture' ? 'Facture' : 'Devis';
   const payload = {
     from: env.MAIL_FROM, to: [devis.client_email], reply_to: env.MAIL_TO ? env.MAIL_TO.split(',')[0].trim() : undefined,
-    subject: devis.email_objet || `Votre devis L'Arrêt Gourmand`,
+    subject: devis.email_objet || `Votre ${kind.toLowerCase()} L'Arrêt Gourmand`,
     text: emailPlain(devis.email_corps), html,
-    attachments: [{ filename: `Devis-${devis.numero}-L-Arret-Gourmand.pdf`, content: pdfBase64 }],
+    attachments: pdfBase64 ? [{ filename: `${kind}-${devis.numero}-L-Arret-Gourmand.pdf`, content: pdfBase64 }] : [],
   };
   if (env.MAIL_TO) payload.bcc = env.MAIL_TO.split(',').map((s) => s.trim()); // copie pour toi
   const r = await fetch('https://api.resend.com/emails', { method: 'POST', headers: { authorization: `Bearer ${env.RESEND_API_KEY}`, 'content-type': 'application/json' }, body: JSON.stringify(payload) });

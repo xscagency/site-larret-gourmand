@@ -169,6 +169,14 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
 }
 .totals{display:grid;grid-template-columns:auto auto;gap:4px 18px;font-variant-numeric:tabular-nums;text-align:right;background:var(--brun);border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin-left:auto}
 .totals b{font-size:1.05rem;color:var(--cheddar)}
+.st.emise{color:var(--cheddar)}.st.payee{color:#9BD178}
+.relance{border:1px solid var(--line);border-radius:14px;background:rgba(243,173,63,.06)}
+.relance>summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 14px;font-weight:600}
+.relance>summary::-webkit-details-marker{display:none}
+.relance>summary::before{content:"🔔";margin-right:8px}
+.relance__body{display:grid;gap:12px;padding:0 14px 14px}
+.dvc .wait{color:#FFB380;font-weight:600}
+.dvc .fact{color:var(--creme-3);font-size:.85rem}
 .tag.s-brouillon{background:var(--brun-3);color:var(--creme-2)}.tag.s-envoye{background:rgba(243,173,63,.18);color:var(--cheddar);border:1px solid rgba(243,173,63,.5)}.tag.s-accepte{background:rgba(123,166,86,.22);color:#B9DBA0;border:1px solid rgba(123,166,86,.5)}.tag.s-refuse{background:rgba(214,64,47,.2);color:#FFB3AA}.tag.s-solde{background:var(--mesclun);color:#13200c}
 .st{display:inline-flex;align-items:center;gap:7px;font-weight:600;font-size:.86rem;letter-spacing:.01em;white-space:nowrap}
 .st::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor;box-shadow:0 0 0 3px rgba(255,255,255,.08);flex:none}
@@ -398,6 +406,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
         <button data-tab="tarifs">Tarifs</button>
         <button data-tab="demandes">Demandes<span class="n" id="nNew" hidden></span></button>
         <button data-tab="devis">Devis</button>
+        <button data-tab="factures">Factures</button>
         <button data-tab="agenda">Agenda<span class="n" id="nAg" hidden></span></button>
         <button data-tab="alertes">Alertes</button>
         <button data-tab="bandeau">Réglages</button>
@@ -518,11 +527,28 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
         </div>
         <div><button class="btn primary" id="reglagesSave" type="button">Enregistrer</button></div>
       </div>
+      <h2 style="margin-top:28px">Modèle d'e-mail de facture<small>Variables : {date} {moment} {nom} {numero} {numero_devis} {total} {acompte} {reste}</small></h2>
+      <div class="card" style="display:grid;gap:12px">
+        <label class="f">Objet<input id="r_facture_objet" type="text" maxlength="200"></label>
+        <label class="f">Corps<textarea id="r_facture_corps" rows="10" maxlength="4000"></textarea></label>
+        <div><button class="btn primary" id="reglagesSave2" type="button">Enregistrer</button></div>
+      </div>
+      <h2 style="margin-top:28px">Modèle d'e-mail de relance<small>Pour un devis envoyé resté sans réponse. Variables : {date} {moment} {nom} {convives} {lieu} {numero}</small></h2>
+      <div class="card" style="display:grid;gap:12px">
+        <label class="f">Objet<input id="r_relance_objet" type="text" maxlength="200"></label>
+        <label class="f">Corps<textarea id="r_relance_corps" rows="9" maxlength="4000"></textarea></label>
+        <div><button class="btn primary" id="reglagesSave3" type="button">Enregistrer</button></div>
+      </div>
     </section>
 
     <section id="tab-devis">
       <div class="row sec-head"><h2 style="margin:0">Devis<small>Brouillons, envoyés, acceptés</small></h2><button class="btn primary sm" id="newDevis" type="button">+ Nouveau devis</button></div>
       <div id="devisList"></div>
+    </section>
+
+    <section id="tab-factures">
+      <div class="row sec-head"><h2 style="margin:0">Factures<small>Créées depuis les devis validés, dans l'éditeur du devis (bouton « Créer la facture »)</small></h2></div>
+      <div id="factureList"></div>
     </section>
 
     <section id="tab-agenda">
@@ -534,7 +560,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
     <!-- Éditeur de devis -->
     <dialog id="devisDlg">
       <div class="card sheet" style="margin:0;width:min(760px,calc(100vw - 24px));display:grid;gap:14px">
-        <div class="row"><h2 style="margin:0">Devis <span id="dvNumero"></span><small id="dvSub"></small></h2><div style="display:flex;gap:8px;align-items:center"><select id="dvStatut"><option value="brouillon">Brouillon</option><option value="envoye">Envoyé</option><option value="accepte">Accepté (arrhes attendues)</option><option value="solde">Payé · confirmé</option><option value="refuse">Refusé</option></select><button class="btn sm" type="button" id="dvClose">Fermer</button></div></div>
+        <div class="row"><h2 style="margin:0"><span id="dvKind">Devis</span> <span id="dvNumero"></span><small id="dvSub"></small></h2><div style="display:flex;gap:8px;align-items:center"><select id="dvStatut"><option value="brouillon">Brouillon</option><option value="envoye">Envoyé</option><option value="accepte">Accepté (arrhes attendues)</option><option value="solde">Payé · confirmé</option><option value="refuse">Refusé</option></select><button class="btn sm" type="button" id="dvClose">Fermer</button></div></div>
         <input type="hidden" id="dvId">
         <h3 class="sub">Client</h3>
         <div class="grid">
@@ -567,12 +593,26 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
         </div>
         <div class="row">
           <label class="f" style="flex-direction:row;display:flex;gap:10px;align-items:center"><span>Prix saisis</span><select id="dv_mode" style="width:auto"><option value="ttc">TTC (TVA 10 % incluse)</option><option value="ht">HT (TVA 10 % en plus)</option></select></label>
+          <label class="f only-facture" style="flex-direction:row;display:flex;gap:10px;align-items:center" hidden><span>Acompte déjà versé</span><input id="dv_acompte" type="number" step="0.01" min="0" inputmode="decimal" style="width:120px"> €</label>
           <div class="totals" id="dvTotals"></div>
         </div>
         <h3 class="sub">E-mail d'accompagnement</h3>
         <label class="f">Objet<input id="dv_email_objet" type="text"></label>
         <label class="f">Message<textarea id="dv_email_corps" rows="10"></textarea><span class="muted">Entourez un passage de ** pour le mettre en gras : **comme ceci**. Le gras est conservé à l'envoi et à la copie.</span></label>
         <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn sm" type="button" id="dvRegen">Régénérer depuis le modèle</button></div>
+        <details class="relance only-devis" id="dvRelance" hidden>
+          <summary><span>Relancer le client</span><span class="muted" id="dvRelanceInfo"></span></summary>
+          <div class="relance__body">
+            <label class="f">Objet<input id="dv_rel_objet" type="text"></label>
+            <label class="f">Message<textarea id="dv_rel_corps" rows="8"></textarea></label>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+              <button class="btn primary sm" type="button" id="dvRelSend">Envoyer la relance (avec le PDF)</button>
+              <button class="btn sm" type="button" id="dvRelCopy">Copier la relance</button>
+              <a class="btn sm" id="dvRelMailto" href="#" target="_blank" rel="noopener">Ouvrir dans Mail</a>
+              <button class="btn sm" type="button" id="dvRelNote" title="Si vous avez relancé par téléphone ou depuis votre messagerie">Marquer comme relancé</button>
+            </div>
+          </div>
+        </details>
         <div class="row" style="border-top:1px solid var(--line);padding-top:14px">
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <button class="btn primary" type="button" id="dvSave">Enregistrer</button>
@@ -582,8 +622,11 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
             <button class="btn primary" type="button" id="dvSend">Envoyer par e-mail avec le PDF</button>
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;width:100%;align-items:center">
-            <button class="btn ok sm" type="button" id="dvValider">✓ Valider : acompte reçu</button>
-            <button class="btn sm" type="button" data-agenda="devis" data-kind="google">📅 Ajouter à Google Agenda</button>
+            <button class="btn ok sm only-devis" type="button" id="dvValider">✓ Valider : acompte reçu</button>
+            <button class="btn sm only-devis" type="button" id="dvFacturer" hidden>🧾 Créer la facture</button>
+            <span class="muted only-devis" id="dvFactureLien" style="font-size:.85rem" hidden></span>
+            <button class="btn ok sm only-facture" type="button" id="dvPayee" hidden>✓ Facture réglée</button>
+            <button class="btn sm only-devis" type="button" data-agenda="devis" data-kind="google">📅 Ajouter à Google Agenda</button>
             <span class="muted" id="dvPdfLink" style="font-size:.85rem"></span>
           </div>
           <button class="btn danger sm" type="button" id="dvDelete">Supprimer</button>
@@ -607,7 +650,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
         <div class="f"><span>Photo <small class="muted">(affichée sous le texte sur Android ; l'iPhone montre seulement l'icône)</small></span><div class="al-photos" id="alPhotos"></div><div class="al-upload"><label class="btn sm" for="alFile">📷 Envoyer une photo</label><input type="file" id="alFile" accept="image/*" hidden><span class="muted" id="alFileInfo"></span></div></div>
         <div class="f"><span>Villes concernées</span><div class="al-villes" id="alVilles"></div><span class="muted" style="font-size:.84rem">Les abonnés « toutes les villes » reçoivent chaque alerte, quelle que soit la ville cochée.</span></div>
         <div class="al-form__foot">
-          <div class="al-preview" id="alPreview" aria-hidden="true"><img src="/img/icon-192.png" alt=""><div><b id="alPvT">Titre</b><span id="alPvC">Le message tel qu'il apparaîtra sur le téléphone</span></div><small>maintenant</small><img class="al-preview__big" id="alPvImg" alt="" hidden></div>
+          <div class="al-preview" id="alPreview" aria-hidden="true"><img src="/img/icon-192-v2.png" alt=""><div><b id="alPvT">Titre</b><span id="alPvC">Le message tel qu'il apparaîtra sur le téléphone</span></div><small>maintenant</small><img class="al-preview__big" id="alPvImg" alt="" hidden></div>
           <div class="al-form__send"><button class="btn primary" id="alSend" type="button">Envoyer</button><span class="muted" id="alCible">—</span></div>
         </div>
         <div class="al-progress" id="alProgress" hidden></div>
@@ -888,7 +931,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
     $('#bandeau').value=state.bandeau||'';
     var th=document.querySelector('#themes input[value="'+(state.theme||'')+'"]');if(th)th.checked=true;$('#themeFx').checked=state.theme_fx!==false;
     $('#themeNow').textContent=state.theme?'Actif : '+({noel:'Noël',halloween:'Halloween','fete-nationale':'Fête nationale','saint-valentin':'Saint-Valentin',paques:'Pâques'}[state.theme]||state.theme):'Thème classique actif';
-    if(state.devis_reglages){$('#r_email_objet').value=state.devis_reglages.email_objet;$('#r_email_corps').value=state.devis_reglages.email_corps;$('#r_contact_email').value=state.devis_reglages.contact_email;$('#r_km_tarif').value=state.devis_reglages.km_tarif;}
+    if(state.devis_reglages){$('#r_facture_objet').value=state.devis_reglages.facture_objet||'';$('#r_facture_corps').value=state.devis_reglages.facture_corps||'';$('#r_relance_objet').value=state.devis_reglages.relance_objet||'';$('#r_relance_corps').value=state.devis_reglages.relance_corps||'';$('#r_email_objet').value=state.devis_reglages.email_objet;$('#r_email_corps').value=state.devis_reglages.email_corps;$('#r_contact_email').value=state.devis_reglages.contact_email;$('#r_km_tarif').value=state.devis_reglages.km_tarif;}
   }
 
   var filter='nouveau';
@@ -969,19 +1012,37 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
   // =====================================================================
   //  DEVIS
   // =====================================================================
-  var devisList=[], curDevis=null, logoData=null;
+  var devisList=[], factureList=[], curDevis=null, logoData=null;
+  var isFacture=function(d){return d&&d.type==='facture';};
+  function factureDe(id){return factureList.filter(function(f){return f.facture_de===id;})[0];}
+  function joursDepuis(sql){if(!sql)return 0;return Math.floor((Date.now()-new Date(sql.replace(' ','T')+'Z').getTime())/864e5);}
   var eur=function(n){return (Math.round((Number(n)||0)*100)/100).toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';};
-  var STATUTS={brouillon:'Brouillon',envoye:'Envoyé',accepte:'Accepté',solde:'Payé ✓',refuse:'Refusé'};
+  var STATUTS={brouillon:'Brouillon',envoye:'Envoyé',accepte:'Accepté',solde:'Payé ✓',refuse:'Refusé',emise:'Émise',payee:'Réglée ✓'};
+  var STATUT_OPTIONS={devis:[['brouillon','Brouillon'],['envoye','Envoyé'],['accepte','Accepté (arrhes attendues)'],['solde','Payé · confirmé'],['refuse','Refusé']],facture:[['emise','Émise (à régler)'],['payee','Réglée']]};
   var MOMENT_ORDRE={'Déjeuner / Brunch':0,'Dîner':1,'Deuxième partie de soirée (21h+)':2};
   function demandeById(id){return demandes.filter(function(x){return x.id===id;})[0]||null;}
-  function loadDevis(){return api('devis').then(function(r){devisList=r.devis;renderDevis();renderAgenda();});}
+  function loadDevis(){return api('devis').then(function(r){devisList=r.devis.filter(function(d){return d.type!=='facture';});factureList=r.devis.filter(function(d){return d.type==='facture';});renderDevis();renderFactures();renderAgenda();});}
   function renderDevis(){
     $('#devisList').innerHTML=devisList.length?devisList.map(function(d){
       var quand=(d.event_date&&/^\d{4}-\d{2}-\d{2}$/.test(d.event_date)?dateFr(d.event_date)+(d.event_moment?' · '+d.event_moment:''):(d.intro&&d.intro[0])||'');
+      var f=factureDe(d.id),suivi='';
+      if(d.statut==='envoye'){var j=joursDepuis(d.relance_le||d.envoye_le);suivi='<dt>Suivi</dt><dd>'+(d.relances?'Relancé '+d.relances+' fois, dernière le '+esc(dateHeure(d.relance_le))+(j>=7?' · <span class="wait">sans réponse depuis '+j+' j</span>':''):(j>=7?'<span class="wait">Sans réponse depuis '+j+' j</span> · pensez à relancer':'En attente de réponse'))+'</dd>';}
       return '<div class="card dvc"><div class="head"><div><div class="name">'+esc(d.client_nom||'Sans nom')+'</div><div class="hsub"><span class="st '+esc(d.statut)+'">'+STATUTS[d.statut]+'</span><span>n°'+esc(d.numero)+'</span></div></div><b class="amt">'+eur(d.total_ttc)+'</b></div>'+
-        '<dl class="kv">'+(quand?'<dt>Date</dt><dd>'+esc(quand)+'</dd>':'')+(d.lieu?'<dt>Lieu</dt><dd>'+esc(d.lieu)+'</dd>':'')+'<dt>Devis du</dt><dd>'+esc(dateFr(d.date_devis))+(d.envoye_le?' · envoyé le '+esc(dateHeure(d.envoye_le)):'')+'</dd></dl>'+
-        '<div class="actions"><button class="btn sm" data-opendevis="'+d.id+'">Ouvrir le devis</button></div></div>';
+        '<dl class="kv">'+(quand?'<dt>Date</dt><dd>'+esc(quand)+'</dd>':'')+(d.lieu?'<dt>Lieu</dt><dd>'+esc(d.lieu)+'</dd>':'')+'<dt>Devis du</dt><dd>'+esc(dateFr(d.date_devis))+(d.envoye_le?' · envoyé le '+esc(dateHeure(d.envoye_le)):'')+'</dd>'+suivi+'</dl>'+
+        '<div class="actions"><button class="btn sm" data-opendevis="'+d.id+'">Ouvrir le devis</button>'+(f?'<button class="btn sm" data-opendevis="'+f.id+'">Facture n°'+esc(f.numero)+'</button>':'')+'</div></div>';
     }).join(''):'<p class="empty">Aucun devis. Créez-en un depuis une demande (bouton « Préparer le devis ») ou avec « Nouveau devis ».</p>';
+  }
+  function renderFactures(){
+    $('#factureList').innerHTML=factureList.length?factureList.map(function(f){
+      var src=devisList.filter(function(d){return d.id===f.facture_de;})[0];
+      var quand=(f.event_date&&/^\d{4}-\d{2}-\d{2}$/.test(f.event_date)?dateFr(f.event_date)+(f.event_moment?' · '+f.event_moment:''):'');
+      var reste=Math.max(0,(f.total_ttc||0)-(f.acompte||0));
+      return '<div class="card dvc"><div class="head"><div><div class="name">'+esc(f.client_nom||'Sans nom')+'</div><div class="hsub"><span class="st '+esc(f.statut)+'">'+(STATUTS[f.statut]||f.statut)+'</span><span>n°'+esc(f.numero)+'</span></div></div><b class="amt">'+eur(f.total_ttc)+'</b></div>'+
+        '<dl class="kv">'+(quand?'<dt>Prestation</dt><dd>'+esc(quand)+'</dd>':'')+'<dt>Facture du</dt><dd>'+esc(dateFr(f.date_devis))+(f.envoye_le?' · envoyée le '+esc(dateHeure(f.envoye_le)):'')+'</dd>'+
+        '<dt>Règlement</dt><dd>'+(f.statut==='payee'?'<b>Réglée</b>'+(f.payee_le?' le '+esc(dateHeure(f.payee_le)):''):'Acompte '+eur(f.acompte||0)+' · <b>reste '+eur(reste)+'</b>')+'</dd>'+
+        (src?'<dt>Devis</dt><dd>n°'+esc(src.numero)+'</dd>':'')+'</dl>'+
+        '<div class="actions"><button class="btn sm" data-opendevis="'+f.id+'">Ouvrir la facture</button>'+(src?'<button class="btn sm" data-opendevis="'+src.id+'">Voir le devis</button>':'')+'</div></div>';
+    }).join(''):'<p class="empty">Aucune facture. Ouvrez un devis validé (accepté ou acompte reçu) et appuyez sur « Créer la facture ».</p>';
   }
   function devisForDemande(id){return devisList.filter(function(d){return d.demande_id===id;});}
   function computeTotals(lignes,mode){
@@ -993,8 +1054,17 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
   var ddlg=$('#devisDlg');
   function openDevis(d){
     curDevis=JSON.parse(JSON.stringify(d));
-    $('#dvId').value=d.id;$('#dvNumero').textContent='n°'+d.numero;$('#dvSub').textContent=d.demande_id?'Lié à la demande n°'+d.demande_id:'Devis libre';
+    var F=isFacture(d),src=F?devisList.filter(function(x){return x.id===d.facture_de;})[0]:null;
+    ddlg.classList.toggle('is-facture',F);
+    document.querySelectorAll('#devisDlg .only-devis').forEach(function(el){el.hidden=F;});
+    document.querySelectorAll('#devisDlg .only-facture').forEach(function(el){el.hidden=!F;});
+    $('#dvKind').textContent=F?'Facture':'Devis';
+    $('#dvId').value=d.id;$('#dvNumero').textContent='n°'+d.numero;$('#dvSub').textContent=F?(src?'D\'après le devis n°'+src.numero:'Facture'):(d.demande_id?'Lié à la demande n°'+d.demande_id:'Devis libre');
+    $('#dvStatut').innerHTML=STATUT_OPTIONS[F?'facture':'devis'].map(function(o){return '<option value="'+o[0]+'">'+o[1]+'</option>';}).join('');
     $('#dvStatut').value=d.statut;
+    $('#dv_acompte').value=F?(d.acompte||0):0;
+    $('#dvPdf').textContent=F?'Télécharger la facture (PDF)':'Télécharger le PDF';$('#dvSend').textContent=F?'Envoyer la facture par e-mail':'Envoyer par e-mail avec le PDF';
+    refreshFacturer();refreshRelance();
     $('#dv_client_nom').value=d.client_nom||'';$('#dv_client_email').value=d.client_email||'';$('#dv_client_tel').value=d.client_tel||'';$('#dv_date_devis').value=d.date_devis||'';
     for(var i=0;i<5;i++)$('#dv_i'+i).value=(d.intro&&d.intro[i])||'';
     $('#dv_mode').value=d.mode||'ttc';$('#dv_email_objet').value=d.email_objet||'';$('#dv_email_corps').value=d.email_corps||'';
@@ -1012,18 +1082,42 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
   }
   function renderTotals(){
     var t=computeTotals(curDevis.lignes||[],$('#dv_mode').value);
-    $('#dvTotals').innerHTML='<span>Total HT</span><span>'+eur(t.ht)+'</span><span>TVA 10 %</span><span>'+eur(t.tva)+'</span><span>Total TTC</span><b>'+eur(t.ttc)+'</b><span>Arrhes 30 %</span><span>'+eur(t.arrhes)+'</span><span>Montant restant</span><span>'+eur(t.reste)+'</span>';
+    if(isFacture(curDevis)){var ac=Math.min(t.ttc,Number($('#dv_acompte').value)||0);$('#dvTotals').innerHTML='<span>Total HT</span><span>'+eur(t.ht)+'</span><span>TVA 10 %</span><span>'+eur(t.tva)+'</span><span>Total TTC</span><b>'+eur(t.ttc)+'</b><span>Acompte versé</span><span>'+eur(ac)+'</span><span>Reste à payer</span><b>'+eur(Math.max(0,t.ttc-ac))+'</b>';}
+    else $('#dvTotals').innerHTML='<span>Total HT</span><span>'+eur(t.ht)+'</span><span>TVA 10 %</span><span>'+eur(t.tva)+'</span><span>Total TTC</span><b>'+eur(t.ttc)+'</b><span>Arrhes 30 %</span><span>'+eur(t.arrhes)+'</span><span>Montant restant</span><span>'+eur(t.reste)+'</span>';
     $('#dvMailto').href='mailto:'+encodeURIComponent($('#dv_client_email').value)+'?subject='+encodeURIComponent($('#dv_email_objet').value)+'&body='+encodeURIComponent(emailPlain($('#dv_email_corps').value));
   }
   function collectDevis(){
     var intro=[];for(var i=0;i<5;i++)intro.push($('#dv_i'+i).value);
-    return {client_nom:$('#dv_client_nom').value,client_email:$('#dv_client_email').value,client_tel:$('#dv_client_tel').value,date_devis:$('#dv_date_devis').value,event_date:$('#dv_event_date').value,event_moment:$('#dv_event_moment').value,intro:intro,lieu:intro[4],lignes:curDevis.lignes,mode:$('#dv_mode').value,statut:$('#dvStatut').value,email_objet:$('#dv_email_objet').value,email_corps:$('#dv_email_corps').value};
+    return {client_nom:$('#dv_client_nom').value,client_email:$('#dv_client_email').value,client_tel:$('#dv_client_tel').value,date_devis:$('#dv_date_devis').value,event_date:$('#dv_event_date').value,event_moment:$('#dv_event_moment').value,intro:intro,lieu:intro[4],lignes:curDevis.lignes,mode:$('#dv_mode').value,acompte:Number($('#dv_acompte').value)||0,statut:$('#dvStatut').value,email_objet:$('#dv_email_objet').value,email_corps:$('#dv_email_corps').value};
   }
   function saveDevis(quiet){
     return api('devis/'+curDevis.id,{method:'PUT',body:collectDevis()}).then(function(r){curDevis=r.devis;return loadDevis();}).then(function(){if(!quiet)toast('Devis enregistré');refreshValider();return curDevis;});
   }
   function showPdfLink(){var el=$('#dvPdfLink');el.innerHTML=curDevis&&curDevis.pdf_url?'<a href="'+esc(curDevis.pdf_url)+'" target="_blank" rel="noopener" style="color:var(--cheddar)">PDF archivé ↗</a>':'';}
-  function refreshValider(){var b=$('#dvValider'),st=$('#dvStatut').value;b.hidden=(st==='solde'||st==='refuse');}
+  function refreshValider(){var b=$('#dvValider'),st=$('#dvStatut').value;b.hidden=isFacture(curDevis)||(st==='solde'||st==='refuse');refreshFacturer();refreshRelance();}
+  // bouton « créer la facture » : devis validé sans facture ; sinon lien vers la facture existante
+  function refreshFacturer(){
+    var F=isFacture(curDevis),st=$('#dvStatut').value,f=curDevis?factureDe(curDevis.id):null,b=$('#dvFacturer'),l=$('#dvFactureLien'),pay=$('#dvPayee');
+    b.hidden=F||!!f||!(st==='accepte'||st==='solde');
+    l.hidden=F||!f;if(f)l.innerHTML='Facture n°'+esc(f.numero)+' · '+(STATUTS[f.statut]||f.statut)+' · <button class="btn sm" type="button" data-opendevis="'+f.id+'">Ouvrir</button>';
+    pay.hidden=!F||st==='payee';
+  }
+  // bloc relance : visible pour un devis envoyé, texte pré-rempli depuis le modèle
+  function refreshRelance(){
+    var box=$('#dvRelance');if(!curDevis||isFacture(curDevis)||$('#dvStatut').value!=='envoye'){box.hidden=true;return;}
+    box.hidden=false;
+    var j=joursDepuis(curDevis.relance_le||curDevis.envoye_le);
+    $('#dvRelanceInfo').textContent=(curDevis.relances?'Relancé '+curDevis.relances+' fois · dernière le '+dateHeure(curDevis.relance_le):'Jamais relancé')+(j>=7?' · sans réponse depuis '+j+' j':'');
+    if(!box.dataset.filled||box.dataset.id!==String(curDevis.id)){var v=devisVars();$('#dv_rel_objet').value=fillTpl(state.devis_reglages.relance_objet,v);$('#dv_rel_corps').value=fillTpl(state.devis_reglages.relance_corps,v);box.dataset.filled='1';box.dataset.id=String(curDevis.id);}
+    $('#dvRelSend').disabled=!state.mail_configure;$('#dvRelSend').title=state.mail_configure?'':'Brancher Resend pour envoyer depuis le site ; en attendant : copier ou ouvrir dans Mail';
+    $('#dvRelMailto').href='mailto:'+encodeURIComponent($('#dv_client_email').value)+'?subject='+encodeURIComponent($('#dv_rel_objet').value)+'&body='+encodeURIComponent(emailPlain($('#dv_rel_corps').value));
+  }
+  var MOMENT_MAIL={'Déjeuner / Brunch':'à midi','Dîner':'le soir','Deuxième partie de soirée (21h+)':'en deuxième partie de soirée (21h+)'};
+  function fillTpl(t,v){return String(t||'').replace(/\{(\w+)\}/g,function(m,k){return v[k]!==undefined?v[k]:'';}).replace(/  +/g,' ');}
+  function devisVars(){
+    var t=computeTotals(curDevis.lignes||[],$('#dv_mode').value),ac=Number($('#dv_acompte').value)||0,src=isFacture(curDevis)?devisList.filter(function(x){return x.id===curDevis.facture_de;})[0]:null;
+    return {date:dateFr($('#dv_event_date').value||''),moment:MOMENT_MAIL[$('#dv_event_moment').value]||'',nom:$('#dv_client_nom').value,convives:(curDevis.lignes[0]&&curDevis.lignes[0].qte)||'',lieu:$('#dv_i4').value,numero:curDevis.numero,numero_devis:src?src.numero:'',total:eur(t.ttc),acompte:eur(ac),reste:eur(Math.max(0,t.ttc-ac))};
+  }
   // archive le PDF sur le site (lien privé non devinable) : utilisé dans l'agenda et comme copie de ce qui a été envoyé
   function archivePdf(d,doc){
     var b64=doc.output('datauristring').split(',')[1];
@@ -1040,6 +1134,31 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
     b.dataset.confirm='';b.classList.remove('armed');b.textContent='✓ Valider : acompte reçu';b.classList.add('busy');$('#dvStatut').value='solde';
     saveDevis(true).then(function(){toast('Privatisation confirmée ✓ — pensez à mettre l\'agenda à jour');return api('demandes');}).then(function(r){demandes=r.demandes;renderDemandes();}).catch(function(e){toast(e.message,true);}).finally(function(){b.classList.remove('busy');});
   });
+  $('#dvFacturer').addEventListener('click',function(){
+    var b=this;b.classList.add('busy');
+    saveDevis(true).then(function(){return api('devis/'+curDevis.id+'/facturer',{method:'POST'});}).then(function(r){toast(r.existante?'Cette facture existait déjà':'Facture n°'+r.devis.numero+' créée');return loadDevis().then(function(){openDevis(r.devis);});}).catch(function(e){toast(e.message,true);}).finally(function(){b.classList.remove('busy');});
+  });
+  $('#dvPayee').addEventListener('click',function(){
+    var b=this;if(b.dataset.confirm!=='1'){b.dataset.confirm='1';b.classList.add('armed');b.textContent='Confirmer : facture réglée en totalité';setTimeout(function(){if(b.dataset.confirm==='1'){b.dataset.confirm='';b.classList.remove('armed');b.textContent='✓ Facture réglée';}},4000);return;}
+    b.dataset.confirm='';b.classList.remove('armed');b.textContent='✓ Facture réglée';b.classList.add('busy');$('#dvStatut').value='payee';
+    saveDevis(true).then(function(){toast('Facture marquée réglée ✓');}).catch(function(e){toast(e.message,true);}).finally(function(){b.classList.remove('busy');});
+  });
+  function relanceDone(msg){return loadDevis().then(function(){var d=devisList.filter(function(x){return x.id===curDevis.id;})[0];if(d){curDevis.relances=d.relances;curDevis.relance_le=d.relance_le;}refreshRelance();toast(msg);});}
+  $('#dvRelSend').addEventListener('click',function(){
+    var btn=this;if(!$('#dv_client_email').value){toast('E-mail du client manquant',true);return;}
+    btn.disabled=true;btn.textContent='Envoi…';
+    var p=curDevis.pdf_url?Promise.resolve(null):buildPdf(curDevis).then(function(doc){return doc.output('datauristring').split(',')[1];});
+    p.then(function(b64){return api('devis/'+curDevis.id+'/relancer',{method:'POST',body:{email_objet:$('#dv_rel_objet').value,email_corps:$('#dv_rel_corps').value,pdf_base64:b64||undefined}});})
+      .then(function(){return relanceDone('Relance envoyée à '+$('#dv_client_email').value);}).catch(function(e){toast(e.message,true);}).finally(function(){btn.disabled=false;btn.textContent='Envoyer la relance (avec le PDF)';});
+  });
+  $('#dvRelNote').addEventListener('click',function(){api('devis/'+curDevis.id+'/relancer',{method:'POST',body:{sans_envoi:true,email_objet:$('#dv_rel_objet').value||'-',email_corps:$('#dv_rel_corps').value||'-'}}).then(function(){return relanceDone('Relance notée');}).catch(function(e){toast(e.message,true);});});
+  $('#dvRelCopy').addEventListener('click',function(){
+    var btn=this,corps=$('#dv_rel_corps').value,plain=emailPlain(corps),html=emailHtml(corps);
+    var done=function(){toast('Relance copiée');flash(btn,'Copié ✓');};
+    if(navigator.clipboard&&window.ClipboardItem){navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([html],{type:'text/html'}),'text/plain':new Blob([plain],{type:'text/plain'})})]).then(done).catch(function(){fallbackCopy(plain);done();});}
+    else{fallbackCopy(plain);done();}
+  });
+  ['dv_rel_objet','dv_rel_corps'].forEach(function(id){$('#'+id).addEventListener('input',function(){$('#dvRelMailto').href='mailto:'+encodeURIComponent($('#dv_client_email').value)+'?subject='+encodeURIComponent($('#dv_rel_objet').value)+'&body='+encodeURIComponent(emailPlain($('#dv_rel_corps').value));});});
   $('#dvLines').addEventListener('input',function(e){var t=e.target;if(!t.dataset.l)return;var l=curDevis.lignes[+t.dataset.i];l[t.dataset.l]=(t.dataset.l==='qte'||t.dataset.l==='prix')?Number(t.value):t.value;t.closest('.dvline').querySelector('.tot').textContent=eur((l.qte||0)*(l.prix||0));renderTotals();});
   $('#dvLines').addEventListener('click',function(e){var b=e.target.closest('[data-rmline]');if(!b)return;curDevis.lignes.splice(+b.dataset.rmline,1);renderLines();});
   ddlg.addEventListener('click',function(e){
@@ -1047,6 +1166,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
     if(e.target===ddlg)ddlg.close();
   });
   $('#dv_mode').addEventListener('change',renderTotals);
+  $('#dv_acompte').addEventListener('input',renderTotals);
   ['dv_client_email','dv_email_objet','dv_email_corps'].forEach(function(id){$('#'+id).addEventListener('input',renderTotals);});
   $('#dvClose').addEventListener('click',function(){ddlg.close();});
   $('#dvSave').addEventListener('click',function(){var b=this;b.classList.add('busy');saveDevis().then(function(){flash(b,'Enregistré ✓');}).catch(function(e){toast(e.message,true);}).finally(function(){b.classList.remove('busy');});});
@@ -1069,7 +1189,8 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
     var moments={'Déjeuner / Brunch':'à midi','Dîner':'le soir','Deuxième partie de soirée (21h+)':'en deuxième partie de soirée (21h+)'};
     var v={date:dateFr($('#dv_event_date').value||''),moment:moments[$('#dv_event_moment').value]||'',nom:$('#dv_client_nom').value,convives:(curDevis.lignes[0]&&curDevis.lignes[0].qte)||'',lieu:$('#dv_i4').value,numero:curDevis.numero};
     var fill=function(t){return String(t||'').replace(/\{(\w+)\}/g,function(m,k){return v[k]!==undefined?v[k]:'';}).replace(/  +/g,' ');};
-    $('#dv_email_objet').value=fill(state.devis_reglages.email_objet);$('#dv_email_corps').value=fill(state.devis_reglages.email_corps);renderTotals();flash(this,'Régénéré ✓');
+    var V=devisVars(),F=isFacture(curDevis);
+    $('#dv_email_objet').value=fillTpl(F?state.devis_reglages.facture_objet:state.devis_reglages.email_objet,V);$('#dv_email_corps').value=fillTpl(F?state.devis_reglages.facture_corps:state.devis_reglages.email_corps,V);renderTotals();flash(this,'Régénéré ✓');
   });
   function emailPlain(t){return String(t||'').replace(/\*\*(.+?)\*\*/g,'$1');}
   function emailHtml(t){return '<div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.55;color:#222">'+String(t||'').split(/\n\s*\n/).map(function(p){return p.trim()?'<p style="margin:0 0 1em">'+esc(p).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>')+'</p>':'';}).join('')+'</div>';}
@@ -1081,18 +1202,18 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
     }else if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(plain).then(done).catch(function(){fallbackCopy(plain);done();});}
     else{fallbackCopy(plain);done();}
   });
-  $('#dvPdf').addEventListener('click',function(){var b=this;b.classList.add('busy');saveDevis().then(function(d){return buildPdf(d);}).then(function(doc){var name='Devis-'+curDevis.numero+'-L-Arret-Gourmand.pdf';try{doc.save(name);}catch(e){window.open(doc.output('bloburl'),'_blank');}toast('PDF '+name+' généré');flash(b,'PDF prêt ✓');return archivePdf(curDevis,doc).catch(function(){});}).catch(function(e){toast(e.message,true);}).finally(function(){b.classList.remove('busy');});});
+  $('#dvPdf').addEventListener('click',function(){var b=this;b.classList.add('busy');saveDevis().then(function(d){return buildPdf(d);}).then(function(doc){var name=(isFacture(curDevis)?'Facture-':'Devis-')+curDevis.numero+'-L-Arret-Gourmand.pdf';try{doc.save(name);}catch(e){window.open(doc.output('bloburl'),'_blank');}toast('PDF '+name+' généré');flash(b,'PDF prêt ✓');return archivePdf(curDevis,doc).catch(function(){});}).catch(function(e){toast(e.message,true);}).finally(function(){b.classList.remove('busy');});});
   $('#dvSend').addEventListener('click',function(){
     var btn=this;if(!$('#dv_client_email').value){toast('E-mail du client manquant',true);return;}
     btn.disabled=true;btn.textContent='Envoi…';
     saveDevis().then(function(d){return buildPdf(d);}).then(function(doc){var b64=doc.output('datauristring').split(',')[1];return api('devis/'+curDevis.id+'/envoyer',{method:'POST',body:{pdf_base64:b64}});})
-      .then(function(){toast('Devis envoyé à '+$('#dv_client_email').value);return loadDevis();}).then(function(){var d=devisList.filter(function(x){return x.id===curDevis.id;})[0];if(d){$('#dvStatut').value=d.statut;curDevis.pdf_url=d.pdf_url;curDevis.statut=d.statut;showPdfLink();refreshValider();}return api('demandes');}).then(function(r){demandes=r.demandes;})
+      .then(function(){toast((isFacture(curDevis)?'Facture envoyée à ':'Devis envoyé à ')+$('#dv_client_email').value);return loadDevis();}).then(function(){var d=devisList.filter(function(x){return x.id===curDevis.id;})[0];if(d){$('#dvStatut').value=d.statut;curDevis.pdf_url=d.pdf_url;curDevis.statut=d.statut;showPdfLink();refreshValider();}return api('demandes');}).then(function(r){demandes=r.demandes;})
       .catch(function(e){toast(e.message,true);}).finally(function(){btn.disabled=false;btn.textContent='Envoyer par e-mail avec le PDF';});
   });
   $('#newDevis').addEventListener('click',function(){api('devis',{method:'POST',body:{}}).then(function(r){return loadDevis().then(function(){openDevis(r.devis);});}).catch(function(e){toast(e.message,true);});});
   document.addEventListener('click',function(e){
     var b=e.target.closest('button');if(!b)return;
-    if(b.dataset.opendevis){var d=devisList.filter(function(x){return x.id===+b.dataset.opendevis;})[0];if(d)openDevis(d);}
+    if(b.dataset.opendevis){var d=devisList.concat(factureList).filter(function(x){return x.id===+b.dataset.opendevis;})[0];if(d)openDevis(d);}
     if(b.dataset.mkdevis){api('devis',{method:'POST',body:{demande_id:+b.dataset.mkdevis}}).then(function(r){return loadDevis().then(function(){openDevis(r.devis);});}).catch(function(err){toast(err.message,true);});}
   });
 
@@ -1210,6 +1331,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
       var J=window.jspdf.jsPDF, doc=new J({unit:'mm',format:'a4'});
       var W=210, M=15, R=W-M, y=M, grey=[216,216,216], dark=[40,40,40], mid=[127,127,127];
       var t=computeTotals(d.lignes||[],d.mode||'ttc');
+      var F=isFacture(d),src=F?devisList.filter(function(x){return x.id===d.facture_de;})[0]:null,ac=F?Math.min(t.ttc,Number(d.acompte)||0):0,reste=Math.max(0,t.ttc-ac);
       var txt=function(s,x,yy,o){doc.text(Array.isArray(s)?s.map(clean):clean(s),x,yy,o||{});};
       var dateCourte=function(iso){var p=(iso||'').split('-');return p.length===3?p[2]+'/'+p[1]+'/'+p[0]:iso||'';};
       doc.setTextColor.apply(doc,dark);
@@ -1221,10 +1343,11 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
       txt('Client',M,y);doc.setFont('helvetica','normal');txt(d.client_nom||'',M,y+6);
       doc.setFontSize(9.5);doc.setTextColor.apply(doc,mid);txt([d.client_email,d.client_tel].filter(Boolean).join('  ·  '),M,y+11);doc.setTextColor.apply(doc,dark);
       // bloc devis (droite)
-      doc.setFont('helvetica','bold');doc.setFontSize(13);txt('DEVIS '+d.numero,R-40,y+2,{align:'center'});
+      doc.setFont('helvetica','bold');doc.setFontSize(13);txt((F?'FACTURE ':'DEVIS ')+d.numero,R-40,y+2,{align:'center'});
       doc.setFont('helvetica','normal');doc.setFontSize(10.5);
-      txt('Numéro du devis',R-80,y+10);txt(String(d.numero),R,y+10,{align:'right'});
-      txt('Date du devis',R-80,y+16);txt(dateCourte(d.date_devis),R,y+16,{align:'right'});
+      txt(F?'Numéro de facture':'Numéro du devis',R-80,y+10);txt(String(d.numero),R,y+10,{align:'right'});
+      txt(F?'Date de facture':'Date du devis',R-80,y+16);txt(dateCourte(d.date_devis),R,y+16,{align:'right'});
+      if(F){txt('Date de la prestation',R-80,y+22);txt(dateCourte(d.event_date),R,y+22,{align:'right'});if(src){txt('Référence devis',R-80,y+28);txt('n° '+src.numero,R,y+28,{align:'right'});}y+=12;}
       y+=24;
       // prestation + montant TTC
       doc.setFontSize(10.5);var iy=y;
@@ -1244,18 +1367,29 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
       });
       y+=4;
       // totaux
-      var rows=[['Total HT',eur(t.ht)],['TVA 10%',eur(t.tva)],['Total Net en Euros',eur(t.ttc)],['Arrhes de 30%',eur(t.arrhes)],['Montant restant',eur(t.reste)]];
+      var rows=F?[['Total HT',eur(t.ht)],['TVA 10%',eur(t.tva)],['Total Net en Euros',eur(t.ttc)],['Acompte versé',eur(ac)],['Reste à payer',eur(d.statut==='payee'?0:reste)]]:[['Total HT',eur(t.ht)],['TVA 10%',eur(t.tva)],['Total Net en Euros',eur(t.ttc)],['Arrhes de 30%',eur(t.arrhes)],['Montant restant',eur(t.reste)]];
       rows.forEach(function(r,i){doc.setFillColor.apply(doc,grey);doc.rect(R-80,y-5,80,8,'F');doc.setFont('helvetica','bold');doc.setFontSize(i===2?12:11);txt(r[0],R-78,y+0.5);doc.setFontSize(11);txt(r[1],R-2,y+0.5,{align:'right'});y+=(i===2?10:9);});
       y+=4;
-      // conditions
-      doc.setFont('helvetica','bold');doc.setFontSize(11);txt("Conditions d'utilisation",M,y);y+=6;doc.setFont('helvetica','normal');doc.setFontSize(9.5);
-      ['Règlement du montant restant par CB, chèque ou espèce le jour de la prestation.','*Ce tarif comprend la réservation du Food-Truck et de ses cuisiniers.','** Quantité minimum de formules pour une privatisation'].forEach(function(l){txt(l,M,y);y+=5;});
-      y+=3;doc.setFont('helvetica','bold');txt('Modalités de réservation de camion :',M,y);y+=5.5;doc.setFont('helvetica','normal');
-      ['Une prise électrique de 16 ampères (prise de maison classique).',"La réservation s'effectue à réception d'un chèque d'arrhes ou virement de 30% et du devis daté et signé portant la mention \"Bon pour accord\".","En cas d'annulation de votre part, les arrhes sont conservées à titre de dédommagement."].forEach(function(l){var ls=doc.splitTextToSize(clean(l),W-2*M);txt(ls,M,y);y+=5*ls.length;});
-      y+=6;
-      // signature + RIB
-      doc.setFont('helvetica','bold');doc.setFontSize(10.5);txt('Date, signature et mention "Bon pour accord" :',R-85,y);doc.setDrawColor(180);doc.rect(R-85,y+3,85,28);
-      txt('Coordonnées bancaires',M,y);txt('BP VAL DE FRANCE',M,y+6);txt('IBAN : FR76 1870 7001 8631 4213 2199 822',M,y+12);txt('BIC : CCBPFRPPVER',M,y+18);
+      if(F){
+        // conditions de règlement (facture)
+        doc.setFont('helvetica','bold');doc.setFontSize(11);txt('Conditions de règlement',M,y);y+=6;doc.setFont('helvetica','normal');doc.setFontSize(9.5);
+        var cond=d.statut==='payee'?['Facture acquittée'+(d.payee_le?' le '+dateHeure(d.payee_le).split(' ')[0]:'')+'. Nous vous remercions pour votre confiance.']:['Règlement du solde à réception de la facture, par CB, chèque, espèces ou virement (coordonnées bancaires ci-dessous).'];
+        cond=cond.concat(["Pas d'escompte pour paiement anticipé. En cas de retard de paiement : pénalités au taux d'intérêt légal en vigueur et, pour les","professionnels, indemnité forfaitaire de 40 € pour frais de recouvrement (art. L441-10 du Code de commerce).",'TVA 10 % (restauration). SARL LAG - SIREN 801 578 584.']);
+        cond.forEach(function(l){txt(l,M,y);y+=5;});
+        y+=6;doc.setFont('helvetica','bold');doc.setFontSize(10.5);
+        txt('Coordonnées bancaires',M,y);txt('BP VAL DE FRANCE',M,y+6);txt('IBAN : FR76 1870 7001 8631 4213 2199 822',M,y+12);txt('BIC : CCBPFRPPVER',M,y+18);
+        if(d.statut==='payee'){doc.setFontSize(22);doc.setTextColor(123,166,86);txt('ACQUITTÉE',R-45,y+12,{align:'center'});doc.setTextColor.apply(doc,dark);}
+      }else{
+        // conditions
+        doc.setFont('helvetica','bold');doc.setFontSize(11);txt("Conditions d'utilisation",M,y);y+=6;doc.setFont('helvetica','normal');doc.setFontSize(9.5);
+        ['Règlement du montant restant par CB, chèque ou espèce le jour de la prestation.','*Ce tarif comprend la réservation du Food-Truck et de ses cuisiniers.','** Quantité minimum de formules pour une privatisation'].forEach(function(l){txt(l,M,y);y+=5;});
+        y+=3;doc.setFont('helvetica','bold');txt('Modalités de réservation de camion :',M,y);y+=5.5;doc.setFont('helvetica','normal');
+        ['Une prise électrique de 16 ampères (prise de maison classique).',"La réservation s'effectue à réception d'un chèque d'arrhes ou virement de 30% et du devis daté et signé portant la mention \"Bon pour accord\".","En cas d'annulation de votre part, les arrhes sont conservées à titre de dédommagement."].forEach(function(l){var ls=doc.splitTextToSize(clean(l),W-2*M);txt(ls,M,y);y+=5*ls.length;});
+        y+=6;
+        // signature + RIB
+        doc.setFont('helvetica','bold');doc.setFontSize(10.5);txt('Date, signature et mention "Bon pour accord" :',R-85,y);doc.setDrawColor(180);doc.rect(R-85,y+3,85,28);
+        txt('Coordonnées bancaires',M,y);txt('BP VAL DE FRANCE',M,y+6);txt('IBAN : FR76 1870 7001 8631 4213 2199 822',M,y+12);txt('BIC : CCBPFRPPVER',M,y+18);
+      }
       // pied de page
       var fy=283;doc.setFontSize(9);doc.setTextColor.apply(doc,mid);
       txt('Tél: 07 82 54 98 29',M,fy);txt('Site web: www.larretgourmand.com',M+52,fy);txt('E-mail: '+(state.devis_reglages.contact_email||''),M+118,fy);txt('N° SIREN : 801 578 584',R,fy+5,{align:'right'});
@@ -1306,6 +1440,8 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
     if(b.id==='supSave'){var inputs=document.querySelectorAll('[data-sup]');Promise.all(Array.prototype.map.call(inputs,function(i){return api('burgers/'+i.dataset.sup,{method:'PUT',body:{supplement:i.value}});})).then(function(){toast('Suppléments enregistrés');load();}).catch(function(err){toast(err.message,true);});}
     if(b.id==='bandeauSave')save('reglages',{bandeau:$('#bandeau').value},'Bandeau enregistré');
     if(b.id==='themeSave'){var sel=document.querySelector('#themes input:checked');save('reglages',{theme:sel?sel.value:'',theme_fx:$('#themeFx').checked?'1':'0'},sel&&sel.value?'Thème appliqué — le site est passé en mode '+sel.closest('.theme').querySelector('b').textContent.replace(/^\S+\s/,''):'Retour au thème classique')}
+    if(b.id==='reglagesSave2')save('reglages',{devis_facture_objet:$('#r_facture_objet').value,devis_facture_corps:$('#r_facture_corps').value},'Modèle de facture enregistré');
+    if(b.id==='reglagesSave3')save('reglages',{devis_relance_objet:$('#r_relance_objet').value,devis_relance_corps:$('#r_relance_corps').value},'Modèle de relance enregistré');
     if(b.id==='reglagesSave')save('reglages',{devis_email_objet:$('#r_email_objet').value,devis_email_corps:$('#r_email_corps').value,devis_contact_email:$('#r_contact_email').value,devis_km_tarif:$('#r_km_tarif').value},'Réglages enregistrés');
     if(b.id==='bandeauClear'){$('#bandeau').value='';save('reglages',{bandeau:''},'Bandeau retiré');}
   });
