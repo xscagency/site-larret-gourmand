@@ -26,11 +26,11 @@ function renderMenu(state) {
     if (i === 0) cls += ' dish--featured';
     else if (i === n - 1 && n > 2 && rem === 2) cls += ' dish--wide';
     else if (i === n - 1 && n > 2 && rem === 1) cls += ' dish--full';
-    const prix = b.supplement ? fmtSup(b.supplement) : fmt(state.prix.burger);
+    const prix = fmt(state.prix.burger + b.supplement); // prix du burger seul, supplément compris
     const sizes = i === 0 ? '(max-width: 980px) 100vw, 66vw' : '(max-width: 600px) 100vw, (max-width: 980px) 50vw, 33vw';
     return `<li class="${cls}" data-burger="${esc(b.id)}"${b.rupture ? ' data-rupture="1"' : ''}>
   <div class="dish__img"><img src="${esc(b.photo || '/img/og.jpg')}"${srcset(b.photo)} sizes="${sizes}" alt="${esc(altPhoto(b.nom))}" width="1100" height="1100" loading="lazy" decoding="async"><span class="dish__price${b.supplement ? ' sup' : ''}">${prix}</span></div>
-  <div class="dish__body"><h3>${esc(typo(b.nom))}</h3>${b.accroche ? `<span class="tag">${esc(typo(b.accroche))}</span>` : ''}<p class="ing">${esc(typo(b.description))}</p></div>
+  <div class="dish__body"><h3>${esc(typo(b.nom))}</h3>${b.supplement ? `<span class="dish__sup">Supplément ${fmtSup(b.supplement)}</span>` : ''}${b.accroche ? `<span class="tag">${esc(typo(b.accroche))}</span>` : ''}<p class="ing">${esc(typo(b.description))}</p></div>
 </li>`;
   }).join('\n');
 }
