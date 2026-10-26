@@ -23,13 +23,19 @@ self.addEventListener('push', (e) => {
     badge: '/img/icon-192.png',
     tag: d.tag || 'lag',
     renotify: !!d.tag,
-    data: { url: d.url || '/?source=push' },
+    data: { url: d.url || '/?source=push', id: d.id || 0 },
   };
-  e.waitUntil(self.registration.showNotification(d.title || "L'Arrêt Gourmand", opts));
+  e.waitUntil(Promise.all([self.registration.showNotification(d.title || "L'Arrêt Gourmand", opts), suivi(d.id, 'recu')]));
 });
 // un appui sur la notification ouvre la page visée (ou ramène l'onglet déjà ouvert)
+// le téléphone confirme au site qu'une alerte est bien arrivée / a été ouverte (statistiques de l'admin)
+function suivi(id, type) {
+  if (!id) return Promise.resolve();
+  return self.registration.pushManager.getSubscription().then((sub) => sub && fetch('/api/alertes/suivi', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ endpoint: sub.endpoint, id, type, ua: navigator.userAgent }) })).catch(() => null);
+}
 self.addEventListener('notificationclick', (e) => {
   e.notification.close();
+  e.waitUntil(suivi(e.notification.data && e.notification.data.id, 'ouvert'));
   const url = new URL((e.notification.data && e.notification.data.url) || '/', self.location.origin).href;
   e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
     const same = list.find((c) => c.url.split('?')[0] === url.split('?')[0]);

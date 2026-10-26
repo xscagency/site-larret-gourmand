@@ -239,6 +239,9 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
 .al-hist .t{font-weight:600}
 .al-hist .m{font-size:.88rem;color:var(--creme-2);margin-top:2px}
 .al-hist .meta{font-size:.8rem;color:var(--creme-3);margin-top:3px}
+.al-hist .devs{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:6px;font-size:.84rem;color:var(--creme-2)}
+.al-hist .dev b{color:var(--cheddar);font-weight:600}
+.al-hist .dev i{font-style:normal;color:var(--mesclun)}
 .al-hist .cnt{text-align:right;white-space:nowrap;font-size:.86rem;color:var(--creme-2)}
 .al-hist .cnt b{display:block;font-size:1.25rem;color:var(--cheddar)}
 @media (max-width:640px){.al-hist .card{grid-template-columns:1fr auto}.al-hist .when{grid-column:1/-1}}
@@ -682,7 +685,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
       renderTpls();
       $('#alHist').innerHTML=r.historique.length?'<div class="al-hist">'+r.historique.map(function(a){
         var d=new Date(a.cree.replace(' ','T')+'Z');
-        return '<div class="card"><div class="when">'+d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'})+'<br>'+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})+'</div><div><div class="t">'+esc(a.titre)+'</div><div class="m">'+esc(a.corps)+'</div><div class="meta">'+esc(SUJETS_LIB[a.sujet]||a.sujet)+' · '+(a.villes.length?esc(a.villes.join(', ')):'toutes les villes')+(a.termine?'':' · <span class="st rupt">En cours</span>')+'</div></div><div class="cnt"><b>'+a.envoyes+'</b>sur '+a.cibles+(a.echecs?'<br>'+a.echecs+' échec'+(a.echecs>1?'s':''):'')+'</div></div>';
+        return '<div class="card"><div class="when">'+d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'})+'<br>'+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})+'</div><div><div class="t">'+esc(a.titre)+'</div><div class="m">'+esc(a.corps)+'</div><div class="meta">'+esc(SUJETS_LIB[a.sujet]||a.sujet)+' · '+(a.villes.length?esc(a.villes.join(', ')):'toutes les villes')+(a.termine?'':' · <span class="st rupt">En cours</span>')+'</div>'+devs(a.appareils)+'</div><div class="cnt"><b>'+a.envoyes+'</b>sur '+a.cibles+(a.echecs?'<br>'+a.echecs+' échec'+(a.echecs>1?'s':''):'')+'</div></div>';
       }).join('')+'</div>':'<p class="empty">Aucune alerte envoyée pour l\'instant.</p>';
       updateCible();
     }).catch(function(e){$('#alStats').innerHTML='<p class="empty">'+esc(e.message)+'</p>';});
@@ -710,6 +713,12 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
     html+=card({k:'🎁 Concours',sujet:'concours',titre:'Concours : …',corps:'Ex. : 5 burgers à gagner, participez sur notre page Facebook.',villes:[]});
     $('#alTpls').innerHTML=html;
     $('#alTpls').onclick=function(e){var b=e.target.closest('[data-tpl]');if(!b)return;var o=out.filter(function(x){return x.id===b.dataset.tpl;})[0];if(o)prefillAlerte(o.o);};
+  }
+  // détail par appareil : envoyées (acceptées par Apple/Google), reçues (affichées sur le téléphone), ouvertes (touchées)
+  function devs(apps){
+    apps=apps||{};var LIB={iphone:'iPhone',android:'Android',autre:'Autre'};
+    var rows=['iphone','android','autre'].filter(function(k){return apps[k];}).map(function(k){var x=apps[k];return '<span class="dev"><b>'+LIB[k]+'</b> '+x.envoyes+' envoyée'+(x.envoyes>1?'s':'')+' · <i>'+x.recus+' reçue'+(x.recus>1?'s':'')+'</i> · '+x.ouverts+' ouverte'+(x.ouverts>1?'s':'')+'</span>';});
+    return rows.length?'<div class="devs">'+rows.join('')+'</div>':'';
   }
   function addDaysIso(iso,n){var d=new Date(iso+'T12:00:00Z');d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10);}
   function alVillesChoisies(){var all=document.querySelectorAll('#alVilles input'),on=Array.prototype.slice.call(document.querySelectorAll('#alVilles input:checked')).map(function(i){return i.value;});return on.length===all.length?[]:on;}

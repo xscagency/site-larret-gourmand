@@ -96,3 +96,10 @@ export const SUJETS = {
   offres: 'Offres et bons plans',
   concours: 'Concours',
 };
+
+// Clé courte (empreinte) d'un abonnement, pour le suivi sans stocker l'adresse en clair une seconde fois
+export async function cleAbonne(endpoint) {
+  const h = await crypto.subtle.digest('SHA-256', te.encode(endpoint));
+  return Array.from(new Uint8Array(h).slice(0, 12), (b) => b.toString(16).padStart(2, '0')).join('');
+}
+export const typeAppareil = (ua) => (/iphone|ipad|ipod/i.test(ua || '') ? 'iphone' : /android/i.test(ua || '') ? 'android' : 'autre');

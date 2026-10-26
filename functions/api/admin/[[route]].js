@@ -26,7 +26,7 @@
 
 import { json, loadState, computeTonight, slugify, todayParis } from '../../_lib.js';
 import { computeTotals, nextNumero, MOMENTS, dateFr, fillTemplate, distanceKm, sendDevisEmail } from '../../_devis.js';
-import { getVapid, sendPush, SUJETS } from '../../_push.js';
+import { getVapid, sendPush, SUJETS, cleAbonne, typeAppareil } from '../../_push.js';
 
 function authorized(request, env) {
   const h = request.headers.get('authorization') || '';
@@ -294,11 +294,14 @@ export async function onRequest({ request, env, params }) {
     return { where: parts.join(' AND '), binds };
   }
   if (route === 'alertes' && method === 'GET') {
-    const [tot, rows, hist] = await Promise.all([
+    const [tot, rows, hist, suivi] = await Promise.all([
       env.DB.prepare('SELECT COUNT(*) AS n FROM abonnes WHERE actif = 1').first(),
       env.DB.prepare('SELECT villes, sujets, appareil FROM abonnes WHERE actif = 1').all(),
       env.DB.prepare('SELECT * FROM alertes ORDER BY id DESC LIMIT 40').all(),
+      env.DB.prepare('SELECT alerte_id, appareil, SUM(envoye) AS envoyes, SUM(recu) AS recus, SUM(ouvert) AS ouverts FROM alertes_suivi WHERE alerte_id IN (SELECT id FROM alertes ORDER BY id DESC LIMIT 40) GROUP BY alerte_id, appareil').all(),
     ]);
+    const parAlerte = {};
+    for (const r of suivi.results) { (parAlerte[r.alerte_id] ||= {})[r.appareil] = { envoyes: r.envoyes, recus: r.recus, ouverts: r.ouverts }; }
     const parVille = {}, parSujet = {}, parAppareil = { iphone: 0, android: 0, autre: 0 };
     let toutesVilles = 0;
     for (const r of rows.results) {
@@ -309,7 +312,7 @@ export async function onRequest({ request, env, params }) {
       parAppareil[/iphone|ipad/i.test(ua) ? 'iphone' : /android/i.test(ua) ? 'android' : 'autre']++;
     }
     return json({ ok: true, actifs: tot.n, toutes_villes: toutesVilles, par_ville: parVille, par_sujet: parSujet, par_appareil: parAppareil, sujets: SUJETS,
-      historique: hist.results.map((a) => ({ ...a, villes: JSON.parse(a.villes || '[]') })) });
+      historique: hist.results.map((a) => ({ ...a, villes: JSON.parse(a.villes || '[]'), appareils: parAlerte[a.id] || {} })) });
   }
   if (route === 'alertes' && method === 'POST') {
     const sujet = str(body.sujet, 20);
@@ -332,15 +335,16 @@ export async function onRequest({ request, env, params }) {
     if (a.termine) return json({ ok: true, envoyes: a.envoyes, echecs: a.echecs, restant: 0, termine: true });
     const villes = JSON.parse(a.villes || '[]');
     const { where, binds } = cibleSql(a.sujet, villes);
-    const lot = await env.DB.prepare(`SELECT id, endpoint, p256dh, auth, echecs FROM abonnes WHERE ${where} AND id > ? ORDER BY id LIMIT ${LOT}`).bind(...binds, a.curseur).all();
+    const lot = await env.DB.prepare(`SELECT id, endpoint, p256dh, auth, echecs, appareil FROM abonnes WHERE ${where} AND id > ? ORDER BY id LIMIT ${LOT}`).bind(...binds, a.curseur).all();
     const vapid = await getVapid(env);
-    const payload = { title: a.titre, body: a.corps, url: a.url + (a.url.includes('?') ? '&' : '?') + 'source=push', tag: `${a.sujet}-${a.id}` };
+    const payload = { id: a.id, title: a.titre, body: a.corps, url: a.url + (a.url.includes('?') ? '&' : '?') + 'source=push', tag: `${a.sujet}-${a.id}` };
     const results = await Promise.all(lot.results.map((s) => sendPush(s, payload, vapid, { ttl: a.sujet === 'service' || a.sujet === 'annulation' ? 4 * 3600 : 24 * 3600, urgency: a.sujet === 'annulation' ? 'high' : 'normal', topic: a.sujet })));
+    const cles = await Promise.all(lot.results.map((s) => cleAbonne(s.endpoint)));
     let ok = 0, ko = 0;
     const updates = [];
     results.forEach((r, i) => {
       const s = lot.results[i];
-      if (r.ok) { ok++; updates.push(env.DB.prepare("UPDATE abonnes SET dernier_envoi = datetime('now'), echecs = 0 WHERE id = ?").bind(s.id)); }
+      if (r.ok) { ok++; updates.push(env.DB.prepare("UPDATE abonnes SET dernier_envoi = datetime('now'), echecs = 0 WHERE id = ?").bind(s.id)); updates.push(env.DB.prepare('INSERT INTO alertes_suivi (alerte_id, cle, appareil, envoye) VALUES (?, ?, ?, 1) ON CONFLICT(alerte_id, cle) DO UPDATE SET envoye = 1').bind(a.id, cles[i], typeAppareil(s.appareil))); }
       else { ko++; const dead = r.gone || s.echecs + 1 >= 5; updates.push(env.DB.prepare("UPDATE abonnes SET echecs = echecs + 1, actif = CASE WHEN ? THEN 0 ELSE actif END, maj = datetime('now') WHERE id = ?").bind(dead ? 1 : 0, s.id)); }
     });
     const last = lot.results.length ? lot.results[lot.results.length - 1].id : a.curseur;

@@ -7,9 +7,10 @@
 //   POST /api/alertes/preferences    { endpoint, villes?, sujets?, actif? }
 //   POST /api/alertes/desabonner     { endpoint } → actif = 0 (plus aucun envoi)
 //   POST /api/alertes/test           { endpoint } → renvoie une notification d'essai
+//   POST /api/alertes/suivi          { endpoint, id, type: 'recu' | 'ouvert' } → le téléphone confirme l'affichage / l'ouverture
 
 import { json, loadState } from '../../_lib.js';
-import { getVapid, sendPush, SUJETS } from '../../_push.js';
+import { getVapid, sendPush, SUJETS, cleAbonne, typeAppareil } from '../../_push.js';
 
 const str = (v, max) => String(v ?? '').trim().slice(0, max);
 const cleanVilles = (v) => (Array.isArray(v) ? v.map((x) => str(x, 60)).filter(Boolean).slice(0, 12) : []);
@@ -59,8 +60,17 @@ export async function onRequest({ request, env, params }) {
 
   const endpoint = body.endpoint;
   if (!validEndpoint(endpoint)) return json({ ok: false, error: 'Abonnement inconnu.' }, 400);
-  const row = await env.DB.prepare('SELECT endpoint, p256dh, auth, villes, sujets, actif FROM abonnes WHERE endpoint = ?').bind(endpoint).first();
+  const row = await env.DB.prepare('SELECT endpoint, p256dh, auth, villes, sujets, actif, appareil FROM abonnes WHERE endpoint = ?').bind(endpoint).first();
 
+  if (route === 'suivi') {
+    const id = Number(body.id), type = body.type === 'ouvert' ? 'ouvert' : 'recu';
+    if (!id) return json({ ok: true });
+    const cle = await cleAbonne(endpoint);
+    const app = typeAppareil(row?.appareil || body.ua);
+    await env.DB.prepare(`INSERT INTO alertes_suivi (alerte_id, cle, appareil, ${type}) VALUES (?, ?, ?, 1)
+      ON CONFLICT(alerte_id, cle) DO UPDATE SET ${type} = 1, appareil = CASE WHEN excluded.appareil <> 'autre' THEN excluded.appareil ELSE appareil END, maj = datetime('now')`).bind(id, cle, app).run();
+    return json({ ok: true });
+  }
   if (route === 'etat') {
     return json({ ok: true, abonne: row ? { villes: JSON.parse(row.villes), sujets: JSON.parse(row.sujets), actif: !!row.actif } : null });
   }

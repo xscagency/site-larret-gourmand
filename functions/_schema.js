@@ -17,6 +17,16 @@ const TABLE_ABONNES = `CREATE TABLE IF NOT EXISTS abonnes (
     dernier_envoi TEXT,
     echecs INTEGER NOT NULL DEFAULT 0
   )`;
+const TABLE_SUIVI = `CREATE TABLE IF NOT EXISTS alertes_suivi (
+    alerte_id INTEGER NOT NULL,
+    cle TEXT NOT NULL,
+    appareil TEXT NOT NULL DEFAULT 'autre',
+    envoye INTEGER NOT NULL DEFAULT 0,
+    recu INTEGER NOT NULL DEFAULT 0,
+    ouvert INTEGER NOT NULL DEFAULT 0,
+    maj TEXT NOT NULL DEFAULT (datetime('now')),
+    PRIMARY KEY (alerte_id, cle)
+  )`;
 const TABLE_ALERTES = `CREATE TABLE IF NOT EXISTS alertes (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     sujet TEXT NOT NULL,
@@ -80,6 +90,7 @@ export const STATEMENTS = [
   )`,
   TABLE_ABONNES,
   TABLE_ALERTES,
+  TABLE_SUIVI,
   `CREATE TABLE IF NOT EXISTS devis (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     numero TEXT NOT NULL UNIQUE,
@@ -146,7 +157,7 @@ Cordialement,
 Sylvain'),
     ('devis_contact_email','contact@larretgalette.com'),
     ('devis_km_tarif',     '1'),
-    ('schema_version',     '8')`,
+    ('schema_version',     '9')`,
 ];
 
 // Crée les tables et les données de départ (sans toucher à ce qui existe déjà)
@@ -157,7 +168,7 @@ export async function ensureSchema(env) {
 
 // Mises à jour appliquées une seule fois sur une base déjà en ligne (numérotées, dans l'ordre).
 // Une base neuve reçoit directement le schéma complet ; une base existante rattrape les versions manquantes.
-export const SCHEMA_VERSION = 8;
+export const SCHEMA_VERSION = 9;
 export const MIGRATIONS = {
   1: ['ALTER TABLE demandes ADD COLUMN moment TEXT'],
   2: ['ALTER TABLE demandes ADD COLUMN adresse TEXT', 'ALTER TABLE demandes ADD COLUMN code_postal TEXT', 'ALTER TABLE demandes ADD COLUMN ville TEXT',
@@ -216,6 +227,7 @@ Sylvain'`],
   6: ['ALTER TABLE devis ADD COLUMN pdf BLOB', 'ALTER TABLE devis ADD COLUMN pdf_token TEXT', 'ALTER TABLE devis ADD COLUMN pdf_maj TEXT'],
   7: ["INSERT OR IGNORE INTO reglages (cle, valeur) VALUES ('theme', ''), ('theme_fx', '1')"],
   8: [TABLE_ABONNES, TABLE_ALERTES],
+  9: [TABLE_SUIVI],
 };
 export async function applyMigrations(env, from = 0) {
   for (let v = from + 1; v <= SCHEMA_VERSION; v++) {
