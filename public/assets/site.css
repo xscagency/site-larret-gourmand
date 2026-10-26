@@ -15,6 +15,8 @@
 [hidden]{display:none!important}
 html{scroll-behavior:smooth}
 body{margin:0;background:var(--brun);color:var(--creme);font-family:var(--body);font-size:17px;line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+/* appli installée (plein écran) : la barre d'état est couverte par un bandeau fixe, et la page commence dessous */
+body{padding-top:env(safe-area-inset-top,0px)}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:60;background:var(--brun)}
 h1,h2,h3{font-family:var(--display);font-weight:400;line-height:1.08;margin:0;text-wrap:balance;letter-spacing:-.012em}
 h2{font-size:clamp(1.9rem,4.2vw,3.1rem)}
@@ -206,7 +208,7 @@ img{max-width:100%;display:block}
 .closing span{color:var(--orange-text)}
 
 /* ---------- footer ---------- */
-.foot{border-top:1px solid var(--brun-line);padding-block:48px 36px;color:var(--creme-2);font-size:.94rem}
+.foot{border-top:1px solid var(--brun-line);padding-block:48px calc(36px + env(safe-area-inset-bottom,0px));color:var(--creme-2);font-size:.94rem}
 .foot__grid{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:32px}
 @media (max-width:820px){.foot__grid{grid-template-columns:1fr}}
 .foot h3{font-size:1.1rem;color:var(--creme);margin-bottom:12px}
@@ -566,8 +568,8 @@ html.dlg-open body{position:fixed;left:0;right:0;width:100%}
   /* plein écran, calé en haut : plus de recentrage à chaque apparition du clavier */
   dialog{max-width:none;width:100%;height:100vh;height:100dvh;max-height:none;margin:0;inset:0;overflow:hidden;border-radius:0}
   dialog[open]{animation:sheetUp .28s ease-out}
-  .sheet{height:100%;max-height:none;border-radius:0;border:0;padding:16px 16px calc(28px + env(safe-area-inset-bottom))}
-  .sheet__head{position:sticky;top:-16px;z-index:2;margin:-16px -16px 8px;padding:14px 16px 10px;background:var(--brun-2);border-bottom:1px solid var(--brun-line)}
+  .sheet{height:100%;max-height:none;border-radius:0;border:0;padding:calc(16px + env(safe-area-inset-top,0px)) 16px calc(28px + env(safe-area-inset-bottom,0px))}
+  .sheet__head{position:sticky;top:calc(-16px - env(safe-area-inset-top,0px));z-index:2;margin:calc(-16px - env(safe-area-inset-top,0px)) -16px 8px;padding:calc(14px + env(safe-area-inset-top,0px)) 16px 10px;background:var(--brun-2);border-bottom:1px solid var(--brun-line)}
   .sheet h2{font-size:1.4rem}
 }
 @keyframes sheetUp{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
