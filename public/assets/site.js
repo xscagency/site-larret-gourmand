@@ -139,14 +139,14 @@
   if (dlg) {
     // la page derrière est figée tant que la fenêtre est ouverte (sinon elle défile sous le doigt sur mobile)
     var savedY = 0;
-    // Sur téléphone, le formulaire s'ouvre en page entière (/contact) : rien de flottant, donc rien qui bouge avec le clavier
-    var onPage = dlg.hasAttribute('data-page'), small = function () { return window.innerWidth < 720; };
-    var openDlg = function () { if (onPage) return; if (small()) { location.href = '/contact'; return; } try { savedY = window.scrollY || 0; dlg.showModal(); document.body.style.top = (-savedY) + 'px'; document.documentElement.classList.add('dlg-open'); } catch (e) {} };
+    // data-page : le même formulaire posé en pleine page (/contact), utilisé par le menu appli
+    var onPage = dlg.hasAttribute('data-page');
+    var openDlg = function () { if (onPage) return; try { savedY = window.scrollY || 0; dlg.showModal(); document.body.style.top = (-savedY) + 'px'; document.documentElement.classList.add('dlg-open'); } catch (e) {} };
     dlg.addEventListener('close', function () { document.documentElement.classList.remove('dlg-open'); document.body.style.top = ''; window.scrollTo(0, savedY); });
     document.querySelectorAll('[data-open-contact]').forEach(function (b) { b.addEventListener('click', openDlg); });
     document.querySelectorAll('[data-close-contact]').forEach(function (b) { b.addEventListener('click', function () { dlg.close(); }); });
     dlg.addEventListener('click', function (e) { if (e.target === dlg && !onPage) dlg.close(); });
-    if (!onPage && (location.hash === '#open-popup' || location.hash === '#contact')) { if (small()) location.replace('/contact'); else openDlg(); }
+    if (!onPage && (location.hash === '#open-popup' || location.hash === '#contact')) openDlg();
 
     var form = document.getElementById('contactForm'), status = document.getElementById('formStatus'), submit = form.querySelector('[type="submit"]'), sent = document.getElementById('formSent');
     // à chaque ouverture, on retrouve le formulaire (et non l'écran de confirmation précédent)
