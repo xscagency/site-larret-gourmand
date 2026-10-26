@@ -423,7 +423,7 @@
   }
   var css = '';
   if (MOTIFS[theme]) {
-    css += 'html[data-theme] .band:not(.band--kraft):not(.band--photo),html[data-theme] .foot,html[data-theme] .page-hero{background-image:' + pattern('#FCF3E3', .13) + ';background-size:240px 240px}';
+    css += 'html[data-theme] .band:not(.band--kraft):not(.band--photo),html[data-theme] .foot,html[data-theme] .page-hero,html[data-theme] body.menu-app{background-image:' + pattern('#FCF3E3', .13) + ';background-size:240px 240px}';
     css += 'html[data-theme] .band--kraft{background-image:' + pattern('#2A1A10', .11) + ',radial-gradient(rgba(255,255,255,.22) 1px,transparent 1.5px),radial-gradient(rgba(60,30,10,.07) 1px,transparent 1.5px);background-size:240px 240px,7px 7px,11px 11px;background-position:0 0,0 0,4px 6px}';
   }
 
