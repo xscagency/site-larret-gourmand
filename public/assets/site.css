@@ -749,3 +749,14 @@ html[data-theme=paques] .band:not(.band--kraft):not(.band--photo)::after{content
 
 /* mention du supplément sur les cartes (le prix affiché est celui du burger, supplément compris) */
 .dish__sup{display:inline-block;width:max-content;font-size:.72rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--orange-text);background:rgba(232,96,16,.1);border:1px solid rgba(232,96,16,.35);border-radius:999px;padding:2px 9px;margin:-2px 0 2px}
+
+/* ---------- page /contact : le formulaire en pleine page (téléphone surtout) ---------- */
+.contact-page .page-hero{padding-bottom:clamp(20px,3vw,32px)}
+.contact-page .page-hero h1{font-size:clamp(2rem,6vw,3.2rem)}
+.contact-page .page-hero .lede{max-width:60ch;margin-top:12px}
+.contact-page__band{padding-top:8px}
+.contact-page__wrap{max-width:680px}
+dialog.contact-page__dlg,dialog.contact-page__dlg[open]{position:static;display:block;width:100%;max-width:none;height:auto;max-height:none;inset:auto;margin:0;padding:0;overflow:visible;background:transparent;animation:none;border-radius:0}
+.contact-page__dlg .sheet{max-height:none;height:auto;overflow:visible;border-radius:18px;border:1px solid var(--brun-line);padding:clamp(20px,4vw,34px)}
+.contact-page__dlg .sheet__head{position:static;margin:0 0 6px;padding:0;border:0;background:transparent}
+.contact-page__dlg .x{display:grid;place-items:center;text-decoration:none}

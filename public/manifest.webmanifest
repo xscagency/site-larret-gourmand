@@ -16,6 +16,6 @@
   ],
   "shortcuts": [
     { "name": "Nos emplacements", "url": "/menu?source=app#emplacements" },
-    { "name": "Demander un devis", "url": "/#contact" }
+    { "name": "Demander un devis", "url": "/contact" }
   ]
 }
