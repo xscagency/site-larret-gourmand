@@ -62,6 +62,8 @@ export async function onRequest(context) {
     return next();
   }
 
+  if (url.pathname === '/menu') return Response.redirect(new URL('/' + url.search + url.hash, url.origin), 301);
+
   const response = await next();
   const ct = response.headers.get('content-type') || '';
   if (!ct.includes('text/html') || !env.DB) return response;

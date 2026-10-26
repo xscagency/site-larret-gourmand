@@ -1,14 +1,14 @@
-// Service worker : rend le menu installable et consultable même sans réseau (dernière version vue),
+// Service worker : rend le site installable et consultable même sans réseau (dernière version vue),
 // et reçoit les alertes envoyées sur le téléphone (notifications).
-const CACHE = 'lag-menu-v2';
-const SHELL = ['/menu', '/assets/site.css', '/assets/menu.css', '/assets/site.js', '/assets/menu.js', '/img/logo-t-192.png', '/img/icon-192.png'];
+const CACHE = 'lag-site-v3';
+const SHELL = ['/', '/assets/site.css', '/assets/site.js', '/img/logo-t-192.png', '/img/icon-192.png'];
 self.addEventListener('install', (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL).catch(() => null)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', (e) => { e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim())); });
 self.addEventListener('fetch', (e) => {
   const req = e.request; if (req.method !== 'GET') return;
   const url = new URL(req.url); if (url.origin !== location.origin || url.pathname.startsWith('/api/') || url.pathname.startsWith('/admin')) return;
   // pages : réseau d'abord (contenu du soir à jour), cache en secours
-  if (req.mode === 'navigate') { e.respondWith(fetch(req).then((r) => { const c = r.clone(); caches.open(CACHE).then((k) => k.put(url.pathname === '/menu' || url.pathname.startsWith('/menu?') ? '/menu' : req, c)); return r; }).catch(() => caches.match('/menu'))); return; }
+  if (req.mode === 'navigate') { e.respondWith(fetch(req).then((r) => { const c = r.clone(); caches.open(CACHE).then((k) => k.put(url.pathname === '/' ? '/' : req, c)); return r; }).catch(() => caches.match(url.pathname === '/' ? '/' : req).then((hit) => hit || caches.match('/')))); return; }
   // images et fichiers : cache d'abord, puis réseau
   if (/\.(?:css|js|png|jpg|webp|svg|woff2?)$/.test(url.pathname) || url.pathname.startsWith('/photos/')) { e.respondWith(caches.match(req).then((hit) => hit || fetch(req).then((r) => { const c = r.clone(); caches.open(CACHE).then((k) => k.put(req, c)); return r; }))); }
 });
@@ -23,14 +23,14 @@ self.addEventListener('push', (e) => {
     badge: '/img/icon-192.png',
     tag: d.tag || 'lag',
     renotify: !!d.tag,
-    data: { url: d.url || '/menu?source=push' },
+    data: { url: d.url || '/?source=push' },
   };
   e.waitUntil(self.registration.showNotification(d.title || "L'Arrêt Gourmand", opts));
 });
 // un appui sur la notification ouvre la page visée (ou ramène l'onglet déjà ouvert)
 self.addEventListener('notificationclick', (e) => {
   e.notification.close();
-  const url = new URL((e.notification.data && e.notification.data.url) || '/menu', self.location.origin).href;
+  const url = new URL((e.notification.data && e.notification.data.url) || '/', self.location.origin).href;
   e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
     const same = list.find((c) => c.url.split('?')[0] === url.split('?')[0]);
     if (same) return same.focus().then(() => ('navigate' in same ? same.navigate(url) : null));

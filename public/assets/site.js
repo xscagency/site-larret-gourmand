@@ -425,7 +425,7 @@
   }
   var css = '';
   if (MOTIFS[theme]) {
-    css += 'html[data-theme] .band:not(.band--kraft):not(.band--photo),html[data-theme] .foot,html[data-theme] .page-hero,html[data-theme] body.menu-app{background-image:' + pattern('#FCF3E3', .13) + ';background-size:240px 240px}';
+    css += 'html[data-theme] .band:not(.band--kraft):not(.band--photo),html[data-theme] .foot,html[data-theme] .page-hero{background-image:' + pattern('#FCF3E3', .13) + ';background-size:240px 240px}';
     css += 'html[data-theme] .band--kraft{background-image:' + pattern('#2A1A10', .11) + ',radial-gradient(rgba(255,255,255,.22) 1px,transparent 1.5px),radial-gradient(rgba(60,30,10,.07) 1px,transparent 1.5px);background-size:240px 240px,7px 7px,11px 11px;background-position:0 0,0 0,4px 6px}';
   }
 
@@ -553,7 +553,8 @@
 // ---------- Alertes sur téléphone (notifications) ----------
 // Un panneau unique : choix des villes et des sujets, activation, puis gestion (modifier, tout couper, réactiver).
 (function () {
-  var SUJETS = [['service', 'Où est le camion ce soir'], ['annulation', 'Annulations et changements'], ['burger', 'Nouveaux burgers et burger du moment'], ['offres', 'Offres et bons plans'], ['concours', 'Concours']];
+  var SUJETS = [['service', 'Où est le camion ce soir', 'Le soir où il s\'installe dans vos villes'], ['annulation', 'Annulations et changements', 'Si un soir saute ou change de lieu'], ['burger', 'Nouveaux burgers', 'Burger du moment, retours à la carte'], ['offres', 'Offres et bons plans', 'Occasionnel, jamais de pub en rafale'], ['concours', 'Concours', 'Des burgers à gagner']];
+  var ICONS = {"service": "<svg viewBox=\"0 0 24 24\"><path d=\"M12 21s-6-5.3-6-10.5a6 6 0 1 1 12 0C18 15.7 12 21 12 21Z\"/><circle cx=\"12\" cy=\"10.5\" r=\"2.3\"/></svg>", "annulation": "<svg viewBox=\"0 0 24 24\"><path d=\"M12 3.5 2.8 19.5h18.4L12 3.5Z\"/><path d=\"M12 9.5v4.5M12 16.8v.4\"/></svg>", "burger": "<svg viewBox=\"0 0 24 24\"><path d=\"M4 10a8 8 0 0 1 16 0H4Z\"/><path d=\"M3.5 13.5h17M5 17h14a2 2 0 0 1-2 2.5H7A2 2 0 0 1 5 17Z\"/></svg>", "offres": "<svg viewBox=\"0 0 24 24\"><path d=\"M3.5 12.5V4.5h8l9 9-8 8-9-9Z\"/><circle cx=\"8\" cy=\"9\" r=\"1.4\"/></svg>", "concours": "<svg viewBox=\"0 0 24 24\"><path d=\"M4 11h16v9H4zM3 7.5h18V11H3zM12 7.5V20\"/><path d=\"M12 7.5c-2.5 0-4.5-1.2-4.5-2.6S9 2.8 10.2 3.7C11.4 4.6 12 7.5 12 7.5Zm0 0c2.5 0 4.5-1.2 4.5-2.6S15 2.8 13.8 3.7C12.6 4.6 12 7.5 12 7.5Z\"/></svg>"};
   var LS = 'lag_alertes', dlg = null, els = {}, saveT = null, savedY = 0;
   var ua = navigator.userAgent, isIos = /iphone|ipad|ipod/i.test(ua) && !window.MSStream;
   var standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
@@ -582,19 +583,19 @@
         '<p class="hsub">Une notification sur votre téléphone quand le camion est près de chez vous, en cas d\'annulation, ou pour un nouveau burger. Désactivable en un geste.</p>' +
         '<div class="al-view" data-view="form">' +
           '<h3 class="al-h">Dans quelles villes ?</h3><div class="al-chips" data-chips="villes">' + villes.map(function (v) { return '<button type="button" class="al-chip" data-v="' + v.replace(/"/g, '&quot;') + '" aria-pressed="true">' + v + '</button>'; }).join('') + '</div>' +
-          '<h3 class="al-h">Quelles alertes ?</h3><div class="al-chips" data-chips="sujets">' + SUJETS.map(function (s) { return '<button type="button" class="al-chip" data-s="' + s[0] + '" aria-pressed="true">' + s[1] + '</button>'; }).join('') + '</div>' +
-          '<div class="al-actions"><button class="btn btn--primary" type="button" data-al-go>Activer les alertes</button><p class="al-note" data-al-note>Votre téléphone vous demandera ensuite d\'autoriser les notifications.</p></div>' +
+          '<h3 class="al-h">Quelles alertes ?</h3><div class="al-cards" data-chips="sujets">' + SUJETS.map(function (s) { return '<button type="button" class="al-card" data-s="' + s[0] + '" aria-pressed="true"><i>' + ICONS[s[0]] + '</i><span><b>' + s[1] + '</b><small>' + s[2] + '</small></span></button>'; }).join('') + '</div>' +
+          '<div class="al-actions"><button class="btn btn--primary al-go" type="button" data-al-go><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15L6 16Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M10 20a2 2 0 0 0 4 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Activer les alertes</button><p class="al-note" data-al-note>Votre téléphone vous demandera ensuite d\'autoriser les notifications.</p></div>' +
         '</div>' +
         '<div class="al-view" data-view="ios" hidden>' +
           '<div class="al-box"><p><b>Sur iPhone, une petite étape d\'abord</b> (imposée par Apple) : ajoutez L\'Arrêt Gourmand à votre écran d\'accueil, puis activez les alertes depuis l\'icône.</p>' +
-          '<ol class="al-steps"><li>Appuyez sur <span class="ios-share" aria-label="Partager"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 3v12m0-12 4 4m-4-4-4 4M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span> <b>Partager</b> en bas de Safari</li><li>Choisissez <b>« Sur l\'écran d\'accueil »</b> puis <b>Ajouter</b></li><li>Ouvrez l\'icône <b>L\'Arrêt Gourmand</b> et appuyez sur <b>Alertes</b> → <b>Activer</b></li></ol>' +
-          '<p class="al-note">30 secondes, une seule fois. Vous aurez aussi le menu toujours à jour dans votre poche.</p></div>' +
+          '<ol class="al-steps"><li><span>Appuyez sur <span class="ios-share" aria-label="Partager"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 3v12m0-12 4 4m-4-4-4 4M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span> <b>Partager</b> en bas de Safari</span></li><li><span>Choisissez <b>« Sur l\'écran d\'accueil »</b> puis <b>Ajouter</b></span></li><li><span>Ouvrez l\'icône <b>L\'Arrêt Gourmand</b> et appuyez sur <b>Alertes</b> → <b>Activer</b></span></li></ol>' +
+          '<p class="al-note">30 secondes, une seule fois. Vous aurez aussi le site dans votre poche, avec la carte et les horaires du soir.</p></div>' +
         '</div>' +
         '<div class="al-view" data-view="on" hidden>' +
           '<label class="al-switch"><span><b data-al-status>Alertes activées</b><small data-al-sub>Ce téléphone recevra les alertes ci-dessous.</small></span><input type="checkbox" data-al-master checked><i></i></label>' +
           '<div data-al-prefs>' +
             '<h3 class="al-h">Villes</h3><div class="al-chips" data-chips="villes2">' + villes.map(function (v) { return '<button type="button" class="al-chip" data-v="' + v.replace(/"/g, '&quot;') + '" aria-pressed="true">' + v + '</button>'; }).join('') + '</div>' +
-            '<h3 class="al-h">Alertes</h3><div class="al-chips" data-chips="sujets2">' + SUJETS.map(function (s) { return '<button type="button" class="al-chip" data-s="' + s[0] + '" aria-pressed="true">' + s[1] + '</button>'; }).join('') + '</div>' +
+            '<h3 class="al-h">Alertes</h3><div class="al-cards" data-chips="sujets2">' + SUJETS.map(function (s) { return '<button type="button" class="al-card" data-s="' + s[0] + '" aria-pressed="true"><i>' + ICONS[s[0]] + '</i><span><b>' + s[1] + '</b><small>' + s[2] + '</small></span></button>'; }).join('') + '</div>' +
             '<p class="al-note" data-al-saved>Vos choix sont enregistrés automatiquement.</p>' +
             '<div class="al-actions al-actions--row"><button class="btn btn--ghost" type="button" data-al-test>Envoyer un test</button></div>' +
           '</div>' +
@@ -606,7 +607,7 @@
     dlg.querySelector('[data-al-close]').addEventListener('click', function () { dlg.close(); });
     dlg.addEventListener('click', function (e) { if (e.target === dlg) dlg.close(); });
     dlg.addEventListener('close', function () { document.documentElement.classList.remove('dlg-open'); document.body.style.top = ''; window.scrollTo(0, savedY); });
-    dlg.querySelectorAll('.al-chip').forEach(function (c) { c.addEventListener('click', function () { c.setAttribute('aria-pressed', c.getAttribute('aria-pressed') === 'true' ? 'false' : 'true'); if (c.closest('[data-view="on"]')) queueSave(); }); });
+    dlg.querySelectorAll('.al-chip,.al-card').forEach(function (c) { c.addEventListener('click', function () { c.setAttribute('aria-pressed', c.getAttribute('aria-pressed') === 'true' ? 'false' : 'true'); if (c.closest('[data-view="on"]')) queueSave(); }); });
     dlg.querySelector('[data-al-go]').addEventListener('click', activer);
     dlg.querySelector('[data-al-master]').addEventListener('change', toggleMaster);
     dlg.querySelector('[data-al-test]').addEventListener('click', test);
@@ -614,14 +615,14 @@
     els.status = dlg.querySelector('[data-al-status]'); els.sub = dlg.querySelector('[data-al-sub]'); els.prefs = dlg.querySelector('[data-al-prefs]'); els.saved = dlg.querySelector('[data-al-saved]');
   }
   function view(name) { dlg.querySelectorAll('.al-view').forEach(function (v) { v.hidden = v.getAttribute('data-view') !== name; }); }
-  function picked(group) { return Array.prototype.slice.call(dlg.querySelectorAll('[data-chips="' + group + '"] .al-chip[aria-pressed="true"]')); }
+  function picked(group) { return Array.prototype.slice.call(dlg.querySelectorAll('[data-chips="' + group + '"] [aria-pressed="true"]')); }
   function choice(group) {
-    var all = dlg.querySelectorAll('[data-chips="' + group + '"] .al-chip').length, v = picked(group);
+    var all = dlg.querySelectorAll('[data-chips="' + group + '"] [aria-pressed]').length, v = picked(group);
     if (group.indexOf('villes') === 0) return v.length === all ? [] : v.map(function (c) { return c.getAttribute('data-v'); }); // [] = toutes les villes
     return v.map(function (c) { return c.getAttribute('data-s'); });
   }
   function setChips(group, villes, sujets) {
-    dlg.querySelectorAll('[data-chips="' + group + '"] .al-chip').forEach(function (c) {
+    dlg.querySelectorAll('[data-chips="' + group + '"] [aria-pressed]').forEach(function (c) {
       var on = c.hasAttribute('data-v') ? (!villes.length || villes.indexOf(c.getAttribute('data-v')) >= 0) : sujets.indexOf(c.getAttribute('data-s')) >= 0;
       c.setAttribute('aria-pressed', on ? 'true' : 'false');
     });
@@ -703,6 +704,7 @@
     post('test', { endpoint: prefs().endpoint }).then(function (r) { b.textContent = r.ok ? 'Test envoyé ✓' : 'Échec : ' + (r.error || ''); }).catch(function () { b.textContent = 'Hors ligne'; })
       .then(function () { setTimeout(function () { b.disabled = false; b.textContent = 'Envoyer un test'; }, 2500); });
   }
+  if (standalone && 'serviceWorker' in navigator && window.isSecureContext) navigator.serviceWorker.register('/sw.js').catch(function () {});
   document.querySelectorAll('[data-open-alertes]').forEach(function (b) { b.addEventListener('click', function (e) { e.preventDefault(); open(); }); });
   if (location.hash === '#alertes') open();
   // pastille « activé » sur les boutons quand ce téléphone est déjà abonné

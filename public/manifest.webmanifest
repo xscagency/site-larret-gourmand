@@ -1,9 +1,9 @@
 {
-  "name": "L'Arrêt Gourmand – Le menu",
+  "name": "L'Arrêt Gourmand – Food-truck burger",
   "short_name": "L'Arrêt Gourmand",
-  "description": "La carte du soir, les formules, les horaires et les emplacements du food-truck burger L'Arrêt Gourmand (78).",
+  "description": "Le food-truck burger L'Arrêt Gourmand (78) : la carte du soir, les horaires, les emplacements et les alertes sur votre téléphone.",
   "lang": "fr",
-  "start_url": "/menu?source=app",
+  "start_url": "/?source=app",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
@@ -15,7 +15,8 @@
     { "src": "/img/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ],
   "shortcuts": [
-    { "name": "Nos emplacements", "url": "/menu?source=app#emplacements" },
+    { "name": "Nos emplacements", "url": "/?source=app#emplacements" },
+    { "name": "La carte", "url": "/?source=app#menu" },
     { "name": "Demander un devis", "url": "/contact" }
   ]
 }

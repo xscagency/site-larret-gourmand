@@ -316,8 +316,8 @@ export async function onRequest({ request, env, params }) {
     if (!SUJETS[sujet]) return json({ ok: false, error: 'Sujet inconnu.' }, 400);
     const titre = str(body.titre, 80), corps = str(body.corps, 240);
     if (!titre || !corps) return json({ ok: false, error: 'Titre et message obligatoires.' }, 400);
-    let url = str(body.url, 300) || '/menu';
-    if (!/^\/[^\s]*$/.test(url) && !/^https:\/\/[^\s]+$/.test(url)) url = '/menu';
+    let url = str(body.url, 300) || '/';
+    if (!/^\/[^\s]*$/.test(url) && !/^https:\/\/[^\s]+$/.test(url)) url = '/';
     const villes = Array.isArray(body.villes) ? body.villes.map((v) => str(v, 60)).filter(Boolean).slice(0, 12) : [];
     const { where, binds } = cibleSql(sujet, villes);
     const n = await env.DB.prepare(`SELECT COUNT(*) AS n FROM abonnes WHERE ${where}`).bind(...binds).first();

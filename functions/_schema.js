@@ -22,7 +22,7 @@ const TABLE_ALERTES = `CREATE TABLE IF NOT EXISTS alertes (
     sujet TEXT NOT NULL,
     titre TEXT NOT NULL,
     corps TEXT NOT NULL,
-    url TEXT NOT NULL DEFAULT '/menu',
+    url TEXT NOT NULL DEFAULT '/',
     villes TEXT NOT NULL DEFAULT '[]',
     cibles INTEGER NOT NULL DEFAULT 0,
     envoyes INTEGER NOT NULL DEFAULT 0,

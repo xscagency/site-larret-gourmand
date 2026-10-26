@@ -23,7 +23,7 @@ function welcome(villes, sujets, state) {
   return {
     title: 'Alertes activées 🔔',
     body: `C'est noté : on vous prévient pour ${ou}. Pour changer d'avis, un geste dans « Mes alertes ».`,
-    url: '/menu?source=push',
+    url: '/?source=push',
     tag: 'bienvenue',
   };
 }
@@ -80,7 +80,7 @@ export async function onRequest({ request, env, params }) {
   }
   if (route === 'test') {
     const vapid = await getVapid(env);
-    const r = await sendPush(row, { title: 'Ça marche ✅', body: 'Vos alertes L\'Arrêt Gourmand arrivent bien sur ce téléphone.', url: '/menu?source=push', tag: 'test' }, vapid, { ttl: 300, topic: 'test' });
+    const r = await sendPush(row, { title: 'Ça marche ✅', body: 'Vos alertes L\'Arrêt Gourmand arrivent bien sur ce téléphone.', url: '/?source=push', tag: 'test' }, vapid, { ttl: 300, topic: 'test' });
     return json({ ok: r.ok, status: r.status, error: r.ok ? undefined : 'Le service de notifications n\'a pas accepté l\'envoi.' });
   }
   return json({ ok: false, error: 'Route inconnue.' }, 404);
