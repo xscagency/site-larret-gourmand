@@ -24,6 +24,12 @@
     });
     window.addEventListener('appinstalled', function () { card.hidden = true; });
   }
+  // ---- appli installée : les liens vers le site complet (devis, mentions, accueil) s'ouvrent par-dessus,
+  // l'icône rouvre donc toujours le menu
+  if (standalone) document.querySelectorAll('a[href^="/"]').forEach(function (a) {
+    var path = a.getAttribute('href').split(/[?#]/)[0];
+    if (path && path !== '/menu' && !a.target) a.target = '_blank';
+  });
   // ---- mise en cache pour l'écran d'accueil (et consultation sans réseau)
   if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('/sw.js').catch(function () {});
 })();
