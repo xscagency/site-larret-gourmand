@@ -20,7 +20,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Rubik:wght@400;500;700&display=swap">
-<link rel="stylesheet" href="/assets/site.css?v=20261026g">
+<link rel="stylesheet" href="/assets/site.css?v=20261027a">
 <!-- Google Tag Manager -->
 <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-N2TH4HN4');</script>
 <!-- End Google Tag Manager -->
@@ -88,6 +88,7 @@
     </ul>
     <div class="nav__right">
       <a class="pill" id="navPill" href="/#emplacements"><i aria-hidden="true"></i><span id="navPillText">Mardi à samedi, de 19h à 20h30</span></a>
+      <button class="bell" type="button" data-open-alertes><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15L6 16Z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/><path d="M10 20a2 2 0 0 0 4 0" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg><span>Alertes</span></button>
       <button class="btn btn--primary" type="button" data-open-contact>Demande de contact</button>
       <button class="nav__burger" type="button" id="navBurger" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="navPanel"><span></span></button>
     </div>
@@ -101,6 +102,7 @@
       <a class="lnk" href="/food-truck-traiteur">Food-Truck Traiteur</a>
       <a class="pill" href="/#emplacements"><i aria-hidden="true"></i><span data-pill-copy>Mardi à samedi, de 19h à 20h30</span></a>
       <button class="btn btn--primary" type="button" data-open-contact>Demande de contact</button>
+      <button class="bell" type="button" data-open-alertes data-al-label-on="Mes alertes" style="margin-top:12px;justify-content:center"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15L6 16Z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/><path d="M10 20a2 2 0 0 0 4 0" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg><span>Recevoir les alertes du camion</span></button>
     </div>
   </nav>
 </header>
@@ -131,6 +133,7 @@
             <p class="tonight__title" id="tonightTitle">Du mardi au samedi, de 19h à 20h30</p>
             <p class="tonight__text" id="tonightText">Triel-sur-Seine, Verneuil-sur-Seine et Carrières-sous-Poissy. <a href="#emplacements">Nos emplacements</a></p>
           </div>
+          <button class="bell tonight__bell" type="button" data-open-alertes data-al-label-on="Mes alertes"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15L6 16Z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/><path d="M10 20a2 2 0 0 0 4 0" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg><span>Être prévenu sur mon téléphone</span></button>
         </div>
       </div>
 
@@ -265,6 +268,10 @@
           <h3 data-id="samedi">Carrières-sous-Poissy</h3>
           <span class="ticket__place" data-id="samedi">Map : <a href="https://share.google/NqgV3Ng4yHxsIs2em" target="_blank" rel="noopener">Place Saint-Blaise - Face à la pharmacie et à la Police Municipale</a></span>
         </article>
+      </div>
+      <div class="al-cta reveal">
+        <p><b>Le camion est près de chez vous ?</b> Recevez une notification le soir où il s'installe dans votre ville, et en cas d'annulation.</p>
+        <button class="bell" type="button" data-open-alertes data-al-label-on="Mes alertes"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15L6 16Z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/><path d="M10 20a2 2 0 0 0 4 0" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg><span>Recevoir les alertes</span></button>
       </div>
     </div>
   </section>
@@ -443,6 +450,6 @@
 </dialog>
 <!--/dialog-->
 
-<script src="/assets/site.js?v=20261026g" defer></script>
+<script src="/assets/site.js?v=20261027a" defer></script>
 </body>
 </html>

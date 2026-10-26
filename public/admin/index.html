@@ -194,6 +194,27 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
 .theme:has(input:checked){border-color:var(--cheddar);background:rgba(243,173,63,.1);box-shadow:0 0 0 1px var(--cheddar) inset}
 .theme__sw{flex:none;width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,var(--a) 0 40%,var(--b) 40% 70%,var(--c) 70%);border:1px solid rgba(255,255,255,.12)}
 .theme__t{display:grid;gap:2px;min-width:0}.theme__t b{font-size:.98rem}.theme__t small{color:var(--creme-3);font-size:.82rem;line-height:1.35}
+/* alertes */
+.al-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.al-stats .card{margin:0;padding:14px 16px}
+.al-stats .big{font:700 2rem/1 var(--body);color:var(--cheddar);margin-bottom:6px}
+.al-stats .lab{color:var(--creme-3);font-size:.8rem;letter-spacing:.06em;text-transform:uppercase;font-weight:600}
+.al-stats .kv{margin-top:10px;font-size:.9rem}
+#alTitreN,#alCorpsN{display:inline;float:right;font-size:.78rem;margin-top:2px}
+.al-quick{display:flex;flex-wrap:wrap;gap:8px}
+.al-quick:empty{display:none}
+.al-villes{display:flex;flex-wrap:wrap;gap:8px}
+.al-villes label{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--line);border-radius:999px;cursor:pointer;font-size:.9rem;background:var(--brun)}
+.al-villes label:has(input:checked){border-color:var(--cheddar);background:rgba(243,173,63,.12)}
+.al-villes input{accent-color:var(--cheddar);width:16px;height:16px;margin:0}
+.al-preview{display:grid;grid-template-columns:40px 1fr;gap:12px;align-items:center;padding:12px 14px;border-radius:14px;background:#F2F2F7;color:#111;max-width:420px;box-shadow:0 10px 24px -14px rgba(0,0,0,.7)}
+.al-preview img{width:40px;height:40px;border-radius:10px}
+.al-preview b{display:block;font-size:.92rem;line-height:1.25}
+.al-preview span{display:block;font-size:.86rem;line-height:1.3;color:#333;overflow-wrap:anywhere}
+.al-hist .row{align-items:flex-start}
+.al-hist .meta{color:var(--creme-3);font-size:.85rem;margin-top:3px}
+.al-hist .cnt{text-align:right;white-space:nowrap}
+.al-hist .cnt b{display:block;font-size:1.3rem;color:var(--cheddar)}
 .chk{display:flex;gap:10px;align-items:flex-start;font-size:.9rem;color:var(--creme-2);cursor:pointer}
 .chk input{margin-top:3px;width:18px;height:18px;flex:none;accent-color:var(--cheddar)}
 /* agenda */
@@ -321,6 +342,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
         <button data-tab="demandes">Demandes<span class="n" id="nNew" hidden></span></button>
         <button data-tab="devis">Devis</button>
         <button data-tab="agenda">Agenda<span class="n" id="nAg" hidden></span></button>
+        <button data-tab="alertes">Alertes<span class="n" id="nAl" hidden></span></button>
         <button data-tab="bandeau">Réglages</button>
       </nav>
     </div>
@@ -513,6 +535,29 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
       </div>
     </dialog>
 
+    <section id="tab-alertes">
+      <div class="row sec-head"><h2 style="margin:0">Alertes sur téléphone<small>Les clients abonnés reçoivent une notification. Vous choisissez le sujet et les villes visées.</small></h2></div>
+      <div class="al-stats" id="alStats"><p class="empty">Chargement…</p></div>
+
+      <h2 style="margin-top:28px">Envoyer une alerte<small>Un titre court, un message d'une ou deux phrases. Elle part immédiatement.</small></h2>
+      <div class="card" style="display:grid;gap:12px">
+        <div class="al-quick" id="alQuick"></div>
+        <div class="grid">
+          <label class="f">Sujet<select id="alSujet"><option value="service">Où est le camion ce soir</option><option value="annulation">Annulation / changement</option><option value="burger">Nouveau burger / burger du moment</option><option value="offres">Offre / bon plan</option><option value="concours">Concours</option></select></label>
+          <label class="f">Page ouverte au toucher<select id="alUrl"><option value="/menu">Le menu</option><option value="/#emplacements">Les emplacements</option><option value="/">La page d'accueil</option><option value="/contact">Demande de devis</option></select></label>
+        </div>
+        <label class="f">Titre <span class="muted" id="alTitreN">0/60</span><input id="alTitre" type="text" maxlength="60" placeholder="Ex. : Ce soir : Triel-sur-Seine"></label>
+        <label class="f">Message <span class="muted" id="alCorpsN">0/180</span><textarea id="alCorps" rows="3" maxlength="180" placeholder="Ex. : Centre commercial des Châtelaines, de 19h à 20h30. À tout à l'heure !"></textarea></label>
+        <div><div class="muted" style="margin-bottom:6px">Villes visées <small>(les abonnés « toutes les villes » reçoivent tout)</small></div><div class="al-villes" id="alVilles"></div></div>
+        <div class="al-preview" id="alPreview" aria-hidden="true"><img src="/img/icon-192.png" alt=""><div><b id="alPvT">Titre</b><span id="alPvC">Message</span></div></div>
+        <div class="row"><span class="muted" id="alCible">—</span><button class="btn primary" id="alSend" type="button">Envoyer</button></div>
+        <div class="muted" id="alProgress" hidden></div>
+      </div>
+
+      <h2 style="margin-top:28px">Derniers envois</h2>
+      <div id="alHist"><p class="empty">Aucune alerte envoyée pour l'instant.</p></div>
+    </section>
+
     <section id="tab-demandes">
       <h2>Demandes de devis<small>Reçues depuis le formulaire du site</small></h2>
       <div class="filters" id="filters">
@@ -584,12 +629,77 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
   });
   try{var t0=localStorage.getItem('lag_admin_tab');if(t0){var b0=document.querySelector('#tabs button[data-tab="'+t0+'"]');if(b0)b0.click();}}catch(e){}
 
+
+  // ---------- alertes sur téléphone
+  var SUJETS_LIB={service:'Où est le camion ce soir',annulation:'Annulation / changement',burger:'Nouveau burger',offres:'Offre',concours:'Concours'};
+  var alData=null;
+  function renderAlertes(){
+    return api('alertes').then(function(r){
+      alData=r;
+      var villes=Object.keys(r.par_ville);
+      $('#alStats').innerHTML=
+        '<div class="card"><div class="big">'+r.actifs+'</div><div class="lab">Abonné'+(r.actifs>1?'s':'')+' actif'+(r.actifs>1?'s':'')+'</div><dl class="kv"><dt>iPhone</dt><dd>'+r.par_appareil.iphone+'</dd><dt>Android</dt><dd>'+r.par_appareil.android+'</dd>'+(r.par_appareil.autre?'<dt>Autre</dt><dd>'+r.par_appareil.autre+'</dd>':'')+'</dl></div>'+
+        '<div class="card"><div class="lab">Par ville</div><dl class="kv" style="margin-top:8px"><dt>Toutes</dt><dd>'+r.toutes_villes+'</dd>'+villes.map(function(v){return '<dt>'+esc(v)+'</dt><dd>'+r.par_ville[v]+'</dd>';}).join('')+'</dl></div>'+
+        '<div class="card"><div class="lab">Par sujet</div><dl class="kv" style="margin-top:8px">'+Object.keys(SUJETS_LIB).map(function(k){return '<dt>'+esc(SUJETS_LIB[k])+'</dt><dd>'+(r.par_sujet[k]||0)+'</dd>';}).join('')+'</dl></div>';
+      $('#nAl').hidden=!r.actifs;$('#nAl').textContent=r.actifs;
+      // villes visées : celles des emplacements
+      var vs=[];state.emplacements.forEach(function(e){if(vs.indexOf(e.ville)<0)vs.push(e.ville);});
+      var cur=Array.prototype.slice.call(document.querySelectorAll('#alVilles input:checked')).map(function(i){return i.value;});
+      $('#alVilles').innerHTML=vs.map(function(v){return '<label><input type="checkbox" value="'+esc(v)+'" '+(cur.length?(cur.indexOf(v)>=0?'checked':''):'checked')+'><span>'+esc(v)+'</span></label>';}).join('');
+      // raccourcis : l'alerte de ce soir, pré-remplie
+      var t=state.tonight,q='';
+      if(t.tonight)q+='<button class="btn sm" type="button" data-alq="soir">🔔 Ce soir : '+esc(t.tonight.ville)+'</button>';
+      if(t.cancelledToday)q+='<button class="btn sm" type="button" data-alq="annul">🔔 Prévenir de l\'annulation de ce soir</button>';
+      $('#alQuick').innerHTML=q;
+      $('#alHist').innerHTML=r.historique.length?'<div class="al-hist">'+r.historique.map(function(a){
+        return '<div class="card"><div class="row"><div><div class="name">'+esc(a.titre)+'</div><div class="muted" style="margin-top:2px">'+esc(a.corps)+'</div><div class="meta">'+esc(SUJETS_LIB[a.sujet]||a.sujet)+' · '+(a.villes.length?esc(a.villes.join(', ')):'toutes les villes')+' · '+esc(new Date(a.cree.replace(' ','T')+'Z').toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}))+(a.termine?'':' · <span class="st rupt">En cours</span>')+'</div></div><div class="cnt"><b>'+a.envoyes+'</b>envoyé'+(a.envoyes>1?'s':'')+' / '+a.cibles+(a.echecs?'<br><span class="muted">'+a.echecs+' échec'+(a.echecs>1?'s':'')+'</span>':'')+'</div></div></div>';
+      }).join('')+'</div>':'<p class="empty">Aucune alerte envoyée pour l\'instant.</p>';
+      updateCible();
+    }).catch(function(e){$('#alStats').innerHTML='<p class="empty">'+esc(e.message)+'</p>';});
+  }
+  function alVillesChoisies(){var all=document.querySelectorAll('#alVilles input'),on=Array.prototype.slice.call(document.querySelectorAll('#alVilles input:checked')).map(function(i){return i.value;});return on.length===all.length?[]:on;}
+  function updateCible(){
+    if(!alData)return;
+    var sujet=$('#alSujet').value,villes=alVillesChoisies();
+    var n=0;// estimation locale : abonnés au sujet, dans les villes visées (ou « toutes »)
+    n=alData.par_sujet[sujet]||0;
+    $('#alCible').textContent=n?'Environ '+n+' abonné'+(n>1?'s':'')+' concerné'+(n>1?'s':'')+(villes.length?' (avant filtre par ville)':''):'Aucun abonné à ce sujet pour l\'instant';
+    $('#alPvT').textContent=$('#alTitre').value||'Titre';$('#alPvC').textContent=$('#alCorps').value||'Message';
+    $('#alTitreN').textContent=$('#alTitre').value.length+'/60';$('#alCorpsN').textContent=$('#alCorps').value.length+'/180';
+  }
+  function prefillAlerte(o){
+    document.querySelector('#tabs button[data-tab="alertes"]').click();
+    $('#alSujet').value=o.sujet||'service';$('#alTitre').value=o.titre||'';$('#alCorps').value=o.corps||'';$('#alUrl').value=o.url||'/menu';
+    document.querySelectorAll('#alVilles input').forEach(function(i){i.checked=!o.villes||!o.villes.length||o.villes.indexOf(i.value)>=0;});
+    updateCible();$('#alTitre').focus();
+  }
+  ['#alSujet','#alTitre','#alCorps'].forEach(function(id){$(id).addEventListener('input',updateCible);$(id).addEventListener('change',updateCible);});
+  $('#alVilles').addEventListener('change',updateCible);
+  $('#alQuick').addEventListener('click',function(e){
+    var b=e.target.closest('button[data-alq]');if(!b)return;var t=state.tonight;
+    if(b.dataset.alq==='soir'&&t.tonight)prefillAlerte({sujet:'service',titre:'Ce soir : '+t.tonight.ville,corps:t.tonight.lieu+', '+(t.tonight.heures||'de 19h à 20h30')+'. À tout à l\'heure !',url:'/#emplacements',villes:[t.tonight.ville]});
+    if(b.dataset.alq==='annul'&&t.cancelledToday)prefillAlerte({sujet:'annulation',titre:'Pas de service ce soir',corps:(t.cancelledToday.message?t.cancelledToday.message+'. ':'')+'Désolés, on se retrouve très vite !',url:'/#emplacements',villes:[t.cancelledToday.ville]});
+  });
+  $('#alSend').addEventListener('click',function(){
+    var titre=$('#alTitre').value.trim(),corps=$('#alCorps').value.trim();
+    if(!titre||!corps){toast('Titre et message obligatoires',true);return;}
+    var villes=alVillesChoisies();
+    if(!confirm('Envoyer « '+titre+' » aux abonnés '+(villes.length?'de '+villes.join(', '):'de toutes les villes')+' ?'))return;
+    var btn=$('#alSend'),prog=$('#alProgress');btn.disabled=true;prog.hidden=false;prog.textContent='Préparation…';
+    api('alertes',{method:'POST',body:{sujet:$('#alSujet').value,titre:titre,corps:corps,url:$('#alUrl').value,villes:villes}}).then(function(r){
+      if(!r.cibles){prog.textContent='Aucun abonné ne correspond : rien envoyé.';btn.disabled=false;return renderAlertes();}
+      var total=r.cibles;
+      function lot(){return api('alertes/'+r.id+'/lot',{method:'POST'}).then(function(l){prog.textContent='Envoi… '+l.envoyes+' / '+total+(l.echecs?' ('+l.echecs+' échec'+(l.echecs>1?'s':'')+')':'');if(!l.termine)return lot();return l;});}
+      return lot().then(function(l){prog.textContent='✓ Envoyé à '+l.envoyes+' abonné'+(l.envoyes>1?'s':'')+(l.echecs?' · '+l.echecs+' échec'+(l.echecs>1?'s':'')+' (abonnements expirés)':'');toast('Alerte envoyée');$('#alTitre').value='';$('#alCorps').value='';btn.disabled=false;return renderAlertes();});
+    }).catch(function(e){prog.textContent='Erreur : '+e.message;btn.disabled=false;});
+  });
+
   // ---------- chargement
   function load(first){
     return api('state').then(function(r){
       state=r.state;$('#login').hidden=true;$('#app').hidden=false;
       render();
-      return api('demandes').then(function(d){demandes=d.demandes;return loadDevis();}).then(function(){renderDemandes();});
+      return api('demandes').then(function(d){demandes=d.demandes;return loadDevis();}).then(function(){renderDemandes();renderAlertes();});
     }).catch(function(e){if(first)toast(e.message,true);if(!token)showLogin();});
   }
 
@@ -635,7 +745,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
     var ex=state.exceptions.filter(function(x){return x.date>=state.today;});
     $('#exceptions').innerHTML=ex.length?ex.map(function(x){
       return '<div class="card"><div class="row"><div><div class="name">'+dateFr(x.date)+' '+(x.annule?'<span class="st cancel">Annulé</span>':'<span class="st rupt">Déplacé</span>')+'</div><div class="muted">'+(x.annule?esc(x.message||''):esc((x.ville||'')+(x.lieu?', '+x.lieu:'')+(x.heures?' · '+x.heures:''))+(x.message?' · '+esc(x.message):''))+'</div></div>'+
-        '<button class="btn sm danger" data-excdel="'+x.date+'">Rétablir</button></div></div>';
+        '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn sm" data-excalert="'+x.date+'">🔔 Prévenir les abonnés</button><button class="btn sm danger" data-excdel="'+x.date+'">Rétablir</button></div></div></div>';
     }).join(''):'<p class="empty">Aucune date annulée ou déplacée à venir.</p>';
 
     // tarifs & bandeau
@@ -1048,6 +1158,9 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
       if(b.dataset.confirm!=='1'){b.dataset.confirm='1';b.textContent='Confirmer ?';setTimeout(function(){b.dataset.confirm='';b.textContent='Supprimer';},3000);return;}
       api('demandes/'+b.dataset.del,{method:'DELETE'}).then(function(){toast('Demande supprimée');return api('demandes');}).then(function(d){demandes=d.demandes;renderDemandes();}).catch(function(err){toast(err.message,true);});
     }
+    if(b.dataset.excalert){var x=state.exceptions.filter(function(e){return e.date===b.dataset.excalert;})[0];if(x){var wd=new Date(x.date+'T12:00:00Z').getUTCDay(),emp=state.emplacements.filter(function(e){return e.jour===wd;})[0],ville=x.annule?(emp&&emp.ville):(x.ville||(emp&&emp.ville));var quand=dateFr(x.date);
+      if(x.annule)prefillAlerte({sujet:'annulation',titre:'Pas de service '+quand.split(' ')[0]+' '+quand.split(' ')[1],corps:(x.message?x.message+'. ':'')+'Désolés, on se retrouve très vite !',url:'/#emplacements',villes:ville?[ville]:[]});
+      else prefillAlerte({sujet:'annulation',titre:'Changement '+quand.split(' ')[0]+' '+quand.split(' ')[1]+' : '+(x.ville||ville),corps:(x.lieu||'')+(x.heures?', '+x.heures:'')+(x.message?'. '+x.message:'')+'.',url:'/#emplacements',villes:[ville,x.ville].filter(function(v,i,a){return v&&a.indexOf(v)===i;})});}}
     if(b.dataset.excdel)api('exceptions/'+b.dataset.excdel,{method:'DELETE'}).then(function(){toast('Date rétablie');load();}).catch(function(err){toast(err.message,true);});
     if(b.id==='excSave'){
       var d=$('#excDate').value;if(!d){toast('Choisissez une date',true);return;}

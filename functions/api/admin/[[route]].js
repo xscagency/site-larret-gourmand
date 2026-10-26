@@ -20,9 +20,13 @@
 //   DELETE /api/admin/devis/:id
 //   POST   /api/admin/devis/:id/envoyer     { pdf_base64 } → e-mail au client avec le PDF (Resend)
 //   GET    /api/admin/distance?q=adresse    km routiers depuis Verneuil-sur-Seine
+//   GET    /api/admin/alertes               abonnés (compteurs) + historique des envois
+//   POST   /api/admin/alertes               { sujet, titre, corps, url, villes } → prépare un envoi, renvoie { id, cibles }
+//   POST   /api/admin/alertes/:id/lot       envoie au prochain paquet d'abonnés → { envoyes, echecs, restant, termine }
 
 import { json, loadState, computeTonight, slugify, todayParis } from '../../_lib.js';
 import { computeTotals, nextNumero, MOMENTS, dateFr, fillTemplate, distanceKm, sendDevisEmail } from '../../_devis.js';
+import { getVapid, sendPush, SUJETS } from '../../_push.js';
 
 function authorized(request, env) {
   const h = request.headers.get('authorization') || '';
@@ -276,6 +280,75 @@ export async function onRequest({ request, env, params }) {
     const d = await distanceKm(q);
     if (!d) return json({ ok: false, error: 'Adresse introuvable.' });
     return json({ ok: true, km: d.km, lieu: d.lieu });
+  }
+
+  // ---- Alertes sur téléphone
+  const LOT = 40; // abonnés traités par appel (limite d'appels sortants par requête chez Cloudflare)
+  function cibleSql(sujet, villes) {
+    // abonné actif, qui a coché ce sujet, et (toutes les villes, ou l'une des villes visées)
+    const parts = ['actif = 1', "instr(sujets, ?) > 0"], binds = [`"${sujet}"`];
+    if (villes.length) {
+      parts.push(`(villes = '[]' OR ${villes.map(() => 'instr(villes, ?) > 0').join(' OR ')})`);
+      villes.forEach((v) => binds.push(`"${v}"`));
+    }
+    return { where: parts.join(' AND '), binds };
+  }
+  if (route === 'alertes' && method === 'GET') {
+    const [tot, rows, hist] = await Promise.all([
+      env.DB.prepare('SELECT COUNT(*) AS n FROM abonnes WHERE actif = 1').first(),
+      env.DB.prepare('SELECT villes, sujets, appareil FROM abonnes WHERE actif = 1').all(),
+      env.DB.prepare('SELECT * FROM alertes ORDER BY id DESC LIMIT 40').all(),
+    ]);
+    const parVille = {}, parSujet = {}, parAppareil = { iphone: 0, android: 0, autre: 0 };
+    let toutesVilles = 0;
+    for (const r of rows.results) {
+      const v = JSON.parse(r.villes || '[]'), sj = JSON.parse(r.sujets || '[]');
+      if (!v.length) toutesVilles++; else v.forEach((x) => { parVille[x] = (parVille[x] || 0) + 1; });
+      sj.forEach((x) => { parSujet[x] = (parSujet[x] || 0) + 1; });
+      const ua = r.appareil || '';
+      parAppareil[/iphone|ipad/i.test(ua) ? 'iphone' : /android/i.test(ua) ? 'android' : 'autre']++;
+    }
+    return json({ ok: true, actifs: tot.n, toutes_villes: toutesVilles, par_ville: parVille, par_sujet: parSujet, par_appareil: parAppareil, sujets: SUJETS,
+      historique: hist.results.map((a) => ({ ...a, villes: JSON.parse(a.villes || '[]') })) });
+  }
+  if (route === 'alertes' && method === 'POST') {
+    const sujet = str(body.sujet, 20);
+    if (!SUJETS[sujet]) return json({ ok: false, error: 'Sujet inconnu.' }, 400);
+    const titre = str(body.titre, 80), corps = str(body.corps, 240);
+    if (!titre || !corps) return json({ ok: false, error: 'Titre et message obligatoires.' }, 400);
+    let url = str(body.url, 300) || '/menu';
+    if (!/^\/[^\s]*$/.test(url) && !/^https:\/\/[^\s]+$/.test(url)) url = '/menu';
+    const villes = Array.isArray(body.villes) ? body.villes.map((v) => str(v, 60)).filter(Boolean).slice(0, 12) : [];
+    const { where, binds } = cibleSql(sujet, villes);
+    const n = await env.DB.prepare(`SELECT COUNT(*) AS n FROM abonnes WHERE ${where}`).bind(...binds).first();
+    const ins = await env.DB.prepare('INSERT INTO alertes (sujet, titre, corps, url, villes, cibles, source) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id')
+      .bind(sujet, titre, corps, url, JSON.stringify(villes), n.n, str(body.source, 20) || 'manuel').first();
+    return json({ ok: true, id: ins.id, cibles: n.n });
+  }
+  const mLot = /^alertes\/(\d+)\/lot$/.exec(route);
+  if (mLot && method === 'POST') {
+    const a = await env.DB.prepare('SELECT * FROM alertes WHERE id = ?').bind(Number(mLot[1])).first();
+    if (!a) return json({ ok: false, error: 'Alerte introuvable.' }, 404);
+    if (a.termine) return json({ ok: true, envoyes: a.envoyes, echecs: a.echecs, restant: 0, termine: true });
+    const villes = JSON.parse(a.villes || '[]');
+    const { where, binds } = cibleSql(a.sujet, villes);
+    const lot = await env.DB.prepare(`SELECT id, endpoint, p256dh, auth, echecs FROM abonnes WHERE ${where} AND id > ? ORDER BY id LIMIT ${LOT}`).bind(...binds, a.curseur).all();
+    const vapid = await getVapid(env);
+    const payload = { title: a.titre, body: a.corps, url: a.url + (a.url.includes('?') ? '&' : '?') + 'source=push', tag: `${a.sujet}-${a.id}` };
+    const results = await Promise.all(lot.results.map((s) => sendPush(s, payload, vapid, { ttl: a.sujet === 'service' || a.sujet === 'annulation' ? 4 * 3600 : 24 * 3600, urgency: a.sujet === 'annulation' ? 'high' : 'normal', topic: a.sujet })));
+    let ok = 0, ko = 0;
+    const updates = [];
+    results.forEach((r, i) => {
+      const s = lot.results[i];
+      if (r.ok) { ok++; updates.push(env.DB.prepare("UPDATE abonnes SET dernier_envoi = datetime('now'), echecs = 0 WHERE id = ?").bind(s.id)); }
+      else { ko++; const dead = r.gone || s.echecs + 1 >= 5; updates.push(env.DB.prepare("UPDATE abonnes SET echecs = echecs + 1, actif = CASE WHEN ? THEN 0 ELSE actif END, maj = datetime('now') WHERE id = ?").bind(dead ? 1 : 0, s.id)); }
+    });
+    const last = lot.results.length ? lot.results[lot.results.length - 1].id : a.curseur;
+    const termine = lot.results.length < LOT ? 1 : 0;
+    updates.push(env.DB.prepare('UPDATE alertes SET envoyes = envoyes + ?, echecs = echecs + ?, curseur = ?, termine = ? WHERE id = ?').bind(ok, ko, last, termine, a.id));
+    await env.DB.batch(updates);
+    const restant = termine ? 0 : (await env.DB.prepare(`SELECT COUNT(*) AS n FROM abonnes WHERE ${where} AND id > ?`).bind(...binds, last).first()).n;
+    return json({ ok: true, envoyes: a.envoyes + ok, echecs: a.echecs + ko, restant, termine: !!termine });
   }
 
   return json({ ok: false, error: 'Route inconnue.' }, 404);

@@ -549,3 +549,168 @@
   document.addEventListener('visibilitychange', function () { document.hidden ? stop() : start(); });
   start();
 })();
+
+// ---------- Alertes sur téléphone (notifications) ----------
+// Un panneau unique : choix des villes et des sujets, activation, puis gestion (modifier, tout couper, réactiver).
+(function () {
+  var SUJETS = [['service', 'Où est le camion ce soir'], ['annulation', 'Annulations et changements'], ['burger', 'Nouveaux burgers et burger du moment'], ['offres', 'Offres et bons plans'], ['concours', 'Concours']];
+  var LS = 'lag_alertes', dlg = null, els = {}, saveT = null, savedY = 0;
+  var ua = navigator.userAgent, isIos = /iphone|ipad|ipod/i.test(ua) && !window.MSStream;
+  var standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  var support = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window && window.isSecureContext;
+  var state = null;
+  try { var se = document.getElementById('site-state'); if (se) state = JSON.parse(se.textContent); } catch (e) { state = null; }
+  function villesDispo() {
+    var out = [];
+    (state && state.emplacements || []).forEach(function (e) { if (e.actif && out.indexOf(e.ville) < 0) out.push(e.ville); });
+    if (!out.length) document.querySelectorAll('.ticket h3').forEach(function (h) { var v = h.textContent.trim(); if (v && out.indexOf(v) < 0) out.push(v); });
+    return out;
+  }
+  function prefs() { try { return JSON.parse(localStorage.getItem(LS) || 'null') || {}; } catch (e) { return {}; } }
+  function keep(p) { try { localStorage.setItem(LS, JSON.stringify(p)); } catch (e) {} }
+  function post(path, body) {
+    return fetch('/api/alertes/' + path, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body || {}) }).then(function (r) { return r.json(); });
+  }
+  function b64(s) { var p = '='.repeat((4 - s.length % 4) % 4), b = atob((s + p).replace(/-/g, '+').replace(/_/g, '/')), a = new Uint8Array(b.length); for (var i = 0; i < b.length; i++) a[i] = b.charCodeAt(i); return a; }
+
+  function build() {
+    var villes = villesDispo();
+    dlg = document.createElement('dialog'); dlg.id = 'alertes'; dlg.className = 'alertes'; dlg.setAttribute('aria-labelledby', 'alertesTitle');
+    dlg.innerHTML =
+      '<div class="sheet">' +
+        '<div class="sheet__head"><div><span class="kicker">Gratuit · sans compte</span><h2 id="alertesTitle">Alertes du camion</h2></div><button class="x" type="button" data-al-close aria-label="Fermer">×</button></div>' +
+        '<p class="hsub">Une notification sur votre téléphone quand le camion est près de chez vous, en cas d\'annulation, ou pour un nouveau burger. Désactivable en un geste.</p>' +
+        '<div class="al-view" data-view="form">' +
+          '<h3 class="al-h">Dans quelles villes ?</h3><div class="al-chips" data-chips="villes">' + villes.map(function (v) { return '<button type="button" class="al-chip" data-v="' + v.replace(/"/g, '&quot;') + '" aria-pressed="true">' + v + '</button>'; }).join('') + '</div>' +
+          '<h3 class="al-h">Quelles alertes ?</h3><div class="al-chips" data-chips="sujets">' + SUJETS.map(function (s) { return '<button type="button" class="al-chip" data-s="' + s[0] + '" aria-pressed="true">' + s[1] + '</button>'; }).join('') + '</div>' +
+          '<div class="al-actions"><button class="btn btn--primary" type="button" data-al-go>Activer les alertes</button><p class="al-note" data-al-note>Votre téléphone vous demandera ensuite d\'autoriser les notifications.</p></div>' +
+        '</div>' +
+        '<div class="al-view" data-view="ios" hidden>' +
+          '<div class="al-box"><p><b>Sur iPhone, une petite étape d\'abord</b> (imposée par Apple) : ajoutez L\'Arrêt Gourmand à votre écran d\'accueil, puis activez les alertes depuis l\'icône.</p>' +
+          '<ol class="al-steps"><li>Appuyez sur <span class="ios-share" aria-label="Partager"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 3v12m0-12 4 4m-4-4-4 4M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span> <b>Partager</b> en bas de Safari</li><li>Choisissez <b>« Sur l\'écran d\'accueil »</b> puis <b>Ajouter</b></li><li>Ouvrez l\'icône <b>L\'Arrêt Gourmand</b> et appuyez sur <b>Alertes</b> → <b>Activer</b></li></ol>' +
+          '<p class="al-note">30 secondes, une seule fois. Vous aurez aussi le menu toujours à jour dans votre poche.</p></div>' +
+        '</div>' +
+        '<div class="al-view" data-view="on" hidden>' +
+          '<label class="al-switch"><span><b data-al-status>Alertes activées</b><small data-al-sub>Ce téléphone recevra les alertes ci-dessous.</small></span><input type="checkbox" data-al-master checked><i></i></label>' +
+          '<div data-al-prefs>' +
+            '<h3 class="al-h">Villes</h3><div class="al-chips" data-chips="villes2">' + villes.map(function (v) { return '<button type="button" class="al-chip" data-v="' + v.replace(/"/g, '&quot;') + '" aria-pressed="true">' + v + '</button>'; }).join('') + '</div>' +
+            '<h3 class="al-h">Alertes</h3><div class="al-chips" data-chips="sujets2">' + SUJETS.map(function (s) { return '<button type="button" class="al-chip" data-s="' + s[0] + '" aria-pressed="true">' + s[1] + '</button>'; }).join('') + '</div>' +
+            '<p class="al-note" data-al-saved>Vos choix sont enregistrés automatiquement.</p>' +
+            '<div class="al-actions al-actions--row"><button class="btn btn--ghost" type="button" data-al-test>Envoyer un test</button></div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="al-view" data-view="denied" hidden><div class="al-box"><p><b>Les notifications sont bloquées pour ce site.</b></p><p>' + (isIos ? 'Sur iPhone : Réglages → Notifications → L\'Arrêt Gourmand → Autoriser les notifications.' : 'Appuyez sur le cadenas à gauche de l\'adresse → Autorisations → Notifications → Autoriser, puis revenez ici.') + '</p></div></div>' +
+        '<div class="al-view" data-view="unsupported" hidden><div class="al-box"><p><b>Ce navigateur ne gère pas les notifications.</b></p><p>Essayez avec Chrome (Android) ou Safari (iPhone). Les emplacements restent visibles ici et sur Facebook.</p></div></div>' +
+      '</div>';
+    document.body.appendChild(dlg);
+    dlg.querySelector('[data-al-close]').addEventListener('click', function () { dlg.close(); });
+    dlg.addEventListener('click', function (e) { if (e.target === dlg) dlg.close(); });
+    dlg.addEventListener('close', function () { document.documentElement.classList.remove('dlg-open'); document.body.style.top = ''; window.scrollTo(0, savedY); });
+    dlg.querySelectorAll('.al-chip').forEach(function (c) { c.addEventListener('click', function () { c.setAttribute('aria-pressed', c.getAttribute('aria-pressed') === 'true' ? 'false' : 'true'); if (c.closest('[data-view="on"]')) queueSave(); }); });
+    dlg.querySelector('[data-al-go]').addEventListener('click', activer);
+    dlg.querySelector('[data-al-master]').addEventListener('change', toggleMaster);
+    dlg.querySelector('[data-al-test]').addEventListener('click', test);
+    els.note = dlg.querySelector('[data-al-note]'); els.go = dlg.querySelector('[data-al-go]'); els.master = dlg.querySelector('[data-al-master]');
+    els.status = dlg.querySelector('[data-al-status]'); els.sub = dlg.querySelector('[data-al-sub]'); els.prefs = dlg.querySelector('[data-al-prefs]'); els.saved = dlg.querySelector('[data-al-saved]');
+  }
+  function view(name) { dlg.querySelectorAll('.al-view').forEach(function (v) { v.hidden = v.getAttribute('data-view') !== name; }); }
+  function picked(group) { return Array.prototype.slice.call(dlg.querySelectorAll('[data-chips="' + group + '"] .al-chip[aria-pressed="true"]')); }
+  function choice(group) {
+    var all = dlg.querySelectorAll('[data-chips="' + group + '"] .al-chip').length, v = picked(group);
+    if (group.indexOf('villes') === 0) return v.length === all ? [] : v.map(function (c) { return c.getAttribute('data-v'); }); // [] = toutes les villes
+    return v.map(function (c) { return c.getAttribute('data-s'); });
+  }
+  function setChips(group, villes, sujets) {
+    dlg.querySelectorAll('[data-chips="' + group + '"] .al-chip').forEach(function (c) {
+      var on = c.hasAttribute('data-v') ? (!villes.length || villes.indexOf(c.getAttribute('data-v')) >= 0) : sujets.indexOf(c.getAttribute('data-s')) >= 0;
+      c.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+  }
+  function showOn(p) {
+    setChips('villes2', p.villes || [], p.sujets || []); setChips('sujets2', p.villes || [], p.sujets || []);
+    els.master.checked = p.actif !== false;
+    paintMaster();
+    view('on');
+  }
+  function paintMaster() {
+    var on = els.master.checked;
+    els.status.textContent = on ? 'Alertes activées' : 'Alertes désactivées';
+    els.sub.textContent = on ? 'Ce téléphone recevra les alertes ci-dessous.' : 'Plus aucune notification. Réactivez quand vous voulez.';
+    els.prefs.style.opacity = on ? '' : '.45'; els.prefs.style.pointerEvents = on ? '' : 'none';
+  }
+  function open() {
+    if (!dlg) build();
+    var p = prefs();
+    if (!support) view(isIos && !standalone ? 'ios' : 'unsupported');
+    else if (Notification.permission === 'denied') view('denied');
+    else if (p.endpoint) { showOn(p); refresh(p); }
+    else view('form');
+    try { savedY = window.scrollY || 0; dlg.showModal(); document.body.style.top = (-savedY) + 'px'; document.documentElement.classList.add('dlg-open'); } catch (e) {}
+  }
+  // l'abonnement a-t-il changé côté navigateur ? les préférences côté serveur ?
+  function refresh(p) {
+    post('etat', { endpoint: p.endpoint }).then(function (r) {
+      if (r.abonne) { var np = { endpoint: p.endpoint, villes: r.abonne.villes, sujets: r.abonne.sujets, actif: r.abonne.actif }; keep(np); showOn(np); }
+      else { keep({}); view('form'); }
+    }).catch(function () {});
+  }
+  function activer() {
+    var sujets = choice('sujets'), villes = choice('villes');
+    if (!sujets.length) { els.note.textContent = 'Choisissez au moins un type d\'alerte.'; return; }
+    els.go.disabled = true; els.note.textContent = 'Un instant…';
+    // la demande d'autorisation doit partir directement du geste de l'utilisateur
+    var perm = new Promise(function (res) { try { var r = Notification.requestPermission(function (v) { res(v); }); if (r && r.then) r.then(res); } catch (e) { res('denied'); } });
+    perm.then(function (v) {
+      if (v !== 'granted') { els.go.disabled = false; els.note.textContent = 'Votre téléphone vous demandera ensuite d\'autoriser les notifications.'; if (v === 'denied') view('denied'); return; }
+      return navigator.serviceWorker.register('/sw.js').then(function () { return navigator.serviceWorker.ready; }).then(function (reg) {
+        return fetch('/api/alertes/cle').then(function (r) { return r.json(); }).then(function (k) {
+          return reg.pushManager.getSubscription().then(function (s) { return s || reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64(k.publicKey) }); });
+        });
+      }).then(function (sub) {
+        return post('abonner', { subscription: sub.toJSON(), villes: villes, sujets: sujets, appareil: ua.slice(0, 200) }).then(function (r) {
+          if (!r.ok) throw new Error(r.error || 'Erreur');
+          var p = { endpoint: sub.endpoint, villes: r.villes, sujets: r.sujets, actif: true }; keep(p); showOn(p);
+          els.saved.textContent = r.bienvenue ? '✓ Une notification de bienvenue vient d\'arriver sur ce téléphone.' : 'Vos choix sont enregistrés automatiquement.';
+        });
+      });
+    }).catch(function (e) {
+      els.go.disabled = false; els.note.textContent = 'Impossible d\'activer pour le moment (' + (e && e.message ? e.message : 'erreur') + '). Réessayez dans un instant.';
+    });
+  }
+  function queueSave() {
+    clearTimeout(saveT);
+    els.saved.textContent = 'Enregistrement…';
+    saveT = setTimeout(function () {
+      var p = prefs(), sujets = choice('sujets2'), villes = choice('villes2');
+      if (!sujets.length) { els.saved.textContent = 'Gardez au moins une alerte, ou coupez tout avec l\'interrupteur.'; return; }
+      post('preferences', { endpoint: p.endpoint, villes: villes, sujets: sujets }).then(function (r) {
+        if (r.ok) { keep({ endpoint: p.endpoint, villes: r.villes, sujets: r.sujets, actif: r.actif }); els.saved.textContent = '✓ Enregistré'; }
+        else if (r.inconnu) { keep({}); view('form'); }
+        else els.saved.textContent = r.error || 'Erreur';
+      }).catch(function () { els.saved.textContent = 'Hors ligne : réessayez plus tard.'; });
+    }, 500);
+  }
+  function toggleMaster() {
+    var p = prefs(), on = els.master.checked;
+    paintMaster();
+    post(on ? 'preferences' : 'desabonner', on ? { endpoint: p.endpoint, actif: true } : { endpoint: p.endpoint }).then(function (r) {
+      if (r.ok) keep({ endpoint: p.endpoint, villes: p.villes, sujets: p.sujets, actif: on });
+      else if (r.inconnu) { keep({}); view('form'); }
+    }).catch(function () {});
+  }
+  function test() {
+    var b = dlg.querySelector('[data-al-test]'); b.disabled = true; b.textContent = 'Envoi…';
+    post('test', { endpoint: prefs().endpoint }).then(function (r) { b.textContent = r.ok ? 'Test envoyé ✓' : 'Échec : ' + (r.error || ''); }).catch(function () { b.textContent = 'Hors ligne'; })
+      .then(function () { setTimeout(function () { b.disabled = false; b.textContent = 'Envoyer un test'; }, 2500); });
+  }
+  document.querySelectorAll('[data-open-alertes]').forEach(function (b) { b.addEventListener('click', function (e) { e.preventDefault(); open(); }); });
+  if (location.hash === '#alertes') open();
+  // pastille « activé » sur les boutons quand ce téléphone est déjà abonné
+  var p0 = prefs(); if (p0.endpoint && p0.actif !== false) { document.documentElement.classList.add('al-on'); document.querySelectorAll('[data-al-label-on]').forEach(function (b) { (b.querySelector('span') || b).textContent = b.getAttribute('data-al-label-on'); }); }
+  // si l'appli est installée et qu'on a déjà l'autorisation, on vérifie en silence que l'abonnement est toujours valide
+  if (support && p0.endpoint && Notification.permission === 'granted') {
+    navigator.serviceWorker.getRegistration('/').then(function (reg) { return reg && reg.pushManager.getSubscription(); }).then(function (s) {
+      if (s && s.endpoint !== p0.endpoint) post('abonner', { subscription: s.toJSON(), villes: p0.villes || [], sujets: p0.sujets || SUJETS.map(function (x) { return x[0]; }), appareil: ua.slice(0, 200), silencieux: true }).then(function (r) { if (r.ok) keep({ endpoint: s.endpoint, villes: r.villes, sujets: r.sujets, actif: true }); });
+    }).catch(function () {});
+  }
+})();

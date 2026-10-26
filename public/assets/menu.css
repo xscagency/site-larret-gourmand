@@ -9,6 +9,8 @@ body.menu-app{background:var(--kraft);color:var(--encre);background-image:radial
 .menu-app .mh__brand img{width:52px;height:52px;flex:none}
 .menu-app .mh__brand b{display:block;font-family:var(--display);font-weight:400;font-size:1.35rem;line-height:1.05}
 .menu-app .mh__brand small{display:block;font-family:var(--body);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--cheddar);margin-top:3px}
+.menu-app .mh__btns{display:flex;align-items:center;gap:10px}
+.menu-app .mh__btns .bell{width:44px;height:44px;border-color:var(--brun-line);background:rgba(var(--rgb-encre),.35)}
 .menu-app .mh__call{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:var(--ketchup);text-decoration:none;font-size:1.15rem;box-shadow:0 8px 20px -10px rgba(0,0,0,.7)}
 .menu-app .mh__status{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;margin:4px 16px 8px;padding:12px 14px;border-radius:14px;background:rgba(var(--rgb-brun2),.75);border:1px solid var(--brun-line);max-width:688px;margin-inline:auto}
 .menu-app .mh,.menu-app .mh__status{color:var(--creme)}
@@ -90,6 +92,12 @@ html .menu-app .dish__img::before{content:"";display:block!important;position:ab
 .menu-app .mpriv h2::after{display:none}
 .menu-app .mbtns{display:grid;gap:10px;margin-top:6px}
 .menu-app .mbtns .btn{width:100%;justify-content:center}
+/* alertes */
+.menu-app .malertes h2{font-size:1.3rem;color:var(--encre)}
+.menu-app .malertes h2::after{display:none}
+.menu-app .malertes p{color:var(--encre-2);font-size:.9rem;line-height:1.45;margin:6px 0 12px}
+.menu-app .malertes__ico{width:56px;height:56px;border-radius:14px;display:grid;place-items:center;background:var(--brun-2);color:var(--cheddar)}
+html.al-on .menu-app .malertes .btn{background:var(--brun-2);border-color:var(--brun-2);color:var(--creme)}
 /* installer */
 .menu-app .minstall__card{display:grid;grid-template-columns:56px 1fr;gap:14px;padding:18px 16px;border-radius:18px;background:rgba(255,255,255,.5);border:1.5px solid var(--kraft-2);align-items:start;color:var(--encre)}
 .menu-app .minstall__card img{border-radius:14px;box-shadow:0 6px 14px -6px rgba(0,0,0,.6)}

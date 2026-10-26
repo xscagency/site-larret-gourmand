@@ -2,6 +2,37 @@
 // Même contenu que schema.sql (gardé lisible à la racine du projet). Toutes les requêtes sont
 // « si n'existe pas » / « ignorer si déjà présent » : les relancer ne modifie jamais des données existantes.
 
+// Alertes (notifications sur téléphone) : abonnés et historique des envois
+const TABLE_ABONNES = `CREATE TABLE IF NOT EXISTS abonnes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    endpoint TEXT NOT NULL UNIQUE,
+    p256dh TEXT NOT NULL,
+    auth TEXT NOT NULL,
+    villes TEXT NOT NULL DEFAULT '[]',
+    sujets TEXT NOT NULL DEFAULT '[]',
+    actif INTEGER NOT NULL DEFAULT 1,
+    appareil TEXT,
+    cree TEXT NOT NULL DEFAULT (datetime('now')),
+    maj TEXT NOT NULL DEFAULT (datetime('now')),
+    dernier_envoi TEXT,
+    echecs INTEGER NOT NULL DEFAULT 0
+  )`;
+const TABLE_ALERTES = `CREATE TABLE IF NOT EXISTS alertes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    sujet TEXT NOT NULL,
+    titre TEXT NOT NULL,
+    corps TEXT NOT NULL,
+    url TEXT NOT NULL DEFAULT '/menu',
+    villes TEXT NOT NULL DEFAULT '[]',
+    cibles INTEGER NOT NULL DEFAULT 0,
+    envoyes INTEGER NOT NULL DEFAULT 0,
+    echecs INTEGER NOT NULL DEFAULT 0,
+    curseur INTEGER NOT NULL DEFAULT 0,
+    termine INTEGER NOT NULL DEFAULT 0,
+    source TEXT NOT NULL DEFAULT 'manuel',
+    cree TEXT NOT NULL DEFAULT (datetime('now'))
+  )`;
+
 export const STATEMENTS = [
   `CREATE TABLE IF NOT EXISTS burgers (
     id TEXT PRIMARY KEY,
@@ -47,6 +78,8 @@ export const STATEMENTS = [
     statut TEXT NOT NULL DEFAULT 'nouveau',
     mail_envoye INTEGER NOT NULL DEFAULT 0
   )`,
+  TABLE_ABONNES,
+  TABLE_ALERTES,
   `CREATE TABLE IF NOT EXISTS devis (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     numero TEXT NOT NULL UNIQUE,
@@ -113,7 +146,7 @@ Cordialement,
 Sylvain'),
     ('devis_contact_email','contact@larretgalette.com'),
     ('devis_km_tarif',     '1'),
-    ('schema_version',     '7')`,
+    ('schema_version',     '8')`,
 ];
 
 // Crée les tables et les données de départ (sans toucher à ce qui existe déjà)
@@ -124,7 +157,7 @@ export async function ensureSchema(env) {
 
 // Mises à jour appliquées une seule fois sur une base déjà en ligne (numérotées, dans l'ordre).
 // Une base neuve reçoit directement le schéma complet ; une base existante rattrape les versions manquantes.
-export const SCHEMA_VERSION = 7;
+export const SCHEMA_VERSION = 8;
 export const MIGRATIONS = {
   1: ['ALTER TABLE demandes ADD COLUMN moment TEXT'],
   2: ['ALTER TABLE demandes ADD COLUMN adresse TEXT', 'ALTER TABLE demandes ADD COLUMN code_postal TEXT', 'ALTER TABLE demandes ADD COLUMN ville TEXT',
@@ -182,6 +215,7 @@ Cordialement,
 Sylvain'`],
   6: ['ALTER TABLE devis ADD COLUMN pdf BLOB', 'ALTER TABLE devis ADD COLUMN pdf_token TEXT', 'ALTER TABLE devis ADD COLUMN pdf_maj TEXT'],
   7: ["INSERT OR IGNORE INTO reglages (cle, valeur) VALUES ('theme', ''), ('theme_fx', '1')"],
+  8: [TABLE_ABONNES, TABLE_ALERTES],
 };
 export async function applyMigrations(env, from = 0) {
   for (let v = from + 1; v <= SCHEMA_VERSION; v++) {
