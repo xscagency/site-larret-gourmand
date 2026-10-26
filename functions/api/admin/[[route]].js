@@ -336,7 +336,7 @@ export async function onRequest({ request, env, params }) {
     const { where, binds } = cibleSql(a.sujet, villes);
     const lot = await env.DB.prepare(`SELECT id, endpoint, p256dh, auth, echecs, appareil FROM abonnes WHERE ${where} AND id > ? ORDER BY id LIMIT ${LOT}`).bind(...binds, a.curseur).all();
     const vapid = await getVapid(env);
-    const payload = { id: a.id, title: a.titre, body: a.corps, url: a.url + (a.url.includes('?') ? '&' : '?') + 'source=push', tag: `${a.sujet}-${a.id}` };
+    const payload = { id: a.id, title: a.titre, body: a.corps, url: a.url + (a.url.includes('?') ? '&' : '?') + 'source=push&al=' + a.id, tag: `${a.sujet}-${a.id}` };
     const results = await Promise.all(lot.results.map((s) => sendPush(s, payload, vapid, { ttl: a.sujet === 'service' || a.sujet === 'annulation' ? 4 * 3600 : 24 * 3600, urgency: a.sujet === 'annulation' ? 'high' : 'normal', topic: a.sujet })));
     const cles = await Promise.all(lot.results.map((s) => cleAbonne(s.endpoint)));
     let ok = 0, ko = 0;
