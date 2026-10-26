@@ -580,7 +580,13 @@
     dlg.innerHTML =
       '<div class="sheet">' +
         '<div class="sheet__head"><div><span class="kicker">Gratuit · sans compte</span><h2 id="alertesTitle">Alertes du camion</h2></div><button class="x" type="button" data-al-close aria-label="Fermer">×</button></div>' +
-        '<p class="hsub">Une notification sur votre téléphone le soir où le camion s\'installe près de chez vous, en cas d\'annulation ou pour un nouveau burger. <b>De quoi ne plus rater un service, et appeler à temps pour réserver votre burger préféré.</b> Désactivable en un geste.</p>' +
+        '<ul class="al-intro">' +
+          '<li><span>📍</span>Le soir où le camion s\'installe près de chez vous</li>' +
+          '<li><span>⛔</span>Si un service est annulé ou déplacé</li>' +
+          '<li><span>🍔</span>Nouveaux burgers, bons plans et concours</li>' +
+          '<li class="al-intro__key"><span>📞</span>De quoi ne plus rater un service, et appeler à temps pour réserver votre burger préféré</li>' +
+          '<li class="al-intro__note"><span>✨</span>Gratuit, sans compte, désactivable en un geste</li>' +
+        '</ul>' +
         '<div class="al-view" data-view="form">' +
           '<h3 class="al-h">Dans quelles villes ?</h3><div class="al-chips" data-chips="villes">' + villes.map(function (v) { return '<button type="button" class="al-chip" data-v="' + v.replace(/"/g, '&quot;') + '" aria-pressed="true">' + v + '</button>'; }).join('') + '</div>' +
           '<h3 class="al-h">Quelles alertes ?</h3><div class="al-cards" data-chips="sujets">' + SUJETS.map(function (s) { return '<button type="button" class="al-card" data-s="' + s[0] + '" aria-pressed="true"><i>' + ICONS[s[0]] + '</i><span><b>' + s[1] + '</b><small>' + s[2] + '</small></span></button>'; }).join('') + '</div>' +
