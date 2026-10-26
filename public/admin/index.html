@@ -531,7 +531,15 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
       <div class="card" style="display:grid;gap:10px">
         <div id="rappelsEtat" class="muted">—</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button class="btn sm" id="rappelsTest" type="button">Envoyer les rappels du jour maintenant (test)</button></div>
-        <details class="muted" style="font-size:.9rem"><summary style="cursor:pointer">Comment ça tourne</summary><p style="margin:8px 0 0;line-height:1.5">Le déclencheur est une tâche planifiée du dépôt GitHub (<code>.github/workflows/rappels.yml</code>) qui appelle le site chaque matin. Il lui faut le jeton d'administration : dans GitHub → <b>Settings → Secrets and variables → Actions → New repository secret</b>, nom <code>ADMIN_TOKEN</code>, valeur = le jeton que vous saisissez pour ouvrir ce tableau de contrôle. Sans ce secret, rien ne part.</p></details>
+        <details class="rappels-bot" id="rappelsBotBox">
+          <summary style="cursor:pointer">Bot Telegram dédié aux rappels <span class="muted" id="rappelsBotEtat"></span></summary>
+          <div style="display:grid;gap:10px;margin-top:10px">
+            <p class="muted" style="margin:0;line-height:1.5">1. Dans Telegram, ouvrez <b>@BotFather</b> → <code>/newbot</code> → donnez-lui un nom (ex. « LAG Rappels ») : il vous répond un jeton du type <code>123456:ABC…</code>.<br>2. Ouvrez votre nouveau bot et appuyez sur <b>Démarrer</b>.<br>3. Collez le jeton ici et appuyez sur « Détecter la conversation ».</p>
+            <div class="grid"><label class="f">Jeton du bot<input id="rappelsToken" type="text" autocomplete="off" placeholder="123456789:AAH…"></label></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary sm" id="rappelsDetect" type="button">Détecter la conversation et enregistrer</button><button class="btn sm danger" id="rappelsBotDel" type="button" hidden>Revenir au bot principal</button></div>
+          </div>
+        </details>
+        <details class="muted" style="font-size:.9rem"><summary style="cursor:pointer">Comment ça tourne</summary><p style="margin:8px 0 0;line-height:1.5">Une tâche planifiée du dépôt GitHub (<code>.github/workflows/rappels.yml</code>) appelle le site chaque matin ; le site n'envoie qu'après 9h et une seule fois par jour. Rien à configurer : aucun secret n'est nécessaire, cet appel ne peut rien faire d'autre que déclencher les rappels prévus.</p></details>
       </div>
       <h2 style="margin-top:28px">Modèle d'e-mail de facture<small>Variables : {date} {moment} {nom} {numero} {numero_devis} {total} {acompte} {reste}</small></h2>
       <div class="card" style="display:grid;gap:12px">
@@ -936,7 +944,8 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
     $('#bandeau').value=state.bandeau||'';
     var th=document.querySelector('#themes input[value="'+(state.theme||'')+'"]');if(th)th.checked=true;$('#themeFx').checked=state.theme_fx!==false;
     $('#themeNow').textContent=state.theme?'Actif : '+({noel:'Noël',halloween:'Halloween','fete-nationale':'Fête nationale','saint-valentin':'Saint-Valentin',paques:'Pâques'}[state.theme]||state.theme):'Thème classique actif';
-    $('#rappelsEtat').innerHTML=(state.telegram_configure?'Telegram : <b style="color:#B9DBA0">branché</b>':'Telegram : <b style="color:#F28B82">non configuré</b> (variables TELEGRAM_BOT_TOKEN et TELEGRAM_CHAT_ID)')+' · Dernier passage : '+(state.rappels_dernier?esc(dateHeure(state.rappels_dernier))+(state.rappels_envoyes?' ('+state.rappels_envoyes+' rappel'+(state.rappels_envoyes>1?'s':'')+')':' (rien à rappeler)'):'jamais');
+    $('#rappelsBotEtat').textContent=state.rappels_bot==='dedie'?'· actif (conversation '+state.rappels_chat_id+')':'· non configuré, le bot principal est utilisé';$('#rappelsBotDel').hidden=state.rappels_bot!=='dedie';
+    $('#rappelsEtat').innerHTML=(state.telegram_configure?'Telegram : <b style="color:#B9DBA0">branché</b> ('+(state.rappels_bot==='dedie'?'bot dédié aux rappels':'bot principal des demandes')+')':'Telegram : <b style="color:#F28B82">non configuré</b> (créez un bot dédié ci-dessous, ou les variables TELEGRAM_BOT_TOKEN et TELEGRAM_CHAT_ID)')+' · Dernier passage : '+(state.rappels_dernier?esc(dateHeure(state.rappels_dernier))+(state.rappels_envoyes?' ('+state.rappels_envoyes+' rappel'+(state.rappels_envoyes>1?'s':'')+')':' (rien à rappeler)'):'jamais');
     if(state.devis_reglages){$('#r_facture_objet').value=state.devis_reglages.facture_objet||'';$('#r_facture_corps').value=state.devis_reglages.facture_corps||'';$('#r_relance_objet').value=state.devis_reglages.relance_objet||'';$('#r_relance_corps').value=state.devis_reglages.relance_corps||'';$('#r_email_objet').value=state.devis_reglages.email_objet;$('#r_email_corps').value=state.devis_reglages.email_corps;$('#r_contact_email').value=state.devis_reglages.contact_email;$('#r_km_tarif').value=state.devis_reglages.km_tarif;}
   }
 
@@ -1391,6 +1400,8 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
     if(b.id==='supSave'){var inputs=document.querySelectorAll('[data-sup]');Promise.all(Array.prototype.map.call(inputs,function(i){return api('burgers/'+i.dataset.sup,{method:'PUT',body:{supplement:i.value}});})).then(function(){toast('Suppléments enregistrés');load();}).catch(function(err){toast(err.message,true);});}
     if(b.id==='bandeauSave')save('reglages',{bandeau:$('#bandeau').value},'Bandeau enregistré');
     if(b.id==='themeSave'){var sel=document.querySelector('#themes input:checked');save('reglages',{theme:sel?sel.value:'',theme_fx:$('#themeFx').checked?'1':'0'},sel&&sel.value?'Thème appliqué — le site est passé en mode '+sel.closest('.theme').querySelector('b').textContent.replace(/^\S+\s/,''):'Retour au thème classique')}
+    if(b.id==='rappelsDetect'){var tk=$('#rappelsToken').value.trim();b.classList.add('busy');api('rappels/detecter',{method:'POST',body:{token:tk}}).then(function(r){toast('Bot relié à '+(r.nom||r.chat_id)+' ✓');$('#rappelsToken').value='';return load();}).catch(function(err){toast(err.message,true);}).finally(function(){b.classList.remove('busy');});}
+    if(b.id==='rappelsBotDel'){api('rappels/bot',{method:'DELETE'}).then(function(){toast('Bot dédié retiré');return load();}).catch(function(err){toast(err.message,true);});}
     if(b.id==='rappelsTest'){b.classList.add('busy');api('rappels',{method:'POST',body:{force:true}}).then(function(r){toast(r.envoyes?r.envoyes+' rappel'+(r.envoyes>1?'s':'')+' envoyé'+(r.envoyes>1?'s':'')+' sur Telegram':'Aucune privatisation à rappeler aujourd\'hui (message de contrôle envoyé)');return load();}).catch(function(err){toast(err.message,true);}).finally(function(){b.classList.remove('busy');});}
     if(b.id==='reglagesSave2')save('reglages',{devis_facture_objet:$('#r_facture_objet').value,devis_facture_corps:$('#r_facture_corps').value},'Modèle de facture enregistré');
     if(b.id==='reglagesSave3')save('reglages',{devis_relance_objet:$('#r_relance_objet').value,devis_relance_corps:$('#r_relance_corps').value},'Modèle de relance enregistré');

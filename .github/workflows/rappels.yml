@@ -1,6 +1,6 @@
 # Rappels Telegram des privatisations (7 jours avant, la veille, le jour même) : appelle le site chaque matin.
 # Le site n'envoie qu'à partir de 9h (heure de Paris) et une seule fois par jour ; les deux horaires couvrent l'heure d'été et l'heure d'hiver.
-# Secret à créer dans GitHub (Settings → Secrets and variables → Actions) : ADMIN_TOKEN = le jeton du tableau de contrôle.
+# Aucun secret : l'adresse appelée ne peut rien faire d'autre que déclencher les rappels prévus.
 name: Rappels privatisations
 on:
   schedule:
@@ -15,11 +15,8 @@ jobs:
     steps:
       - name: Appeler le site
         env:
-          ADMIN_TOKEN: ${{ secrets.ADMIN_TOKEN }}
           SITE_URL: ${{ vars.SITE_URL || 'https://site-larret-gourmand.pages.dev' }}
-        run: |
-          if [ -z "$ADMIN_TOKEN" ]; then echo "Secret ADMIN_TOKEN manquant dans GitHub" >&2; exit 1; fi
-          curl -fsS -X POST "$SITE_URL/api/admin/rappels" -H "Authorization: Bearer $ADMIN_TOKEN" -H "content-type: application/json" -d '{}'
+        run: curl -fsS -X POST "$SITE_URL/api/rappels/tick" 
   # GitHub coupe les tâches planifiées d'un dépôt sans activité depuis 60 jours : un commit vide le 1er du mois les maintient en vie.
   keepalive:
     if: github.event.schedule == '5 8 * * *'

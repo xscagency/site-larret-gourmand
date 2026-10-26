@@ -30,8 +30,8 @@
 import { json, loadState, computeTonight, slugify, todayParis } from '../../_lib.js';
 import { computeTotals, nextNumero, MOMENTS, dateFr, fillTemplate, distanceKm, sendDevisEmail, eur } from '../../_devis.js';
 import { getVapid, sendPush, SUJETS, cleAbonne, typeAppareil } from '../../_push.js';
-import { sendTelegram, telegramConfigure } from '../../_telegram.js';
-import { nowParis, addDays } from '../../_lib.js';
+import { telegramConfig, detectChat } from '../../_telegram.js';
+import { runRappels } from '../../_rappels.js';
 
 function authorized(request, env) {
   const h = request.headers.get('authorization') || '';
@@ -64,7 +64,10 @@ export async function onRequest({ request, env, params }) {
     state.devis_reglages = { email_objet: d.devis_email_objet || '', email_corps: d.devis_email_corps || '', contact_email: d.devis_contact_email || '', km_tarif: Number(d.devis_km_tarif || 1),
       facture_objet: d.devis_facture_objet || '', facture_corps: d.devis_facture_corps || '', relance_objet: d.devis_relance_objet || '', relance_corps: d.devis_relance_corps || '' };
     state.mail_configure = !!(env.RESEND_API_KEY && env.MAIL_FROM);
-    state.telegram_configure = telegramConfigure(env);
+    const tcfg = await telegramConfig(env, 'rappels');
+    state.telegram_configure = !!tcfg;
+    state.rappels_bot = tcfg ? tcfg.source : 'aucun';
+    state.rappels_chat_id = tcfg && tcfg.source === 'dedie' ? tcfg.chat : '';
     const rp = Object.fromEntries((await env.DB.prepare("SELECT cle, valeur FROM reglages WHERE cle LIKE 'rappels_%'").all()).results.map((x) => [x.cle, x.valeur]));
     state.rappels_dernier = rp.rappels_dernier || '';
     state.rappels_envoyes = Number(rp.rappels_envoyes || 0);
@@ -343,48 +346,26 @@ export async function onRequest({ request, env, params }) {
     await env.DB.prepare("UPDATE devis SET relances = relances + 1, relance_le = datetime('now') WHERE id = ?").bind(cur.id).run();
     return json({ ok: true });
   }
-  // ---- Rappels Telegram des privatisations validées : 7 jours avant, la veille, le jour même (à 9h, heure de Paris)
+  // ---- Rappels Telegram : test forcé depuis l'admin (la tâche quotidienne passe par /api/rappels/tick)
   if (route === 'rappels' && method === 'POST') {
-    const today = todayParis(), { minutes } = nowParis();
-    const rp = Object.fromEntries((await env.DB.prepare("SELECT cle, valeur FROM reglages WHERE cle LIKE 'rappels_%'").all()).results.map((x) => [x.cle, x.valeur]));
-    if (!body.force) {
-      if (minutes < 9 * 60) return json({ ok: true, ignore: 'avant 9h' });
-      if (rp.rappels_jour === today) return json({ ok: true, ignore: 'déjà fait aujourd\'hui' });
-    }
-    if (!telegramConfigure(env)) return json({ ok: false, error: 'Telegram non configuré (TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID).' }, 400);
-    const horizons = [[0, "AUJOURD'HUI"], [1, 'DEMAIN'], [7, 'DANS 7 JOURS']];
-    const dates = horizons.map(([n]) => addDays(today, n));
-    const rows = await env.DB.prepare(`SELECT d.*, dm.message AS dem_message, dm.type AS dem_type, dm.tel AS dem_tel FROM devis d LEFT JOIN demandes dm ON dm.id = d.demande_id
-      WHERE d.type = 'devis' AND d.statut IN ('accepte', 'solde') AND d.event_date IN (?, ?, ?) ORDER BY d.event_date`).bind(...dates).all();
-    const JOURS = ['dim.', 'lun.', 'mar.', 'mer.', 'jeu.', 'ven.', 'sam.'];
-    let envoyes = 0;
-    for (const d of rows.results) {
-      const [, label] = horizons[dates.indexOf(d.event_date)];
-      const lignes = JSON.parse(d.lignes || '[]'), intro = JSON.parse(d.intro || '[]');
-      const t = computeTotals(lignes, d.mode || 'ttc');
-      const conv = lignes[0] && lignes[0].qte;
-      const dt = new Date(d.event_date + 'T12:00:00Z');
-      const mom = MOMENTS[d.event_moment] || {};
-      const fact = await env.DB.prepare("SELECT numero, statut, acompte, total_ttc FROM devis WHERE type = 'facture' AND facture_de = ?").bind(d.id).first();
-      const texte = [
-        `📅 Privatisation ${label} · ${JOURS[dt.getUTCDay()]} ${dateFr(d.event_date)}${mom.mail ? ' ' + mom.mail : ''}`,
-        `👤 ${d.client_nom || 'Sans nom'}${d.client_tel || d.dem_tel ? ' · 📞 ' + (d.client_tel || d.dem_tel) : ''}`,
-        `${conv ? '👥 ' + conv + ' convives' : ''}${d.lieu ? (conv ? ' · ' : '') + '📍 ' + d.lieu : ''}`,
-        [intro[1], intro[2], intro[3]].filter(Boolean).join(' · '),
-        `🧾 Devis n°${d.numero} · ${eur(t.total_ttc)} · ${d.statut === 'solde' ? 'acompte reçu, reste ' + eur(t.reste) : 'accepté, arrhes attendues (' + eur(t.arrhes) + ')'}${fact ? ' · facture n°' + fact.numero + (fact.statut === 'payee' ? ' réglée' : ' émise') : ''}`,
-        d.dem_message ? `📝 ${String(d.dem_message).slice(0, 300)}` : '',
-        `${new URL(request.url).origin}/admin`,
-      ].filter(Boolean).join('\n');
-      const r = await sendTelegram(env, texte);
-      if (r.ok) envoyes++;
-    }
-    if (body.force && !rows.results.length) await sendTelegram(env, `✅ Rappels L'Arrêt Gourmand : rien à rappeler aujourd'hui (${dateFr(today)}). Le système fonctionne.`);
+    const r = await runRappels(env, { force: !!body.force, origin: new URL(request.url).origin });
+    return json(r, r.ok ? 200 : 400);
+  }
+  // bot dédié aux rappels : retrouver la conversation après un /start
+  if (route === 'rappels/detecter' && method === 'POST') {
+    const token = str(body.token, 120) || (await env.DB.prepare("SELECT valeur FROM reglages WHERE cle = 'rappels_bot_token'").first())?.valeur || '';
+    if (!token) return json({ ok: false, error: 'Collez d\'abord le jeton du bot.' }, 400);
+    const r = await detectChat(token);
+    if (!r.ok) return json(r, 400);
     await env.DB.batch([
-      env.DB.prepare('INSERT INTO reglages (cle, valeur) VALUES (?, ?) ON CONFLICT(cle) DO UPDATE SET valeur = excluded.valeur').bind('rappels_jour', body.force ? (rp.rappels_jour || '') : today),
-      env.DB.prepare('INSERT INTO reglages (cle, valeur) VALUES (?, ?) ON CONFLICT(cle) DO UPDATE SET valeur = excluded.valeur').bind('rappels_dernier', new Date().toISOString().slice(0, 19).replace('T', ' ')),
-      env.DB.prepare('INSERT INTO reglages (cle, valeur) VALUES (?, ?) ON CONFLICT(cle) DO UPDATE SET valeur = excluded.valeur').bind('rappels_envoyes', String(envoyes)),
+      env.DB.prepare('INSERT INTO reglages (cle, valeur) VALUES (?, ?) ON CONFLICT(cle) DO UPDATE SET valeur = excluded.valeur').bind('rappels_bot_token', token),
+      env.DB.prepare('INSERT INTO reglages (cle, valeur) VALUES (?, ?) ON CONFLICT(cle) DO UPDATE SET valeur = excluded.valeur').bind('rappels_chat_id', r.chat_id),
     ]);
-    return json({ ok: true, envoyes, trouves: rows.results.length });
+    return json({ ok: true, chat_id: r.chat_id, nom: r.nom });
+  }
+  if (route === 'rappels/bot' && method === 'DELETE') {
+    await env.DB.prepare("DELETE FROM reglages WHERE cle IN ('rappels_bot_token', 'rappels_chat_id')").run();
+    return json({ ok: true });
   }
   if (route === 'distance' && method === 'GET') {
     const q = str(new URL(request.url).searchParams.get('q'), 200);
