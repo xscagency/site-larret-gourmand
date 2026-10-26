@@ -53,6 +53,16 @@ function renderMenuLd(state) {
   return JSON.stringify({ '@context': 'https://schema.org', '@type': 'Menu', name: 'Menu', inLanguage: 'fr', hasMenuSection: [{ '@type': 'MenuSection', name: 'Burgers', hasMenuItem: items }] }).replace(/</g, '\\u003c');
 }
 
+async function compterOuverture(env, alerteId, request) {
+  const ua = request.headers.get('user-agent') || '';
+  const ip = request.headers.get('cf-connecting-ip') || '';
+  const h = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(ip + '|' + ua));
+  const cle = 'v-' + Array.from(new Uint8Array(h).slice(0, 10), (b) => b.toString(16).padStart(2, '0')).join('');
+  const appareil = /iphone|ipad|ipod/i.test(ua) ? 'iphone' : /android/i.test(ua) ? 'android' : 'autre';
+  await env.DB.prepare(`INSERT INTO alertes_suivi (alerte_id, cle, appareil, ouvert) VALUES (?, ?, ?, 1)
+    ON CONFLICT(alerte_id, cle) DO UPDATE SET ouvert = 1, maj = datetime('now')`).bind(alerteId, cle, appareil).run();
+}
+
 export async function onRequest(context) {
   const { request, env, next } = context;
   const url = new URL(request.url);
@@ -63,6 +73,10 @@ export async function onRequest(context) {
   }
 
   if (url.pathname === '/menu') return Response.redirect(new URL('/' + url.search + url.hash, url.origin), 301);
+
+  // page ouverte depuis une notification (…?al=<id>) : comptée ici, côté serveur, sans dépendre du téléphone
+  const al = Number(url.searchParams.get('al') || 0);
+  if (al && env.DB) context.waitUntil(compterOuverture(env, al, request).catch((e) => console.error('suivi ouverture', e)));
 
   const response = await next();
   const ct = response.headers.get('content-type') || '';

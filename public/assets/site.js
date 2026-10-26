@@ -663,7 +663,7 @@
     var perm = new Promise(function (res) { try { var r = Notification.requestPermission(function (v) { res(v); }); if (r && r.then) r.then(res); } catch (e) { res('denied'); } });
     perm.then(function (v) {
       if (v !== 'granted') { els.go.disabled = false; els.note.textContent = 'Votre téléphone vous demandera ensuite d\'autoriser les notifications.'; if (v === 'denied') view('denied'); return; }
-      return navigator.serviceWorker.register('/sw.js').then(function () { return navigator.serviceWorker.ready; }).then(function (reg) {
+      return navigator.serviceWorker.register('/sw.js').then(function (r) { r.update().catch(function () {}); return navigator.serviceWorker.ready; }).then(function (reg) {
         return fetch('/api/alertes/cle').then(function (r) { return r.json(); }).then(function (k) {
           return reg.pushManager.getSubscription().then(function (s) { return s || reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64(k.publicKey) }); });
         });
@@ -704,15 +704,9 @@
     post('test', { endpoint: prefs().endpoint }).then(function (r) { b.textContent = r.ok ? 'Test envoyé ✓' : 'Échec : ' + (r.error || ''); }).catch(function () { b.textContent = 'Hors ligne'; })
       .then(function () { setTimeout(function () { b.disabled = false; b.textContent = 'Envoyer un test'; }, 2500); });
   }
-  if (standalone && 'serviceWorker' in navigator && window.isSecureContext) navigator.serviceWorker.register('/sw.js').catch(function () {});
-  // page ouverte depuis une notification : on le signale (statistique « ouvertes » de l'admin)
-  var mAl = /[?&]al=(\d+)/.exec(location.search);
-  if (mAl) {
-    var sig = function (endpoint) { if (endpoint) post('suivi', { endpoint: endpoint, id: Number(mAl[1]), type: 'ouvert', ua: ua }).catch(function () {}); };
-    if (prefs().endpoint) sig(prefs().endpoint);
-    else if ('serviceWorker' in navigator) navigator.serviceWorker.getRegistration('/').then(function (reg) { return reg && reg.pushManager.getSubscription(); }).then(function (s) { sig(s && s.endpoint); }).catch(function () {});
-    try { history.replaceState(null, '', location.pathname + location.hash); } catch (e) {}
-  }
+  if (standalone && 'serviceWorker' in navigator && window.isSecureContext) navigator.serviceWorker.register('/sw.js').then(function (r) { return r.update(); }).catch(function () {});
+  // page ouverte depuis une notification : l'ouverture est comptée par le serveur, on nettoie juste l'adresse
+  if (/[?&]al=\d+/.test(location.search)) { try { history.replaceState(null, '', location.pathname + location.hash); } catch (e) {} }
   document.querySelectorAll('[data-open-alertes]').forEach(function (b) { b.addEventListener('click', function (e) { e.preventDefault(); open(); }); });
   if (location.hash === '#alertes') open();
   // pastille « activé » sur les boutons quand ce téléphone est déjà abonné

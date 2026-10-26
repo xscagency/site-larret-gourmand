@@ -1,6 +1,6 @@
 // Service worker : rend le site installable et consultable même sans réseau (dernière version vue),
 // et reçoit les alertes envoyées sur le téléphone (notifications).
-const CACHE = 'lag-site-v3';
+const CACHE = 'lag-site-v4';
 const SHELL = ['/', '/assets/site.css', '/assets/site.js', '/img/logo-t-192.png', '/img/icon-192.png'];
 self.addEventListener('install', (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL).catch(() => null)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', (e) => { e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim())); });
@@ -35,7 +35,6 @@ function suivi(id, type) {
 }
 self.addEventListener('notificationclick', (e) => {
   e.notification.close();
-  e.waitUntil(suivi(e.notification.data && e.notification.data.id, 'ouvert'));
   const url = new URL((e.notification.data && e.notification.data.url) || '/', self.location.origin).href;
   e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
     const same = list.find((c) => c.url.split('?')[0] === url.split('?')[0]);
