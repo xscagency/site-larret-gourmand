@@ -21,6 +21,7 @@
 //   POST   /api/admin/devis/:id/envoyer     { pdf_base64 } → e-mail au client avec le PDF (Resend)
 //   POST   /api/admin/devis/:id/facturer    crée la facture d'un devis validé (type 'facture', numéro F + date + compteur)
 //   POST   /api/admin/devis/:id/relancer    { email_objet, email_corps } → e-mail de relance avec le PDF archivé
+//   POST   /api/admin/rappels                { force } → rappels Telegram des privatisations (J-7, J-1, jour J à 9h) ; appelé chaque matin par GitHub Actions
 //   GET    /api/admin/distance?q=adresse    km routiers depuis Verneuil-sur-Seine
 //   GET    /api/admin/alertes               abonnés (compteurs) + historique des envois
 //   POST   /api/admin/alertes               { sujet, titre, corps, url, villes } → prépare un envoi, renvoie { id, cibles }
@@ -29,6 +30,8 @@
 import { json, loadState, computeTonight, slugify, todayParis } from '../../_lib.js';
 import { computeTotals, nextNumero, MOMENTS, dateFr, fillTemplate, distanceKm, sendDevisEmail, eur } from '../../_devis.js';
 import { getVapid, sendPush, SUJETS, cleAbonne, typeAppareil } from '../../_push.js';
+import { sendTelegram, telegramConfigure } from '../../_telegram.js';
+import { nowParis, addDays } from '../../_lib.js';
 
 function authorized(request, env) {
   const h = request.headers.get('authorization') || '';
@@ -61,6 +64,10 @@ export async function onRequest({ request, env, params }) {
     state.devis_reglages = { email_objet: d.devis_email_objet || '', email_corps: d.devis_email_corps || '', contact_email: d.devis_contact_email || '', km_tarif: Number(d.devis_km_tarif || 1),
       facture_objet: d.devis_facture_objet || '', facture_corps: d.devis_facture_corps || '', relance_objet: d.devis_relance_objet || '', relance_corps: d.devis_relance_corps || '' };
     state.mail_configure = !!(env.RESEND_API_KEY && env.MAIL_FROM);
+    state.telegram_configure = telegramConfigure(env);
+    const rp = Object.fromEntries((await env.DB.prepare("SELECT cle, valeur FROM reglages WHERE cle LIKE 'rappels_%'").all()).results.map((x) => [x.cle, x.valeur]));
+    state.rappels_dernier = rp.rappels_dernier || '';
+    state.rappels_envoyes = Number(rp.rappels_envoyes || 0);
     return json({ ok: true, state: { ...state, tonight: computeTonight(state) } });
   }
 
@@ -234,6 +241,14 @@ export async function onRequest({ request, env, params }) {
     const mode = body.mode === 'ht' ? 'ht' : (body.mode === 'ttc' ? 'ttc' : cur.mode);
     const t = computeTotals(lignes, mode);
     const intro = Array.isArray(body.intro) ? body.intro.slice(0, 6).map((x) => str(x, 160)) : JSON.parse(cur.intro || '[]');
+    // date et moment de l'événement déduits de « Le 12/06/2027 soir » quand les champs dédiés sont vides (devis saisis à la main)
+    let eventDate = body.event_date !== undefined ? str(body.event_date, 20) : cur.event_date, eventMoment = body.event_moment !== undefined ? str(body.event_moment, 60) : cur.event_moment;
+    const mi = /^Le (\d{2})\/(\d{2})\/(\d{4})\s*(.*)$/.exec(intro[0] || '');
+    if (mi) {
+      if (!isoDate(eventDate)) eventDate = `${mi[3]}-${mi[2]}-${mi[1]}`;
+      const mm = { midi: 'Déjeuner / Brunch', soir: 'Dîner', 'deuxième partie de soirée (21h+)': 'Deuxième partie de soirée (21h+)' }[mi[4].trim().toLowerCase()];
+      if (!eventMoment && mm) eventMoment = mm;
+    }
     const isFacture = cur.type === 'facture';
     const statut = (isFacture ? ['emise', 'payee'] : ['brouillon', 'envoye', 'accepte', 'solde', 'refuse']).includes(body.statut) ? body.statut : cur.statut;
     const acompte = isFacture ? Math.max(0, Math.min(t.total_ttc, body.acompte !== undefined ? num(body.acompte) : num(cur.acompte))) : 0;
@@ -242,8 +257,8 @@ export async function onRequest({ request, env, params }) {
       body.client_nom !== undefined ? str(body.client_nom, 120) : cur.client_nom,
       body.client_email !== undefined ? str(body.client_email, 160) : cur.client_email,
       body.client_tel !== undefined ? str(body.client_tel, 40) : cur.client_tel,
-      body.event_date !== undefined ? str(body.event_date, 20) : cur.event_date,
-      body.event_moment !== undefined ? str(body.event_moment, 60) : cur.event_moment,
+      eventDate,
+      eventMoment,
       body.lieu !== undefined ? str(body.lieu, 200) : (intro[4] ?? cur.lieu),
       JSON.stringify(intro), JSON.stringify(lignes), mode, t.total_ht, t.tva, t.total_ttc, t.arrhes, statut,
       body.email_objet !== undefined ? str(body.email_objet, 200) : cur.email_objet,
@@ -327,6 +342,49 @@ export async function onRequest({ request, env, params }) {
     if (!r.ok) return json(r, 400);
     await env.DB.prepare("UPDATE devis SET relances = relances + 1, relance_le = datetime('now') WHERE id = ?").bind(cur.id).run();
     return json({ ok: true });
+  }
+  // ---- Rappels Telegram des privatisations validées : 7 jours avant, la veille, le jour même (à 9h, heure de Paris)
+  if (route === 'rappels' && method === 'POST') {
+    const today = todayParis(), { minutes } = nowParis();
+    const rp = Object.fromEntries((await env.DB.prepare("SELECT cle, valeur FROM reglages WHERE cle LIKE 'rappels_%'").all()).results.map((x) => [x.cle, x.valeur]));
+    if (!body.force) {
+      if (minutes < 9 * 60) return json({ ok: true, ignore: 'avant 9h' });
+      if (rp.rappels_jour === today) return json({ ok: true, ignore: 'déjà fait aujourd\'hui' });
+    }
+    if (!telegramConfigure(env)) return json({ ok: false, error: 'Telegram non configuré (TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID).' }, 400);
+    const horizons = [[0, "AUJOURD'HUI"], [1, 'DEMAIN'], [7, 'DANS 7 JOURS']];
+    const dates = horizons.map(([n]) => addDays(today, n));
+    const rows = await env.DB.prepare(`SELECT d.*, dm.message AS dem_message, dm.type AS dem_type, dm.tel AS dem_tel FROM devis d LEFT JOIN demandes dm ON dm.id = d.demande_id
+      WHERE d.type = 'devis' AND d.statut IN ('accepte', 'solde') AND d.event_date IN (?, ?, ?) ORDER BY d.event_date`).bind(...dates).all();
+    const JOURS = ['dim.', 'lun.', 'mar.', 'mer.', 'jeu.', 'ven.', 'sam.'];
+    let envoyes = 0;
+    for (const d of rows.results) {
+      const [, label] = horizons[dates.indexOf(d.event_date)];
+      const lignes = JSON.parse(d.lignes || '[]'), intro = JSON.parse(d.intro || '[]');
+      const t = computeTotals(lignes, d.mode || 'ttc');
+      const conv = lignes[0] && lignes[0].qte;
+      const dt = new Date(d.event_date + 'T12:00:00Z');
+      const mom = MOMENTS[d.event_moment] || {};
+      const fact = await env.DB.prepare("SELECT numero, statut, acompte, total_ttc FROM devis WHERE type = 'facture' AND facture_de = ?").bind(d.id).first();
+      const texte = [
+        `📅 Privatisation ${label} · ${JOURS[dt.getUTCDay()]} ${dateFr(d.event_date)}${mom.mail ? ' ' + mom.mail : ''}`,
+        `👤 ${d.client_nom || 'Sans nom'}${d.client_tel || d.dem_tel ? ' · 📞 ' + (d.client_tel || d.dem_tel) : ''}`,
+        `${conv ? '👥 ' + conv + ' convives' : ''}${d.lieu ? (conv ? ' · ' : '') + '📍 ' + d.lieu : ''}`,
+        [intro[1], intro[2], intro[3]].filter(Boolean).join(' · '),
+        `🧾 Devis n°${d.numero} · ${eur(t.total_ttc)} · ${d.statut === 'solde' ? 'acompte reçu, reste ' + eur(t.reste) : 'accepté, arrhes attendues (' + eur(t.arrhes) + ')'}${fact ? ' · facture n°' + fact.numero + (fact.statut === 'payee' ? ' réglée' : ' émise') : ''}`,
+        d.dem_message ? `📝 ${String(d.dem_message).slice(0, 300)}` : '',
+        `${new URL(request.url).origin}/admin`,
+      ].filter(Boolean).join('\n');
+      const r = await sendTelegram(env, texte);
+      if (r.ok) envoyes++;
+    }
+    if (body.force && !rows.results.length) await sendTelegram(env, `✅ Rappels L'Arrêt Gourmand : rien à rappeler aujourd'hui (${dateFr(today)}). Le système fonctionne.`);
+    await env.DB.batch([
+      env.DB.prepare('INSERT INTO reglages (cle, valeur) VALUES (?, ?) ON CONFLICT(cle) DO UPDATE SET valeur = excluded.valeur').bind('rappels_jour', body.force ? (rp.rappels_jour || '') : today),
+      env.DB.prepare('INSERT INTO reglages (cle, valeur) VALUES (?, ?) ON CONFLICT(cle) DO UPDATE SET valeur = excluded.valeur').bind('rappels_dernier', new Date().toISOString().slice(0, 19).replace('T', ' ')),
+      env.DB.prepare('INSERT INTO reglages (cle, valeur) VALUES (?, ?) ON CONFLICT(cle) DO UPDATE SET valeur = excluded.valeur').bind('rappels_envoyes', String(envoyes)),
+    ]);
+    return json({ ok: true, envoyes, trouves: rows.results.length });
   }
   if (route === 'distance' && method === 'GET') {
     const q = str(new URL(request.url).searchParams.get('q'), 200);
