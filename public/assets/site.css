@@ -818,6 +818,7 @@ html.al-on .bell--icon::after{position:absolute;top:4px;right:4px}
 .al-steps li>span{line-height:1.5;padding-top:3px}
 .al-steps li::before{counter-increment:s;content:counter(s);width:30px;height:30px;border-radius:50%;background:var(--ketchup);color:#fff;font-weight:700;display:grid;place-items:center;font-size:.9rem}
 .ios-share{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:6px;background:#1C77FF;color:#fff;vertical-align:middle;margin:0 2px}
+.al-bell-inline{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--brun);border:1.5px solid var(--brun-line);color:var(--cheddar);vertical-align:middle;margin:0 2px}
 .al-switch{position:relative;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 16px;border:1.5px solid var(--kraft-2);border-radius:16px;background:rgba(255,255,255,.6);margin-top:14px;cursor:pointer}
 .al-switch b{display:block;font-size:1.05rem;font-weight:700}
 .al-switch small{display:block;color:var(--encre-2);font-size:.86rem;margin-top:2px;line-height:1.4}
