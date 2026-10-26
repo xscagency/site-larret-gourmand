@@ -25,6 +25,7 @@ self.addEventListener('push', (e) => {
     renotify: !!d.tag,
     data: { url: d.url || '/?source=push', id: d.id || 0 },
   };
+  if (d.image) opts.image = d.image;
   e.waitUntil(Promise.all([self.registration.showNotification(d.title || "L'Arrêt Gourmand", opts), suivi(d.id, 'recu')]));
 });
 // un appui sur la notification ouvre la page visée (ou ramène l'onglet déjà ouvert)

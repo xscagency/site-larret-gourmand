@@ -320,11 +320,12 @@ export async function onRequest({ request, env, params }) {
     const titre = str(body.titre, 80), corps = str(body.corps, 240);
     if (!titre || !corps) return json({ ok: false, error: 'Titre et message obligatoires.' }, 400);
     const url = '/'; // un appui sur la notification ouvre simplement le site
+    const image = photoPath(body.image); // photo affichée sous le texte (Android ; ignorée par l'iPhone)
     const villes = Array.isArray(body.villes) ? body.villes.map((v) => str(v, 60)).filter(Boolean).slice(0, 12) : [];
     const { where, binds } = cibleSql(sujet, villes);
     const n = await env.DB.prepare(`SELECT COUNT(*) AS n FROM abonnes WHERE ${where}`).bind(...binds).first();
-    const ins = await env.DB.prepare('INSERT INTO alertes (sujet, titre, corps, url, villes, cibles, source) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id')
-      .bind(sujet, titre, corps, url, JSON.stringify(villes), n.n, str(body.source, 20) || 'manuel').first();
+    const ins = await env.DB.prepare('INSERT INTO alertes (sujet, titre, corps, url, villes, cibles, source, image, termine) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id')
+      .bind(sujet, titre, corps, url, JSON.stringify(villes), n.n, str(body.source, 20) || 'manuel', image || null, n.n ? 0 : 1).first();
     return json({ ok: true, id: ins.id, cibles: n.n });
   }
   const mLot = /^alertes\/(\d+)\/lot$/.exec(route);
@@ -336,7 +337,7 @@ export async function onRequest({ request, env, params }) {
     const { where, binds } = cibleSql(a.sujet, villes);
     const lot = await env.DB.prepare(`SELECT id, endpoint, p256dh, auth, echecs, appareil FROM abonnes WHERE ${where} AND id > ? ORDER BY id LIMIT ${LOT}`).bind(...binds, a.curseur).all();
     const vapid = await getVapid(env);
-    const payload = { id: a.id, title: a.titre, body: a.corps, url: a.url + (a.url.includes('?') ? '&' : '?') + 'source=push&al=' + a.id, tag: `${a.sujet}-${a.id}` };
+    const payload = { id: a.id, title: a.titre, body: a.corps, url: a.url + (a.url.includes('?') ? '&' : '?') + 'source=push&al=' + a.id, tag: `${a.sujet}-${a.id}`, image: a.image || undefined };
     const results = await Promise.all(lot.results.map((s) => sendPush(s, payload, vapid, { ttl: a.sujet === 'service' || a.sujet === 'annulation' ? 4 * 3600 : 24 * 3600, urgency: a.sujet === 'annulation' ? 'high' : 'normal', topic: a.sujet })));
     const cles = await Promise.all(lot.results.map((s) => cleAbonne(s.endpoint)));
     let ok = 0, ko = 0;
