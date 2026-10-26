@@ -203,6 +203,14 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
 .theme__sw{flex:none;width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,var(--a) 0 40%,var(--b) 40% 70%,var(--c) 70%);border:1px solid rgba(255,255,255,.12)}
 .theme__t{display:grid;gap:2px;min-width:0}.theme__t b{font-size:.98rem}.theme__t small{color:var(--creme-3);font-size:.82rem;line-height:1.35}
 /* alertes */
+.tpl{border:1px solid var(--line);border-radius:14px;background:var(--brun)}
+.tpl>summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 14px;font-weight:600}
+.tpl>summary::-webkit-details-marker{display:none}
+.tpl>summary::after{content:"";width:8px;height:8px;border-right:2px solid var(--cheddar);border-bottom:2px solid var(--cheddar);transform:rotate(-45deg);transition:transform .2s;flex:none}
+.tpl[open]>summary::after{transform:rotate(45deg)}
+.tpl>summary .muted{font-weight:400;font-size:.86rem;flex:1 1 auto}
+.tpl__body{display:grid;gap:12px;padding:0 14px 14px}
+.vars{margin:0;font-size:.85rem}.vars code{background:rgba(255,255,255,.06);padding:1px 6px;border-radius:6px;font-size:.82rem}
 .al-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
 .al-stats .card{margin:0;padding:16px 18px}
 .al-stats .big{font:700 2.4rem/1 var(--body);color:var(--cheddar)}
@@ -537,17 +545,47 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
         <label class="f">Message (vide = pas de bandeau)<input id="bandeau" type="text" maxlength="300" placeholder="Ex. : Fermé du 24 au 31 décembre, bonnes fêtes !"></label>
         <div style="margin-top:12px;display:flex;gap:8px"><button class="btn primary" id="bandeauSave" type="button">Enregistrer</button><button class="btn" id="bandeauClear" type="button">Retirer le bandeau</button></div>
       </div>
-      <h2 style="margin-top:28px">Modèle d'e-mail de devis<small>Variables : {date} {moment} {nom} {convives} {lieu} {numero}</small></h2>
-      <div class="card" style="display:grid;gap:12px">
-        <label class="f">Objet<input id="r_email_objet" type="text" maxlength="200"></label>
-        <label class="f">Corps<textarea id="r_email_corps" rows="12" maxlength="4000"></textarea><span class="muted">Entourez un passage de ** pour le mettre en gras.</span></label>
+      <h2 style="margin-top:28px">Devis<small>Paramètres utilisés dans les devis et factures</small></h2>
+      <div class="card">
         <div class="grid">
           <label class="f">E-mail affiché sur le devis<input id="r_contact_email" type="email" maxlength="160"></label>
           <label class="f">Tarif du kilomètre (€)<input id="r_km_tarif" type="number" step="0.1" min="0"></label>
         </div>
-        <div><button class="btn primary" id="reglagesSave" type="button">Enregistrer</button></div>
+        <div style="margin-top:12px"><button class="btn primary" id="reglagesSave" type="button">Enregistrer</button></div>
       </div>
-      <h2 style="margin-top:28px">Rappels des privatisations<small>Un message Telegram 7 jours avant, la veille et le jour même à 9h, pour chaque devis validé</small></h2>
+
+      <h2 style="margin-top:28px">Modèles d'e-mails<small>Les textes pré-remplis à l'envoi d'un devis, d'une facture ou d'une relance. Entourez un passage de ** pour le mettre en gras.</small></h2>
+      <div class="card tpls" style="display:grid;gap:10px">
+        <details class="tpl" open>
+          <summary><span>📄 Devis</span><span class="muted">envoyé avec le PDF du devis</span></summary>
+          <div class="tpl__body">
+            <p class="muted vars">Variables : <code>{date}</code> <code>{moment}</code> <code>{nom}</code> <code>{convives}</code> <code>{lieu}</code> <code>{numero}</code></p>
+            <label class="f">Objet<input id="r_email_objet" type="text" maxlength="200"></label>
+            <label class="f">Corps<textarea id="r_email_corps" rows="12" maxlength="4000"></textarea></label>
+            <div><button class="btn primary sm" id="reglagesSave1" type="button">Enregistrer le modèle de devis</button></div>
+          </div>
+        </details>
+        <details class="tpl">
+          <summary><span>🧾 Facture</span><span class="muted">envoyé avec le PDF de la facture</span></summary>
+          <div class="tpl__body">
+            <p class="muted vars">Variables : <code>{date}</code> <code>{moment}</code> <code>{nom}</code> <code>{numero}</code> <code>{numero_devis}</code> <code>{total}</code> <code>{acompte}</code> <code>{reste}</code></p>
+            <label class="f">Objet<input id="r_facture_objet" type="text" maxlength="200"></label>
+            <label class="f">Corps<textarea id="r_facture_corps" rows="10" maxlength="4000"></textarea></label>
+            <div><button class="btn primary sm" id="reglagesSave2" type="button">Enregistrer le modèle de facture</button></div>
+          </div>
+        </details>
+        <details class="tpl">
+          <summary><span>🔔 Relance</span><span class="muted">pour un devis envoyé resté sans réponse</span></summary>
+          <div class="tpl__body">
+            <p class="muted vars">Variables : <code>{date}</code> <code>{moment}</code> <code>{nom}</code> <code>{convives}</code> <code>{lieu}</code> <code>{numero}</code></p>
+            <label class="f">Objet<input id="r_relance_objet" type="text" maxlength="200"></label>
+            <label class="f">Corps<textarea id="r_relance_corps" rows="9" maxlength="4000"></textarea></label>
+            <div><button class="btn primary sm" id="reglagesSave3" type="button">Enregistrer le modèle de relance</button></div>
+          </div>
+        </details>
+      </div>
+
+      <h2 style="margin-top:28px">Rappels des privatisations<small>Un message Telegram 7 jours avant, la veille et le jour même à 9h, pour chaque devis validé et chaque événement</small></h2>
       <div class="card" style="display:grid;gap:10px">
         <div id="rappelsEtat" class="muted">—</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button class="btn sm" id="rappelsTest" type="button">Envoyer les rappels du jour maintenant (test)</button></div>
@@ -560,18 +598,6 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
           </div>
         </details>
         <details class="muted" style="font-size:.9rem"><summary style="cursor:pointer">Comment ça tourne</summary><p style="margin:8px 0 0;line-height:1.5">Une tâche planifiée du dépôt GitHub (<code>.github/workflows/rappels.yml</code>) appelle le site chaque matin ; le site n'envoie qu'après 9h et une seule fois par jour. Rien à configurer : aucun secret n'est nécessaire, cet appel ne peut rien faire d'autre que déclencher les rappels prévus.</p></details>
-      </div>
-      <h2 style="margin-top:28px">Modèle d'e-mail de facture<small>Variables : {date} {moment} {nom} {numero} {numero_devis} {total} {acompte} {reste}</small></h2>
-      <div class="card" style="display:grid;gap:12px">
-        <label class="f">Objet<input id="r_facture_objet" type="text" maxlength="200"></label>
-        <label class="f">Corps<textarea id="r_facture_corps" rows="10" maxlength="4000"></textarea></label>
-        <div><button class="btn primary" id="reglagesSave2" type="button">Enregistrer</button></div>
-      </div>
-      <h2 style="margin-top:28px">Modèle d'e-mail de relance<small>Pour un devis envoyé resté sans réponse. Variables : {date} {moment} {nom} {convives} {lieu} {numero}</small></h2>
-      <div class="card" style="display:grid;gap:12px">
-        <label class="f">Objet<input id="r_relance_objet" type="text" maxlength="200"></label>
-        <label class="f">Corps<textarea id="r_relance_corps" rows="9" maxlength="4000"></textarea></label>
-        <div><button class="btn primary" id="reglagesSave3" type="button">Enregistrer</button></div>
       </div>
     </section>
 
@@ -1448,7 +1474,8 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
     if(b.id==='rappelsTest'){b.classList.add('busy');api('rappels',{method:'POST',body:{force:true}}).then(function(r){toast(r.envoyes?r.envoyes+' rappel'+(r.envoyes>1?'s':'')+' envoyé'+(r.envoyes>1?'s':'')+' sur Telegram':'Aucune privatisation à rappeler aujourd\'hui (message de contrôle envoyé)');return load();}).catch(function(err){toast(err.message,true);}).finally(function(){b.classList.remove('busy');});}
     if(b.id==='reglagesSave2')save('reglages',{devis_facture_objet:$('#r_facture_objet').value,devis_facture_corps:$('#r_facture_corps').value},'Modèle de facture enregistré');
     if(b.id==='reglagesSave3')save('reglages',{devis_relance_objet:$('#r_relance_objet').value,devis_relance_corps:$('#r_relance_corps').value},'Modèle de relance enregistré');
-    if(b.id==='reglagesSave')save('reglages',{devis_email_objet:$('#r_email_objet').value,devis_email_corps:$('#r_email_corps').value,devis_contact_email:$('#r_contact_email').value,devis_km_tarif:$('#r_km_tarif').value},'Réglages enregistrés');
+    if(b.id==='reglagesSave1')save('reglages',{devis_email_objet:$('#r_email_objet').value,devis_email_corps:$('#r_email_corps').value},'Modèle de devis enregistré');
+    if(b.id==='reglagesSave')save('reglages',{devis_contact_email:$('#r_contact_email').value,devis_km_tarif:$('#r_km_tarif').value},'Paramètres enregistrés');
     if(b.id==='bandeauClear'){$('#bandeau').value='';save('reglages',{bandeau:''},'Bandeau retiré');}
   });
 
