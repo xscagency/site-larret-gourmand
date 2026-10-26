@@ -566,9 +566,10 @@ html.dlg-open,html.dlg-open body{overflow:hidden;overscroll-behavior:none}
 html.dlg-open body{position:fixed;left:0;right:0;width:100%}
 @media (max-width:640px){
   /* plein écran, calé en haut : plus de recentrage à chaque apparition du clavier */
-  dialog{max-width:none;width:100%;height:auto;max-height:none;margin:0;inset:0;overflow:hidden;border-radius:0}
-  dialog[open]{animation:sheetUp .28s ease-out}
-  .sheet{height:100%;max-height:none;border-radius:0;border:0;padding:calc(16px + env(safe-area-inset-top,0px)) 16px calc(28px + env(safe-area-inset-bottom,0px))}
+  /* la fenêtre remplit l'écran ; la feuille (.sheet) est le seul élément qui défile, sans hauteur en pourcentage (Safari ne la résolvait pas et laissait la page bouger sous le clavier) */
+  dialog{max-width:none;width:100%;height:100vh;height:100dvh;max-height:none;margin:0;inset:0;overflow:hidden;border-radius:0}
+  dialog[open]{display:flex;flex-direction:column;animation:sheetUp .28s ease-out}
+  .sheet{flex:1 1 auto;min-height:0;height:auto;max-height:none;border-radius:0;border:0;padding:calc(16px + env(safe-area-inset-top,0px)) 16px calc(28px + env(safe-area-inset-bottom,0px))}
   .sheet__head{position:sticky;top:calc(-16px - env(safe-area-inset-top,0px));z-index:2;margin:calc(-16px - env(safe-area-inset-top,0px)) -16px 8px;padding:calc(14px + env(safe-area-inset-top,0px)) 16px 10px;background:var(--brun-2);border-bottom:1px solid var(--brun-line)}
   .sheet h2{font-size:1.4rem}
 }
