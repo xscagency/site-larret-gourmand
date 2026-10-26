@@ -284,7 +284,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
 .chk input{margin-top:3px;width:18px;height:18px;flex:none;accent-color:var(--cheddar)}
 /* agenda */
 .agm{margin:22px 0 10px;font:600 .8rem var(--body);letter-spacing:.12em;text-transform:uppercase;color:var(--cheddar)}
-.ag{display:grid;grid-template-columns:64px 1fr;gap:14px;border-left:4px solid var(--cheddar)}.ag.conf{border-left-color:var(--mesclun)}.ag.dem{border-left-color:var(--ketchup)}
+.ag{display:grid;grid-template-columns:64px 1fr;gap:14px;border-left:4px solid var(--cheddar)}.ag.conf{border-left-color:var(--mesclun)}.ag.dem{border-left-color:var(--ketchup)}.ag.ev{border-left-color:#C58AF9}.ag.ev.annule{opacity:.6}.st.ev{color:#C58AF9}
 .ag .day{text-align:center;background:var(--brun);border-radius:12px;padding:8px 4px;align-self:start}.ag .day b{display:block;font:400 1.6rem/1 var(--display);color:var(--creme)}.ag .day span{display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--creme-3);margin-top:4px}
 .ag .body{display:grid;gap:8px;min-width:0}.ag .in{color:var(--creme-3);font-size:.82rem}
 .ag .meta{display:flex;flex-wrap:wrap;gap:6px}.ag .meta span{background:var(--brun);border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:.84rem}
@@ -424,6 +424,26 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
     </section>
 
     <!-- Fiche burger (création / modification) -->
+    <dialog id="evDlg">
+      <div class="card sheet" tabindex="-1" autofocus style="margin:0;width:min(560px,calc(100vw - 24px));display:grid;gap:12px;outline:none">
+        <div class="row"><h2 style="margin:0" id="evTitle">Événement</h2><button class="btn sm" type="button" id="evClose">Fermer</button></div>
+        <input type="hidden" id="ev_id">
+        <label class="f">Titre<input id="ev_titre" type="text" maxlength="120" placeholder="Marché de Noël de Triel, Fête de la musique, Festival…"></label>
+        <div class="grid">
+          <label class="f">Date<input id="ev_date" type="date"></label>
+          <label class="f">Horaires<input id="ev_heures" type="text" maxlength="60" placeholder="11h - 22h"></label>
+        </div>
+        <div class="grid">
+          <label class="f">Lieu<input id="ev_lieu" type="text" maxlength="200" placeholder="Place de la mairie"></label>
+          <label class="f">Ville<input id="ev_ville" type="text" maxlength="80"></label>
+        </div>
+        <label class="f">Contact sur place<input id="ev_contact" type="text" maxlength="160" placeholder="Nom · téléphone"></label>
+        <label class="f">Notes<textarea id="ev_notes" rows="4" maxlength="2000" placeholder="Branchement, emplacement, nombre de burgers prévu…"></textarea></label>
+        <label class="chk"><input type="checkbox" id="ev_rappel" checked><span>Rappels Telegram 7 jours avant, la veille et le jour même</span></label>
+        <label class="chk" id="ev_annuleRow" hidden><input type="checkbox" id="ev_annule"><span>Événement annulé</span></label>
+        <div class="row" style="border-top:1px solid var(--line);padding-top:12px"><div style="display:flex;gap:8px"><button class="btn primary" type="button" id="evSave">Enregistrer</button></div><button class="btn danger sm" type="button" id="evDelete" hidden>Supprimer</button></div>
+      </div>
+    </dialog>
     <dialog id="burgerDlg">
       <form class="card" id="burgerForm" method="dialog" style="margin:0;width:min(560px,calc(100vw - 32px));display:grid;gap:12px">
         <div class="row"><h2 id="burgerDlgTitle" style="margin:0">Nouveau burger</h2><button class="btn sm" type="button" id="burgerCancel">Fermer</button></div>
@@ -566,8 +586,8 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
     </section>
 
     <section id="tab-agenda">
-      <div class="row sec-head"><h2 style="margin:0">Agenda<small>Les privatisations à venir : devis envoyés, confirmées, demandes datées</small></h2></div>
-      <div class="filters" id="agFilters"><button data-agf="all" class="is-on">Tout</button><button data-agf="conf">Confirmées (payées)</button><button data-agf="attente">En attente</button></div>
+      <div class="row sec-head"><h2 style="margin:0">Agenda<small>Privatisations (devis, demandes datées) et événements publics</small></h2><button class="btn primary sm" id="newEvent" type="button">+ Événement</button></div>
+      <div class="filters" id="agFilters"><button data-agf="all" class="is-on">Tout</button><button data-agf="conf">Confirmées (payées)</button><button data-agf="attente">En attente</button><button data-agf="event">Événements</button></div>
       <div id="agenda"></div>
     </section>
 
@@ -889,7 +909,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
     return api('state').then(function(r){
       state=r.state;$('#login').hidden=true;$('#app').hidden=false;
       render();
-      return api('demandes').then(function(d){demandes=d.demandes;return loadDevis();}).then(function(){renderDemandes();renderAlertes();});
+      return api('demandes').then(function(d){demandes=d.demandes;return api('evenements');}).then(function(e){evenements=e.evenements;return loadDevis();}).then(function(){renderDemandes();renderAlertes();});
     }).catch(function(e){if(first)toast(e.message,true);if(!token)showLogin();});
   }
 
@@ -1027,7 +1047,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
   // =====================================================================
   //  DEVIS
   // =====================================================================
-  var devisList=[], factureList=[], curDevis=null, logoData=null;
+  var devisList=[], factureList=[], evenements=[], curDevis=null, logoData=null;
   var isFacture=function(d){return d&&d.type==='facture';};
   function factureDe(id){return factureList.filter(function(f){return f.facture_de===id;})[0];}
   function joursDepuis(sql){if(!sql)return 0;return Math.floor((Date.now()-new Date(sql.replace(' ','T')+'Z').getTime())/864e5);}
@@ -1248,10 +1268,11 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
     var today=state.today,items=[],covered={};
     devisList.forEach(function(d){if(d.demande_id)covered[d.demande_id]=1;if(isoOk(d.event_date)&&d.event_date>=today&&d.statut!=='refuse'){var dem=d.demande_id?demandeById(d.demande_id):null;items.push({date:d.event_date,moment:d.event_moment||'',nom:d.client_nom||(dem&&dem.nom)||'Sans nom',convives:convivesDe(d,dem),lieu:d.lieu||(dem&&dem.lieu)||'',type:dem&&dem.type||'',message:dem&&dem.message||'',kind:'devis',d:d,dem:dem,conf:d.statut==='solde'});}});
     demandes.forEach(function(x){if(isoOk(x.date_event)&&x.date_event>=today&&!covered[x.id]&&x.statut!=='perdu')items.push({date:x.date_event,moment:x.moment||'',nom:x.nom,convives:x.convives,lieu:x.lieu,type:x.type,message:x.message,kind:'demande',dem:x,conf:false});});
+    evenements.forEach(function(e){if(e.date>=today)items.push({date:e.date,moment:'',nom:e.titre,convives:'',lieu:[e.lieu,e.ville].filter(Boolean).join(', '),type:'',message:e.notes||'',kind:'event',ev:e,conf:e.statut!=='annule'});});
     items.sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:(MOMENT_ORDRE[a.moment]||0)-(MOMENT_ORDRE[b.moment]||0);});
     $('#nAg').hidden=!items.length;$('#nAg').textContent=items.length;
     document.querySelectorAll('#agFilters button').forEach(function(b){b.classList.toggle('is-on',b.dataset.agf===agFilter);});
-    var list=items.filter(function(i){return agFilter==='all'||(agFilter==='conf'?i.conf:!i.conf);});
+    var list=items.filter(function(i){return agFilter==='all'||(agFilter==='event'?i.kind==='event':agFilter==='conf'?(i.conf&&i.kind!=='event'):(!i.conf&&i.kind!=='event'));});
     if(!list.length){$('#agenda').innerHTML='<p class="empty">'+(items.length?'Rien dans cette catégorie.':'Aucune privatisation à venir pour le moment. Les devis et les demandes qui ont une date apparaissent ici automatiquement.')+'</p>';return;}
     var MOIS=['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'],JC=['dim.','lun.','mar.','mer.','jeu.','ven.','sam.'];
     var html='',lastM='',t0=new Date(today+'T00:00:00Z').getTime();
@@ -1259,23 +1280,45 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
       var p=i.date.split('-'),dt=new Date(Date.UTC(+p[0],+p[1]-1,+p[2])),m=MOIS[+p[1]-1]+' '+p[0];
       if(m!==lastM){html+='<div class="agm">'+m+'</div>';lastM=m;}
       var dans=Math.round((dt.getTime()-t0)/86400000),inTxt=dans===0?"aujourd'hui":dans===1?'demain':'dans '+dans+' jours';
-      var tag=i.kind==='devis'?'<span class="st '+esc(i.d.statut)+'">'+(i.conf?'Confirmée · payée':i.d.statut==='accepte'?'Acceptée · arrhes attendues':i.d.statut==='envoye'?'Devis envoyé · en attente':'Devis en brouillon')+'</span>':'<span class="st nouveau">Demande · devis à préparer</span>';
-      var acts='<div class="actions">'+(i.kind==='devis'?'<button class="btn sm" type="button" data-opendevis="'+i.d.id+'">Devis n°'+esc(i.d.numero)+' · '+eur(i.d.total_ttc)+'</button>'+(i.conf?'':'<button class="btn ok sm" type="button" data-valider="'+i.d.id+'">✓ Acompte reçu</button>'):'<button class="btn sm primary" type="button" data-mkdevis="'+i.dem.id+'">Préparer le devis</button>')+
+      var tag=i.kind==='event'?'<span class="st '+(i.ev.statut==='annule'?'perdu':'ev')+'">'+(i.ev.statut==='annule'?'Événement annulé':'Événement public')+(i.ev.rappel&&i.ev.statut!=='annule'?' · rappels':'')+'</span>':i.kind==='devis'?'<span class="st '+esc(i.d.statut)+'">'+(i.conf?'Confirmée · payée':i.d.statut==='accepte'?'Acceptée · arrhes attendues':i.d.statut==='envoye'?'Devis envoyé · en attente':'Devis en brouillon')+'</span>':'<span class="st nouveau">Demande · devis à préparer</span>';
+      var acts='<div class="actions">'+(i.kind==='event'?'<button class="btn sm" type="button" data-openevent="'+i.ev.id+'">Modifier</button>':i.kind==='devis'?'<button class="btn sm" type="button" data-opendevis="'+i.d.id+'">Devis n°'+esc(i.d.numero)+' · '+eur(i.d.total_ttc)+'</button>'+(i.conf?'':'<button class="btn ok sm" type="button" data-valider="'+i.d.id+'">✓ Acompte reçu</button>'):'<button class="btn sm primary" type="button" data-mkdevis="'+i.dem.id+'">Préparer le devis</button>')+
         (i.dem?'<button class="btn sm ghost" type="button" data-godemande="'+i.dem.id+'">Voir la demande</button>':'')+'</div>';
-      var tel=i.dem?i.dem.tel:i.d.client_tel;
-      html+='<div class="card ag'+(i.conf?' conf':i.kind==='demande'?' dem':'')+'"><div class="day"><b>'+(+p[2])+'</b><span>'+JC[dt.getUTCDay()]+'</span></div><div class="body">'+
-        '<div><div class="name">'+esc(i.nom)+'</div><div class="sub2">'+tag+'<span>'+inTxt+(i.moment?' · '+esc(i.moment):'')+'</span></div></div>'+
-        '<dl class="kv">'+(i.type?'<dt>Événement</dt><dd>'+esc(i.type)+'</dd>':'')+(i.convives?'<dt>Convives</dt><dd><b>'+esc(i.convives)+'</b></dd>':'')+(i.lieu?'<dt>Lieu</dt><dd>'+esc(i.lieu)+'</dd>':'')+(tel?'<dt>Tél</dt><dd><a href="tel:'+esc(tel)+'" style="color:inherit">'+esc(fmtTel(tel))+'</a></dd>':'')+(i.message?'<dt>Précisions</dt><dd class="pre">'+esc(i.message)+'</dd>':'')+'</dl>'+acts+'</div></div>';
+      var tel=i.kind==='event'?'':(i.dem?i.dem.tel:i.d.client_tel);
+      html+='<div class="card ag'+(i.kind==='event'?' ev'+(i.ev.statut==='annule'?' annule':''):i.conf?' conf':i.kind==='demande'?' dem':'')+'"><div class="day"><b>'+(+p[2])+'</b><span>'+JC[dt.getUTCDay()]+'</span></div><div class="body">'+
+        '<div><div class="name">'+esc(i.nom)+'</div><div class="sub2">'+tag+'<span>'+inTxt+(i.moment?' · '+esc(i.moment):'')+(i.kind==='event'&&i.ev.heures?' · '+esc(i.ev.heures):'')+'</span></div></div>'+
+        '<dl class="kv">'+(i.type?'<dt>Événement</dt><dd>'+esc(i.type)+'</dd>':'')+(i.convives?'<dt>Convives</dt><dd><b>'+esc(i.convives)+'</b></dd>':'')+(i.lieu?'<dt>Lieu</dt><dd>'+esc(i.lieu)+'</dd>':'')+(i.kind==='event'&&i.ev.contact?'<dt>Contact</dt><dd>'+esc(i.ev.contact)+'</dd>':'')+(tel?'<dt>Tél</dt><dd><a href="tel:'+esc(tel)+'" style="color:inherit">'+esc(fmtTel(tel))+'</a></dd>':'')+(i.message?'<dt>'+(i.kind==='event'?'Notes':'Précisions')+'</dt><dd class="pre">'+esc(i.message)+'</dd>':'')+'</dl>'+acts+'</div></div>';
     });
     $('#agenda').innerHTML=html;
   }
   $('#agFilters').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;agFilter=b.dataset.agf;renderAgenda();});
+  // ---- événements publics (sans devis)
+  var evdlg=$('#evDlg');
+  function openEvent(ev){
+    $('#evTitle').textContent=ev?'Modifier l\'événement':'Nouvel événement';
+    $('#ev_id').value=ev?ev.id:'';$('#ev_titre').value=ev?ev.titre:'';$('#ev_date').value=ev?ev.date:'';$('#ev_heures').value=ev?ev.heures||'':'';$('#ev_lieu').value=ev?ev.lieu||'':'';$('#ev_ville').value=ev?ev.ville||'':'';$('#ev_contact').value=ev?ev.contact||'':'';$('#ev_notes').value=ev?ev.notes||'':'';
+    $('#ev_rappel').checked=ev?!!ev.rappel:true;$('#ev_annuleRow').hidden=!ev;$('#ev_annule').checked=!!(ev&&ev.statut==='annule');$('#evDelete').hidden=!ev;$('#evDelete').dataset.confirm='';$('#evDelete').textContent='Supprimer';
+    evdlg.showModal();setTimeout(function(){var a=document.activeElement;if(a&&a.tagName!=='DIV')a.blur();},0);
+  }
+  $('#newEvent').addEventListener('click',function(){openEvent(null);});
+  $('#evClose').addEventListener('click',function(){evdlg.close();});
+  evdlg.addEventListener('click',function(e){if(e.target===evdlg)evdlg.close();});
+  $('#evSave').addEventListener('click',function(){
+    var id=$('#ev_id').value,body={titre:$('#ev_titre').value.trim(),date:$('#ev_date').value,heures:$('#ev_heures').value,lieu:$('#ev_lieu').value,ville:$('#ev_ville').value,contact:$('#ev_contact').value,notes:$('#ev_notes').value,rappel:$('#ev_rappel').checked,statut:$('#ev_annule').checked?'annule':'prevu'};
+    if(!body.titre||!body.date){toast('Titre et date obligatoires',true);return;}
+    var b=this;b.classList.add('busy');
+    api(id?'evenements/'+id:'evenements',{method:id?'PUT':'POST',body:body}).then(function(){toast(id?'Événement modifié':'Événement ajouté à l\'agenda');evdlg.close();return api('evenements');}).then(function(e){evenements=e.evenements;renderAgenda();}).catch(function(err){toast(err.message,true);}).finally(function(){b.classList.remove('busy');});
+  });
+  $('#evDelete').addEventListener('click',function(){
+    if(this.dataset.confirm!=='1'){this.dataset.confirm='1';this.textContent='Confirmer la suppression';return;}
+    api('evenements/'+$('#ev_id').value,{method:'DELETE'}).then(function(){toast('Événement supprimé');evdlg.close();return api('evenements');}).then(function(e){evenements=e.evenements;renderAgenda();}).catch(function(err){toast(err.message,true);});
+  });
   document.addEventListener('click',function(e){
     var b=e.target.closest('button');if(!b)return;
     if(b.dataset.valider){
       if(b.dataset.confirm!=='1'){b.dataset.confirm='1';b.classList.add('armed');b.textContent='Confirmer la validation';setTimeout(function(){if(b.dataset.confirm==='1'){b.dataset.confirm='';b.classList.remove('armed');b.textContent='✓ Acompte reçu';}},4000);return;}
       b.classList.add('busy');api('devis/'+b.dataset.valider,{method:'PUT',body:{statut:'solde'}}).then(function(){toast('Privatisation confirmée ✓');return api('demandes');}).then(function(r){demandes=r.demandes;return loadDevis();}).then(function(){renderDemandes();}).catch(function(err){toast(err.message,true);});
     }
+    if(b.dataset.openevent){var ev=evenements.filter(function(x){return x.id===+b.dataset.openevent;})[0];if(ev)openEvent(ev);}
     if(b.dataset.godemande){filter='all';document.querySelector('#tabs button[data-tab="demandes"]').click();renderDemandes();var el=document.getElementById('dem-'+b.dataset.godemande);if(el){el.scrollIntoView({behavior:'smooth',block:'start'});el.style.outline='2px solid var(--cheddar)';setTimeout(function(){el.style.outline='';},2500);}}
   });
 

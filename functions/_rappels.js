@@ -37,8 +37,25 @@ export async function runRappels(env, { force = false, origin = '' } = {}) {
     const r = await sendTelegram(env, texte, 'rappels');
     if (r.ok) envoyes++;
   }
-  if (force && !rows.results.length) await sendTelegram(env, `✅ Rappels L'Arrêt Gourmand : rien à rappeler aujourd'hui (${dateFr(today)}). Le système fonctionne.`, 'rappels');
+  // événements publics (marchés, festivals…) créés dans l'agenda, avec rappel activé
+  const evs = await env.DB.prepare("SELECT * FROM evenements WHERE statut = 'prevu' AND rappel = 1 AND date IN (?, ?, ?) ORDER BY date").bind(...dates).all();
+  for (const e of evs.results) {
+    const [, label] = horizons[dates.indexOf(e.date)];
+    const dt = new Date(e.date + 'T12:00:00Z');
+    const texte = [
+      `🎪 Événement ${label} · ${JOURS[dt.getUTCDay()]} ${dateFr(e.date)}${e.heures ? ' · 🕒 ' + e.heures : ''}`,
+      `📌 ${e.titre}`,
+      [e.lieu, e.ville].filter(Boolean).length ? `📍 ${[e.lieu, e.ville].filter(Boolean).join(', ')}` : '',
+      e.contact ? `👤 ${e.contact}` : '',
+      e.notes ? `📝 ${String(e.notes).slice(0, 300)}` : '',
+      origin ? `${origin}/admin` : '',
+    ].filter(Boolean).join('\n');
+    const r = await sendTelegram(env, texte, 'rappels');
+    if (r.ok) envoyes++;
+  }
+  const total = rows.results.length + evs.results.length;
+  if (force && !total) await sendTelegram(env, `✅ Rappels L'Arrêt Gourmand : rien à rappeler aujourd'hui (${dateFr(today)}). Le système fonctionne.`, 'rappels');
   const up = (k, v) => env.DB.prepare('INSERT INTO reglages (cle, valeur) VALUES (?, ?) ON CONFLICT(cle) DO UPDATE SET valeur = excluded.valeur').bind(k, v);
   await env.DB.batch([up('rappels_jour', force ? (rp.rappels_jour || '') : today), up('rappels_dernier', new Date().toISOString().slice(0, 19).replace('T', ' ')), up('rappels_envoyes', String(envoyes))]);
-  return { ok: true, envoyes, trouves: rows.results.length };
+  return { ok: true, envoyes, trouves: total };
 }

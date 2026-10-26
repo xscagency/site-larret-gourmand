@@ -21,6 +21,10 @@
 //   POST   /api/admin/devis/:id/envoyer     { pdf_base64 } → e-mail au client avec le PDF (Resend)
 //   POST   /api/admin/devis/:id/facturer    crée la facture d'un devis validé (type 'facture', numéro F + date + compteur)
 //   POST   /api/admin/devis/:id/relancer    { email_objet, email_corps } → e-mail de relance avec le PDF archivé
+//   GET    /api/admin/evenements             événements publics (marchés, festivals…) à venir et des 60 derniers jours
+//   POST   /api/admin/evenements             { titre, date, heures, lieu, ville, contact, notes, rappel }
+//   PUT    /api/admin/evenements/:id         mêmes champs + statut ('prevu' | 'annule')
+//   DELETE /api/admin/evenements/:id
 //   POST   /api/admin/rappels                { force } → rappels Telegram des privatisations (J-7, J-1, jour J à 9h) ; appelé chaque matin par GitHub Actions
 //   GET    /api/admin/distance?q=adresse    km routiers depuis Verneuil-sur-Seine
 //   GET    /api/admin/alertes               abonnés (compteurs) + historique des envois
@@ -32,6 +36,7 @@ import { computeTotals, nextNumero, MOMENTS, dateFr, fillTemplate, distanceKm, s
 import { getVapid, sendPush, SUJETS, cleAbonne, typeAppareil } from '../../_push.js';
 import { telegramConfig, detectChat } from '../../_telegram.js';
 import { runRappels } from '../../_rappels.js';
+import { addDays } from '../../_lib.js';
 
 function authorized(request, env) {
   const h = request.headers.get('authorization') || '';
@@ -344,6 +349,43 @@ export async function onRequest({ request, env, params }) {
     const r = await sendDevisEmail(env, { ...cur, email_objet: objet, email_corps: corps }, b64);
     if (!r.ok) return json(r, 400);
     await env.DB.prepare("UPDATE devis SET relances = relances + 1, relance_le = datetime('now') WHERE id = ?").bind(cur.id).run();
+    return json({ ok: true });
+  }
+  // ---- Événements publics sans devis (marchés, festivals, fêtes de village…)
+  if (route === 'evenements' && method === 'GET') {
+    const r = await env.DB.prepare('SELECT * FROM evenements WHERE date >= ? ORDER BY date, id').bind(addDays(todayParis(), -60)).all();
+    return json({ ok: true, evenements: r.results.map((e) => ({ ...e, rappel: !!e.rappel })) });
+  }
+  const evBody = (cur) => ({
+    titre: body.titre !== undefined ? str(body.titre, 120) : cur.titre,
+    date: isoDate(body.date) || cur.date,
+    heures: body.heures !== undefined ? str(body.heures, 60) : cur.heures,
+    lieu: body.lieu !== undefined ? str(body.lieu, 200) : cur.lieu,
+    ville: body.ville !== undefined ? str(body.ville, 80) : cur.ville,
+    contact: body.contact !== undefined ? str(body.contact, 160) : cur.contact,
+    notes: body.notes !== undefined ? str(body.notes, 2000) : cur.notes,
+    rappel: body.rappel !== undefined ? bool(body.rappel) : cur.rappel,
+    statut: ['prevu', 'annule'].includes(body.statut) ? body.statut : cur.statut,
+  });
+  if (route === 'evenements' && method === 'POST') {
+    const e = evBody({ titre: '', date: null, heures: '', lieu: '', ville: '', contact: '', notes: '', rappel: 1, statut: 'prevu' });
+    if (!e.titre || !e.date) return json({ ok: false, error: 'Titre et date obligatoires.' }, 400);
+    const ins = await env.DB.prepare('INSERT INTO evenements (titre, date, heures, lieu, ville, contact, notes, rappel, statut) VALUES (?,?,?,?,?,?,?,?,?) RETURNING *')
+      .bind(e.titre, e.date, e.heures, e.lieu, e.ville, e.contact, e.notes, e.rappel, e.statut).first();
+    return json({ ok: true, evenement: { ...ins, rappel: !!ins.rappel } });
+  }
+  m = route.match(/^evenements\/(\d+)$/);
+  if (m && method === 'PUT') {
+    const cur = await env.DB.prepare('SELECT * FROM evenements WHERE id = ?').bind(Number(m[1])).first();
+    if (!cur) return json({ ok: false, error: 'Événement inconnu.' }, 404);
+    const e = evBody(cur);
+    if (!e.titre || !e.date) return json({ ok: false, error: 'Titre et date obligatoires.' }, 400);
+    await env.DB.prepare('UPDATE evenements SET titre = ?, date = ?, heures = ?, lieu = ?, ville = ?, contact = ?, notes = ?, rappel = ?, statut = ? WHERE id = ?')
+      .bind(e.titre, e.date, e.heures, e.lieu, e.ville, e.contact, e.notes, e.rappel, e.statut, cur.id).run();
+    return json({ ok: true });
+  }
+  if (m && method === 'DELETE') {
+    await env.DB.prepare('DELETE FROM evenements WHERE id = ?').bind(Number(m[1])).run();
     return json({ ok: true });
   }
   // ---- Rappels Telegram : test forcé depuis l'admin (la tâche quotidienne passe par /api/rappels/tick)
