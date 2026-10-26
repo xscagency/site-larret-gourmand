@@ -38,7 +38,7 @@ const num = (v, def = 0) => (v === '' || v === null || v === undefined || Number
 const bool = (v) => (v === true || v === 1 || v === '1' || v === 'true' ? 1 : 0);
 const isoDate = (s) => /^\d{4}-\d{2}-\d{2}$/.test(s || '') ? s : null;
 const str = (v, max) => String(v ?? '').trim().slice(0, max);
-const photoPath = (v) => { const s = str(v, 300); return /^\/(img|photos)\/[A-Za-z0-9._-]+$/.test(s) ? s : ''; };
+const photoPath = (v) => { const s = str(v, 300); return /^\/(img|photos|f)\/[A-Za-z0-9._-]+$/.test(s) ? s : ''; };
 
 export async function onRequest({ request, env, params }) {
   if (!authorized(request, env)) return json({ ok: false, error: 'Accès refusé.' }, 401);
@@ -63,13 +63,20 @@ export async function onRequest({ request, env, params }) {
 
   // ---- Photo : envoi vers R2
   if (route === 'photo' && method === 'POST') {
-    if (!env.PHOTOS) return json({ ok: false, error: 'Stockage des photos non configuré (bucket R2 "PHOTOS").' }, 500);
     const type = request.headers.get('content-type') || '';
     const ext = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' }[type];
     if (!ext) return json({ ok: false, error: 'Format accepté : JPEG, PNG ou WebP.' }, 400);
     const buf = await request.arrayBuffer();
     if (buf.byteLength > 6 * 1024 * 1024) return json({ ok: false, error: 'Photo trop lourde (6 Mo max).' }, 400);
     const base = slugify((request.headers.get('x-filename') || 'photo').replace(/\.[a-z0-9]+$/i, ''));
+    if (!env.PHOTOS) {
+      // pas de stockage R2 : la photo (déjà réduite par le navigateur) est gardée dans la base, servie par /f/…
+      if (buf.byteLength > 1.5 * 1024 * 1024) return json({ ok: false, error: 'Photo trop lourde pour le stockage actuel (1,5 Mo max).' }, 400);
+      await loadState(env);
+      const token = Array.from(crypto.getRandomValues(new Uint8Array(8)), (b) => b.toString(16).padStart(2, '0')).join('');
+      const ins = await env.DB.prepare('INSERT INTO fichiers (token, type, nom, taille, data) VALUES (?, ?, ?, ?, ?) RETURNING id').bind(token, type, base, buf.byteLength, buf).first();
+      return json({ ok: true, path: `/f/${ins.id}-${token}.${ext}` });
+    }
     const key = `${Date.now().toString(36)}-${base}.${ext}`;
     await env.PHOTOS.put(key, buf, { httpMetadata: { contentType: type, cacheControl: 'public, max-age=31536000, immutable' } });
     return json({ ok: true, path: `/photos/${key}` });

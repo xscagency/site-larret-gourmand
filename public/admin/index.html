@@ -230,6 +230,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
 .al-photo--none span:first-of-type{display:grid;place-items:center;background:var(--brun);border-color:var(--line);font-size:.72rem}
 .al-photo:has(input:checked) img,.al-photo--none:has(input:checked) span:first-of-type{border-color:var(--cheddar);box-shadow:0 0 0 2px rgba(243,173,63,.3)}
 .al-photo:has(input:checked){color:var(--cheddar)}
+.al-upload{display:flex;align-items:center;gap:10px;margin-top:10px;font-size:.86rem}
 .al-preview img.al-preview__big{grid-column:1/-1;width:100%;height:150px;object-fit:cover;border-radius:10px;margin-top:4px}
 .al-form__foot{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;align-items:center}
 @media (max-width:640px){.al-form__foot{grid-template-columns:1fr}}
@@ -603,7 +604,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
         <label class="f">Sujet<select id="alSujet"><option value="service">Où est le camion ce soir</option><option value="annulation">Annulation / changement</option><option value="burger">Nouveau burger / burger du moment</option><option value="offres">Offre / bon plan</option><option value="concours">Concours</option></select></label>
         <label class="f">Titre <span class="cnt" id="alTitreN">0 / 60</span><input id="alTitre" type="text" maxlength="60" placeholder="Ex. : Ce soir : Triel-sur-Seine"></label>
         <label class="f">Message <span class="cnt" id="alCorpsN">0 / 180</span><textarea id="alCorps" rows="3" maxlength="180" placeholder="Ex. : Centre commercial des Châtelaines, de 19h à 20h30. À tout à l'heure !"></textarea></label>
-        <div class="f"><span>Photo <small class="muted">(affichée sous le texte sur Android ; l'iPhone montre seulement l'icône)</small></span><div class="al-photos" id="alPhotos"></div></div>
+        <div class="f"><span>Photo <small class="muted">(affichée sous le texte sur Android ; l'iPhone montre seulement l'icône)</small></span><div class="al-photos" id="alPhotos"></div><div class="al-upload"><label class="btn sm" for="alFile">📷 Envoyer une photo</label><input type="file" id="alFile" accept="image/*" hidden><span class="muted" id="alFileInfo"></span></div></div>
         <div class="f"><span>Villes concernées</span><div class="al-villes" id="alVilles"></div><span class="muted" style="font-size:.84rem">Les abonnés « toutes les villes » reçoivent chaque alerte, quelle que soit la ville cochée.</span></div>
         <div class="al-form__foot">
           <div class="al-preview" id="alPreview" aria-hidden="true"><img src="/img/icon-192.png" alt=""><div><b id="alPvT">Titre</b><span id="alPvC">Le message tel qu'il apparaîtra sur le téléphone</span></div><small>maintenant</small><img class="al-preview__big" id="alPvImg" alt="" hidden></div>
@@ -690,7 +691,17 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
 
   // ---------- alertes sur téléphone
   var SUJETS_LIB={service:'Où est le camion ce soir',annulation:'Annulation / changement',burger:'Nouveau burger',offres:'Offre',concours:'Concours'};
-  var alData=null;
+  var alData=null,alCustomPhoto='';
+  // photo envoyée pour une alerte : réduite dans le navigateur (1000 px, JPEG) puis stockée
+  $('#alFile').addEventListener('change',function(){
+    var f=this.files[0];if(!f)return;var info=$('#alFileInfo');info.textContent='Préparation…';
+    resizeImage(f,1000).then(function(blob){info.textContent='Envoi…';return fetch('/api/admin/photo',{method:'POST',headers:{'authorization':'Bearer '+token,'content-type':'image/jpeg','x-filename':f.name},body:blob}).then(function(r){return r.json();});})
+      .then(function(r){if(!r.ok)throw new Error(r.error||'Envoi impossible');alCustomPhoto=r.path;info.textContent='Photo prête ✓';
+        var lab=document.createElement('label');lab.className='al-photo';lab.innerHTML='<input type="radio" name="alPhoto" value="'+esc(r.path)+'" checked><img src="'+esc(r.path)+'" alt=""><span>Photo envoyée</span>';
+        var old=document.querySelector('#alPhotos .al-photo--custom');if(old)old.remove();lab.classList.add('al-photo--custom');$('#alPhotos').insertBefore(lab,$('#alPhotos').children[1]||null);updateCible();})
+      .catch(function(err){info.textContent=err.message;toast(err.message,true);});
+    this.value='';
+  });
   function bars(obj,total,extra){var keys=Object.keys(obj);if(extra)keys=extra.concat(keys.filter(function(k){return extra.indexOf(k)<0;}));return '<div class="al-bars">'+keys.map(function(k){var n=obj[k]||0;return '<div class="al-bar"><span>'+esc(k)+'</span><b>'+n+'</b><i style="--w:'+(total?Math.round(n/total*100):0)+'%"></i></div>';}).join('')+'</div>';}
   function renderAlertes(){
     return api('alertes').then(function(r){
@@ -705,7 +716,8 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
       var cur=Array.prototype.slice.call(document.querySelectorAll('#alVilles input:checked')).map(function(i){return i.value;});
       $('#alVilles').innerHTML=vs.map(function(v){return '<label><input type="checkbox" value="'+esc(v)+'" '+(cur.length?(cur.indexOf(v)>=0?'checked':''):'checked')+'><span>'+esc(v)+'</span></label>';}).join('');
       var curP=(document.querySelector('#alPhotos input:checked')||{}).value||'';
-      $('#alPhotos').innerHTML='<label class="al-photo al-photo--none"><input type="radio" name="alPhoto" value="" '+(curP?'':'checked')+'><span>Sans photo</span></label>'+state.burgers.filter(function(b){return b.photo;}).map(function(b){return '<label class="al-photo"><input type="radio" name="alPhoto" value="'+esc(b.photo)+'" '+(curP===b.photo?'checked':'')+'><img src="'+esc(b.photo)+'" alt=""><span>'+esc(b.nom)+'</span></label>';}).join('');
+      var custom=alCustomPhoto?'<label class="al-photo"><input type="radio" name="alPhoto" value="'+esc(alCustomPhoto)+'" '+(curP===alCustomPhoto?'checked':'')+'><img src="'+esc(alCustomPhoto)+'" alt=""><span>Photo envoyée</span></label>':'';
+      $('#alPhotos').innerHTML='<label class="al-photo al-photo--none"><input type="radio" name="alPhoto" value="" '+(curP?'':'checked')+'><span>Sans photo</span></label>'+custom+state.burgers.filter(function(b){return b.photo;}).map(function(b){return '<label class="al-photo"><input type="radio" name="alPhoto" value="'+esc(b.photo)+'" '+(curP===b.photo?'checked':'')+'><img src="'+esc(b.photo)+'" alt=""><span>'+esc(b.nom)+'</span></label>';}).join('');
       renderTpls();
       $('#alHist').innerHTML=r.historique.length?alWeeks(r.historique):'<p class="empty">Aucune alerte envoyée pour l\'instant.</p>';
       updateCible();
