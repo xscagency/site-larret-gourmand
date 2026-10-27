@@ -644,6 +644,12 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
         <div class="cal" id="calGrid"></div>
         <div id="calDay"></div>
       </div>
+      <dialog id="calDlg">
+        <div class="card sheet" tabindex="-1" autofocus style="margin:0;width:min(640px,calc(100vw - 24px));display:grid;gap:12px;outline:none">
+          <div class="row"><h2 style="margin:0;text-transform:capitalize" id="calDlgTitle">Jour</h2><button class="btn sm" type="button" id="calDlgClose">Fermer</button></div>
+          <div id="calDlgBody" style="display:grid;gap:10px"></div>
+        </div>
+      </dialog>
     </section>
 
     <!-- Éditeur de devis -->
@@ -869,8 +875,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
     });
     html+=card({k:'🍔 Nouveau burger',sujet:'burger',titre:'Nouveau à la carte : …',corps:'Décrivez-le en une phrase gourmande. Dès ce soir !',villes:[]});
     html+=card({k:'🔥 Burger du moment',sujet:'burger',titre:'Le burger du moment : …',corps:'Pour quelques soirs seulement. Il est de retour !',villes:[]});
-    html+=card({k:'🏷️ Offre',sujet:'offres',titre:'Bon plan : …',corps:'Ex. : la frite offerte ce soir sur présentation de cette notification.',villes:[]});
-    html+=card({k:'🎁 Concours',sujet:'offres',titre:'Concours : …',corps:'Ex. : 5 burgers à gagner, participez sur notre page Facebook.',villes:[]});
+    html+=card({k:'🏷️ Offre / concours',sujet:'offres',titre:'Bon plan : …',corps:'Ex. : la frite offerte ce soir sur présentation de cette notification, ou 5 burgers à gagner sur notre page Facebook.',villes:[]});
     $('#alTpls').innerHTML=html;
     $('#alTpls').onclick=function(e){var b=e.target.closest('[data-tpl]');if(!b)return;var o=out.filter(function(x){return x.id===b.dataset.tpl;})[0];if(o)prefillAlerte(o.o);};
   }
@@ -1326,7 +1331,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
     $('#nAg').hidden=!items.length;$('#nAg').textContent=items.length;
     document.querySelectorAll('#agFilters button').forEach(function(b){b.classList.toggle('is-on',b.dataset.agf===agFilter);});
     document.querySelectorAll('#agView button').forEach(function(b){b.classList.toggle('is-on',b.dataset.agv===agView);});
-    $('#agenda').hidden=agView!=='liste';$('#agendaCal').hidden=agView!=='cal';
+    $('#agenda').hidden=agView!=='liste';$('#agendaCal').hidden=agView!=='cal';$('#agFilters').style.visibility=agView==='cal'?'hidden':'';
     if(agView==='cal'){renderAgendaCal(items,today);return;}
     var list=items.filter(function(i){return agFilter==='all'||(agFilter==='event'?i.kind==='event':agFilter==='conf'?(i.conf&&i.kind!=='event'):(!i.conf&&i.kind!=='event'));});
     if(!list.length){$('#agenda').innerHTML='<p class="empty">'+(items.length?'Rien dans cette catégorie.':'Aucune privatisation à venir pour le moment. Les devis et les demandes qui ont une date apparaissent ici automatiquement.')+'</p>';return;}
@@ -1354,10 +1359,20 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
       html+='<div class="cal__m"><div class="cal__t"><span>'+MOIS[mm]+' '+yy+'</span><small>'+(cnt?cnt+' date'+(cnt>1?'s':''):'')+'</small></div><div class="cal__g"><span class="cal__w">L</span><span class="cal__w">M</span><span class="cal__w">M</span><span class="cal__w">J</span><span class="cal__w">V</span><span class="cal__w">S</span><span class="cal__w">D</span>'+cells+'</div></div>';
     }
     $('#calGrid').innerHTML=html;
-    var day=items.filter(function(i){return i.date===calSel;});
-    $('#calDay').innerHTML=calSel?(day.length?'<div class="agm">'+dateFr(calSel)+'</div>'+day.map(function(i){return agCard(i,today);}).join(''):''):'<p class="muted" style="margin:0">Cliquez sur un jour coloré pour voir le détail.</p>';
+    $('#calDay').innerHTML='<p class="muted" style="margin:0">Cliquez sur un jour coloré pour voir ce qui s\'y passe.</p>';
   }
-  $('#calGrid').addEventListener('click',function(e){var c=e.target.closest('[data-calday]');if(!c)return;calSel=calSel===c.dataset.calday?'':c.dataset.calday;renderAgenda();});
+  // clic sur un jour : ses privatisations / événements dans une fenêtre
+  var caldlg=$('#calDlg');
+  function openCalDay(iso){
+    calSel=iso;var items=agendaItems().filter(function(i){return i.date===iso;});
+    $('#calDlgTitle').textContent=dateFr(iso);
+    $('#calDlgBody').innerHTML=items.length?items.map(function(i){return agCard(i,state.today);}).join(''):'<p class="empty">Rien ce jour-là.</p>';
+    caldlg.showModal();setTimeout(function(){var a=document.activeElement;if(a&&a.tagName!=='DIV')a.blur();},0);
+  }
+  $('#calGrid').addEventListener('click',function(e){var c=e.target.closest('[data-calday]');if(!c)return;openCalDay(c.dataset.calday);});
+  $('#calDlgClose').addEventListener('click',function(){caldlg.close();});
+  caldlg.addEventListener('click',function(e){if(e.target===caldlg)caldlg.close();});
+  caldlg.addEventListener('close',function(){calSel='';if(agView==='cal')renderAgenda();});
   $('#agView').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;agView=b.dataset.agv;try{localStorage.setItem('lag_agenda_vue',agView);}catch(err){}renderAgenda();});
   $('#agFilters').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;agFilter=b.dataset.agf;renderAgenda();});
   // ---- événements publics (sans devis)
