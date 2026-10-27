@@ -15,7 +15,7 @@ jobs:
     steps:
       - name: Appeler le site
         env:
-          SITE_URL: ${{ vars.SITE_URL || 'https://site-larret-gourmand.pages.dev' }}
+          SITE_URL: ${{ vars.SITE_URL || 'https://www.larretgourmand.com' }}
         run: curl -fsS -X POST "$SITE_URL/api/rappels/tick" 
   # GitHub coupe les tâches planifiées d'un dépôt sans activité depuis 60 jours : un commit vide le 1er du mois les maintient en vie.
   keepalive:

@@ -67,6 +67,13 @@ export async function onRequest(context) {
   const { request, env, next } = context;
   const url = new URL(request.url);
 
+  // Une seule adresse publique : www.larretgourmand.com. L'adresse technique pages.dev et le domaine sans www y renvoient
+  // (les appels /api/ ne sont pas redirigés : la tâche des rappels et les téléphones déjà abonnés sur pages.dev continuent de fonctionner).
+  const CANON = 'www.larretgourmand.com';
+  if ((url.hostname === 'larretgourmand.com' || url.hostname.endsWith('.pages.dev')) && !url.pathname.startsWith('/api/')) {
+    return Response.redirect(`https://${CANON}${url.pathname}${url.search}`, 301);
+  }
+
   // Les API, les photos et les fichiers (images, admin…) passent sans modification
   if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/admin') || url.pathname.startsWith('/photos/') || /\.[a-z0-9]+$/i.test(url.pathname)) {
     return next();
