@@ -206,9 +206,9 @@ Je reste à votre disposition par mail ou par téléphone au 06 83 82 71 49.
 
 Cordialement,
 Sylvain'),
-    ('devis_contact_email','contact@larretgalette.com'),
+    ('devis_contact_email','contact@larretgourmand.com'),
     ('devis_km_tarif',     '1'),
-    ('schema_version',     '13')`,
+    ('schema_version',     '14')`,
 ];
 
 // Crée les tables et les données de départ (sans toucher à ce qui existe déjà)
@@ -219,7 +219,7 @@ export async function ensureSchema(env) {
 
 // Mises à jour appliquées une seule fois sur une base déjà en ligne (numérotées, dans l'ordre).
 // Une base neuve reçoit directement le schéma complet ; une base existante rattrape les versions manquantes.
-export const SCHEMA_VERSION = 13;
+export const SCHEMA_VERSION = 14;
 export const MIGRATIONS = {
   1: ['ALTER TABLE demandes ADD COLUMN moment TEXT'],
   2: ['ALTER TABLE demandes ADD COLUMN adresse TEXT', 'ALTER TABLE demandes ADD COLUMN code_postal TEXT', 'ALTER TABLE demandes ADD COLUMN ville TEXT',
@@ -308,6 +308,7 @@ Je reste à votre disposition par mail ou par téléphone au 06 83 82 71 49.
 Cordialement,
 Sylvain')`],
   13: [TABLE_EVENEMENTS],
+  14: ["UPDATE abonnes SET sujets = replace(sujets, '\"concours\"', '\"offres\"')", "UPDATE reglages SET valeur = 'contact@larretgourmand.com' WHERE cle = 'devis_contact_email'"],
 };
 export async function applyMigrations(env, from = 0) {
   for (let v = from + 1; v <= SCHEMA_VERSION; v++) {

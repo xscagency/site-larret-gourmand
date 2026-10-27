@@ -45,7 +45,20 @@ export function fillTemplate(tpl, v) {
 const ORIGINE = { lat: 48.9765, lon: 1.9745 }; // Verneuil-sur-Seine
 export async function distanceKm(adresse) {
   const ua = { 'User-Agent': 'larretgourmand.com admin (contact@larretgourmand.com)', 'Accept-Language': 'fr' };
-  const geo = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=fr&q=${encodeURIComponent(adresse)}`, { headers: ua }).then((r) => r.json()).catch(() => null);
+  // On géocode sur le code postal + la ville (fiable), pas sur l'adresse complète (souvent introuvable) ; l'adresse complète reste affichée sur le devis.
+  const m = /(\d{5})\s*[-,]?\s*([A-Za-zÀ-ÿ'’ -]+)/.exec(adresse || '');
+  const tries = [];
+  if (m) {
+    const cp = m[1], ville = m[2].trim().replace(/\s+(cedex.*)$/i, '');
+    tries.push(`postalcode=${encodeURIComponent(cp)}&city=${encodeURIComponent(ville)}&country=France`);
+    tries.push(`q=${encodeURIComponent(cp + ' ' + ville)}`);
+  }
+  tries.push(`q=${encodeURIComponent(adresse)}`);
+  let geo = null;
+  for (const t of tries) {
+    geo = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=fr&${t}`, { headers: ua }).then((r) => r.json()).catch(() => null);
+    if (geo && geo[0]) break;
+  }
   if (!geo || !geo[0]) return null;
   const { lat, lon, display_name } = geo[0];
   const route = await fetch(`https://router.project-osrm.org/route/v1/driving/${ORIGINE.lon},${ORIGINE.lat};${lon},${lat}?overview=false`, { headers: ua }).then((r) => r.json()).catch(() => null);

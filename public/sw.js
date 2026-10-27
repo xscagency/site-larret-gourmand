@@ -55,6 +55,6 @@ self.addEventListener('pushsubscriptionchange', (e) => {
     }
     let prefs = {};
     if (old) { try { const r = await fetch('/api/alertes/etat', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ endpoint: old.endpoint }) }); prefs = (await r.json()).abonne || {}; } catch (err) {} }
-    await fetch('/api/alertes/abonner', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ subscription: sub.toJSON(), villes: prefs.villes || [], sujets: prefs.sujets || ['service', 'annulation', 'burger', 'offres', 'concours'], silencieux: true }) });
+    await fetch('/api/alertes/abonner', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ subscription: sub.toJSON(), villes: prefs.villes || [], sujets: prefs.sujets || ['service', 'annulation', 'burger', 'offres'], silencieux: true }) });
   })());
 });

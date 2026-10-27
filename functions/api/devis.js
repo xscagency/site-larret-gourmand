@@ -82,10 +82,17 @@ export async function onRequestPost({ request, env }) {
       <table style="font-family:sans-serif;border-collapse:collapse">${lignes.map(([k, v]) => `<tr><td style="padding:4px 12px 4px 0;color:#666">${esc(k)}</td><td style="padding:4px 0"><b>${esc(v)}</b></td></tr>`).join('')}</table>
       ${d.message ? `<p style="font-family:sans-serif;white-space:pre-wrap;border-left:3px solid #D6402F;padding-left:12px">${esc(d.message)}</p>` : ''}
       <p style="font-family:sans-serif;color:#666">Répondre : <a href="mailto:${esc(d.email)}">${esc(d.email)}</a> · <a href="tel:${esc(d.tel)}">${esc(d.tel)}</a></p>`;
+    const recap = [
+      ['Type d\'événement', d.type], ['Date souhaitée', d.date_event], ['Moment', d.moment], ['Nombre de convives', d.convives], ['Adresse', d.lieu],
+    ].filter(([, v]) => v);
     const htmlClient = `
-      <p style="font-family:sans-serif">Bonjour ${esc(d.nom)},</p>
-      <p style="font-family:sans-serif">Nous avons bien reçu votre demande${d.type ? ` pour votre ${esc(d.type.toLowerCase())}` : ''}${d.date_event ? ` (${esc(d.date_event)})` : ''}. Nous vous contacterons par mail ou téléphone dans les plus brefs délais.</p>
-      <p style="font-family:sans-serif">À bientôt,<br>L'Arrêt Gourmand<br>Food-Truck Burger (78) • Since 2014<br>07 82 54 98 29</p>`;
+      <div style="font-family:Arial,sans-serif;font-size:15px;line-height:1.55;color:#222">
+      <p>Bonjour ${esc(d.nom)},</p>
+      <p>Nous avons bien reçu votre demande et nous vous contacterons par mail ou par téléphone dans les plus brefs délais.</p>
+      ${recap.length ? `<p style="margin:14px 0 6px;color:#666">Récapitulatif de votre demande :</p><table style="border-collapse:collapse">${recap.map(([k, v]) => `<tr><td style="padding:3px 12px 3px 0;color:#666">${esc(k)}</td><td style="padding:3px 0"><b>${esc(v)}</b></td></tr>`).join('')}</table>` : ''}
+      ${d.message ? `<p style="white-space:pre-wrap;border-left:3px solid #E86010;padding-left:12px;color:#444">${esc(d.message)}</p>` : ''}
+      <p style="margin-top:18px">À bientôt,<br>L'Arrêt Gourmand</p>
+      </div>`;
 
     const send = (payload) => fetch('https://api.resend.com/emails', {
       method: 'POST',

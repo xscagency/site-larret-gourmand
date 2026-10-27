@@ -93,8 +93,7 @@ export const SUJETS = {
   service: 'Où est le camion ce soir',
   annulation: 'Annulations et changements',
   burger: 'Nouveaux burgers et burger du moment',
-  offres: 'Offres et bons plans',
-  concours: 'Concours',
+  offres: 'Offres et concours',
 };
 
 // Clé courte (empreinte) d'un abonnement, pour le suivi sans stocker l'adresse en clair une seconde fois
