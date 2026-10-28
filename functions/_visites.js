@@ -28,6 +28,7 @@ async function interroger(env, jours) {
     pays: ${grp('countryName', 6, 'count_DESC')}
     heures: ${grp('datetimeHour', 1000, 'datetimeHour_ASC')}
     navigateurs: ${grp('userAgentBrowser', 6, 'count_DESC')}
+    vitesse: rumPerformanceEventsAdaptiveGroups(limit: 1, filter: {datetime_geq: "${iso(from)}", datetime_leq: "${iso(to)}", requestPath_notlike: "/admin%"${env.CF_SITE_TAG ? `, siteTag: "${hex(env.CF_SITE_TAG)}"` : ''}}) { count quantiles { firstContentfulPaintP50 pageLoadTimeP50 pageLoadTimeP75 } }
   } } }`;
   const res = await fetch(GQL, { method: 'POST', headers: { authorization: `Bearer ${env.CF_API_TOKEN}`, 'content-type': 'application/json' }, body: JSON.stringify({ query }) });
   const data = await res.json().catch(() => ({}));
@@ -70,6 +71,8 @@ export function formatVisites(acc, jours, maintenant = new Date()) {
     navigateurs: liste(acc.navigateurs, 'userAgentBrowser', (b) => b || 'Autre'),
     heures,
     jours_semaine: parJourSemaine,
+    // temps mesurés dans le navigateur des visiteurs (microsecondes → millisecondes)
+    vitesse: acc.vitesse && acc.vitesse[0] && acc.vitesse[0].quantiles ? { mesures: n(acc.vitesse[0].count), affichage: Math.round(n(acc.vitesse[0].quantiles.firstContentfulPaintP50) / 1000), chargement: Math.round(n(acc.vitesse[0].quantiles.pageLoadTimeP50) / 1000), chargement75: Math.round(n(acc.vitesse[0].quantiles.pageLoadTimeP75) / 1000) } : null,
     periode: jours,
     maj: maintenant.toISOString(),
   };
