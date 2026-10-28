@@ -37,6 +37,7 @@ import { getVapid, sendPush, SUJETS, cleAbonne, typeAppareil } from '../../_push
 import { telegramConfig, detectChat } from '../../_telegram.js';
 import { runRappels } from '../../_rappels.js';
 import { getVisites } from '../../_visites.js';
+import { getSearchConsole } from '../../_google.js';
 import { addDays } from '../../_lib.js';
 
 function authorized(request, env) {
@@ -85,6 +86,14 @@ export async function onRequest({ request, env, params }) {
     const u = new URL(request.url);
     const jours = u.searchParams.get('jours') === '90' ? 90 : 30;
     try { return json({ ok: true, ...(await getVisites(env, { jours, force: u.searchParams.get('force') === '1' })) }); }
+    catch (e) { return json({ ok: true, configure: true, erreur: String(e.message || e) }); }
+  }
+
+  // ---- Google Search Console (requêtes, clics, impressions) pour le tableau de bord
+  if (route === 'google' && method === 'GET') {
+    const u = new URL(request.url);
+    const jours = u.searchParams.get('jours') === '90' ? 90 : 28;
+    try { return json({ ok: true, ...(await getSearchConsole(env, { jours, force: u.searchParams.get('force') === '1' })) }); }
     catch (e) { return json({ ok: true, configure: true, erreur: String(e.message || e) }); }
   }
 
