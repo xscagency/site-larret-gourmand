@@ -63,6 +63,23 @@ export function formatVisites(acc, jours, maintenant = new Date()) {
   };
 }
 
+// En cas de refus de Cloudflare, on précise d'où vient le problème (jeton ou identifiant de compte)
+async function diagnostiquer(env, erreur) {
+  const h = { authorization: `Bearer ${env.CF_API_TOKEN}` };
+  let msg = erreur;
+  try {
+    const v = await fetch('https://api.cloudflare.com/client/v4/user/tokens/verify', { headers: h }).then((r) => r.json());
+    if (!v.success) return `${erreur} — le jeton CF_API_TOKEN est refusé par Cloudflare (${(v.errors && v.errors[0] && v.errors[0].message) || 'invalide'}) : vérifiez qu'il a été collé en entier.`;
+    if (v.result && v.result.status !== 'active') return `${erreur} — le jeton existe mais n'est pas actif (${v.result.status}).`;
+    const a = await fetch('https://api.cloudflare.com/client/v4/accounts?per_page=20', { headers: h }).then((r) => r.json());
+    const comptes = (a.result || []).map((x) => `${x.name} (${x.id})`);
+    const vise = hex(env.CF_ACCOUNT_ID);
+    if (a.success && comptes.length && !(a.result || []).some((x) => x.id === vise)) return `${erreur} — le jeton est valide mais ne donne pas accès au compte ${vise}. Comptes qu'il voit : ${comptes.join(', ')}.`;
+    msg = `${erreur} — le jeton est valide${comptes.length ? ` et voit le compte ${vise}` : ''}, mais il lui manque l'autorisation « Account Analytics : Read » (dans Mon profil → API Tokens → modifier le jeton « Stats site »).`;
+  } catch (e) { /* diagnostic impossible : on garde l'erreur d'origine */ }
+  return msg;
+}
+
 export async function getVisites(env, { jours = 30, force = false } = {}) {
   if (!visitesConfigurees(env)) return { configure: false };
   const cle = `visites_cache_${jours}`;
@@ -75,7 +92,9 @@ export async function getVisites(env, { jours = 30, force = false } = {}) {
       } catch (e) { /* cache illisible : on réinterroge */ }
     }
   }
-  const acc = await interroger(env, jours);
+  let acc;
+  try { acc = await interroger(env, jours); }
+  catch (e) { throw new Error(await diagnostiquer(env, String(e.message || e))); }
   const data = formatVisites(acc, jours);
   await env.DB.prepare('INSERT INTO reglages (cle, valeur) VALUES (?, ?) ON CONFLICT(cle) DO UPDATE SET valeur = excluded.valeur').bind(cle, JSON.stringify(data)).run();
   return { configure: true, ...data };
