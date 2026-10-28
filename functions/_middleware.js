@@ -14,7 +14,7 @@ const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '
 const fmt = (n) => (Number.isInteger(n) ? String(n) : n.toFixed(2).replace('.', ',')) + ' €';
 const fmtSup = (n) => '+' + fmt(n);
 // Pour les photos livrées avec le site (/img/xxx.jpg), on propose les versions WebP (pleine et 640 px)
-const srcset = (photo) => /^\/img\/[A-Za-z0-9_-]+\.jpg$/.test(photo) ? ` srcset="${photo.replace('.jpg', '-640.webp')} 640w, ${photo.replace('.jpg', '.webp')} 1100w"` : '';
+const srcset = (photo) => /^\/img\/[A-Za-z0-9_-]+\.jpg$/.test(photo) ? ` srcset="${photo.replace('.jpg', '-640.webp')} 640w, ${photo.replace('.jpg', '-900.webp')} 900w, ${photo.replace('.jpg', '.webp')} 1100w"` : '';
 
 // ---- HTML de la carte (section Menu)
 function renderMenu(state) {
@@ -29,7 +29,7 @@ function renderMenu(state) {
     const prix = fmt(state.prix.burger + b.supplement); // prix du burger seul, supplément compris
     const sizes = i === 0 ? '(max-width: 980px) 100vw, 66vw' : '(max-width: 600px) 100vw, (max-width: 980px) 50vw, 33vw';
     return `<li class="${cls}" data-burger="${esc(b.id)}"${b.rupture ? ' data-rupture="1"' : ''}>
-  <div class="dish__img"><img src="${esc(b.photo || '/img/og.jpg')}"${srcset(b.photo)} sizes="${sizes}" alt="${esc(altPhoto(b.nom))}" width="1100" height="1100" loading="lazy" decoding="async"><span class="dish__price${b.supplement ? ' sup' : ''}">${prix}</span></div>
+  <div class="dish__img"><img data-src="${esc(b.photo || '/img/og.jpg')}"${srcset(b.photo).replace(' srcset=', ' data-srcset=')} sizes="${sizes}" alt="${esc(altPhoto(b.nom))}" width="1100" height="1100" loading="lazy" decoding="async"><span class="dish__price${b.supplement ? ' sup' : ''}">${prix}</span></div>
   <div class="dish__body"><h3>${esc(typo(b.nom))}</h3>${b.supplement ? `<span class="dish__sup">Supplément ${fmtSup(b.supplement)}</span>` : ''}${b.accroche ? `<span class="tag">${esc(typo(b.accroche))}</span>` : ''}<p class="ing">${esc(typo(b.description))}</p></div>
 </li>`;
   }).join('\n');
@@ -40,7 +40,7 @@ function renderShow(state) {
   const list = state.burgers.filter((b) => b.actif && b.photo);
   return list.map((b, i) => {
     const prix = fmt(state.prix.burger + b.supplement);
-    return `<figure${i === 0 ? ' class="is-on"' : ''} data-burger="${esc(b.id)}"${b.rupture ? ' data-rupture="1"' : ''} data-name="${esc(typo(b.nom))}" data-sub="${esc(typo(b.accroche || b.description.slice(0, 70)))}" data-prix="${prix}"><img src="${esc(b.photo)}"${srcset(b.photo)} sizes="(max-width: 900px) 92vw, 45vw" alt="${esc(altPhoto(b.nom))}" width="1100" height="1100"${i === 0 ? ' fetchpriority="high"' : ' loading="lazy" decoding="async"'}></figure>`;
+    return `<figure${i === 0 ? ' class="is-on"' : ''} data-burger="${esc(b.id)}"${b.rupture ? ' data-rupture="1"' : ''} data-name="${esc(typo(b.nom))}" data-sub="${esc(typo(b.accroche || b.description.slice(0, 70)))}" data-prix="${prix}"><img ${i === 0 ? `src="${esc(b.photo)}"${srcset(b.photo)}` : `data-src="${esc(b.photo)}"${srcset(b.photo).replace(' srcset=', ' data-srcset=')}`} sizes="(max-width: 900px) 92vw, 340px" alt="${esc(altPhoto(b.nom))}" width="1100" height="1100"${i === 0 ? ' fetchpriority="high"' : ' decoding="async"'}></figure>`;
   }).join('\n');
 }
 

@@ -101,6 +101,22 @@
   var pillCopy = document.querySelector('[data-pill-copy]');
   if (pillCopy && pillText) { pillCopy.textContent = pillText.textContent; if (pill && pill.classList.contains('is-off')) pillCopy.parentNode.classList.add('is-off'); }
 
+  // ---------- Photos différées : chargées quand elles approchent de l'écran ----------
+  (function () {
+    // fond photo de la bande « privatisation »
+    var priv = document.querySelector('.priv');
+    if (priv) {
+      if (!('IntersectionObserver' in window)) priv.classList.add('bg-in');
+      else { var iop = new IntersectionObserver(function (en) { en.forEach(function (e) { if (e.isIntersecting) { priv.classList.add('bg-in'); iop.disconnect(); } }); }, { rootMargin: '700px 0px' }); iop.observe(priv); }
+    }
+    var imgs = Array.prototype.slice.call(document.querySelectorAll('img[data-src]')).filter(function (i) { return !i.closest('#show'); });
+    if (!imgs.length) return;
+    var load = function (img) { if (!img.dataset.src) return; if (img.dataset.srcset) img.srcset = img.dataset.srcset; img.src = img.dataset.src; img.removeAttribute('data-src'); img.removeAttribute('data-srcset'); };
+    if (!('IntersectionObserver' in window)) { imgs.forEach(load); return; }
+    var io = new IntersectionObserver(function (entries) { entries.forEach(function (e) { if (e.isIntersecting) { load(e.target); io.unobserve(e.target); } }); }, { rootMargin: '500px 0px' });
+    imgs.forEach(function (i) { io.observe(i); });
+  })();
+
   // ---------- Carrousel du hero ----------
   var show = document.getElementById('show');
   if (show) {
@@ -114,8 +130,16 @@
         b.addEventListener('click', function () { go(i); restart(); });
         dots.appendChild(b);
       });
+      // les photos autres que la première ne sont chargées qu'au moment où elles vont apparaître (page plus légère)
+      var hydrate = function (k) {
+        var img = figs[(k + figs.length) % figs.length].querySelector('img[data-src]');
+        if (!img) return;
+        if (img.dataset.srcset) img.srcset = img.dataset.srcset;
+        img.src = img.dataset.src; img.removeAttribute('data-src'); img.removeAttribute('data-srcset');
+      };
       var go = function (i) {
         cur = (i + figs.length) % figs.length;
+        hydrate(cur); if (ready) hydrate(cur + 1);
         figs.forEach(function (f, k) { f.classList.toggle('is-on', k === cur); });
         dots.querySelectorAll('button').forEach(function (b, k) { b.classList.toggle('is-on', k === cur); });
         var f = figs[cur];
@@ -123,6 +147,9 @@
         sub.textContent = f.hasAttribute('data-rupture') ? 'Épuisé ce soir' : f.dataset.sub;
         price.textContent = f.dataset.prix || f.dataset.price || '';
       };
+      // la photo suivante n'est préparée qu'une fois la page chargée (premier affichage plus léger)
+      var ready = false;
+      window.addEventListener('load', function () { setTimeout(function () { ready = true; hydrate(cur + 1); }, 800); });
       var restart = function () { clearInterval(timer); if (!reduce) timer = setInterval(function () { go(cur + 1); }, 4500); };
       go(0);
       document.getElementById('showPrev').addEventListener('click', function () { go(cur - 1); restart(); });

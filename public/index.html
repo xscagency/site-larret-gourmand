@@ -22,10 +22,9 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="L'Arrêt Gourmand">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Rubik:wght@400;500;700&display=swap">
-<link rel="stylesheet" href="/assets/site.css?v=20261028f">
+<link rel="preload" href="/fonts/rubik-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/dm-serif-display-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/assets/site.css?v=20261028g">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -138,13 +137,13 @@
 
       <div class="show" id="show" aria-roledescription="carrousel" aria-label="Nos burgers">
         <div class="show__figures" data-show-figures>
-        <figure class="is-on" data-burger="original" data-name="L'Original" data-sub="Steak VG sur demande" data-prix="11 €"><img src="/img/original.jpg" srcset="/img/original-640.webp 640w, /img/original.webp 1100w" sizes="(max-width: 900px) 92vw, 45vw" alt="L'Original – Meilleur Restaurant Burger Carrières Poissy Verneuil Triel sur Seine – L'Arrêt Gourmand" width="1024" height="1024" fetchpriority="high"></figure>
-        <figure data-burger="americain" data-name="L'Américain" data-sub="Can I get some Burger ?" data-prix="12 €"><img src="/img/americain.jpg" srcset="/img/americain-640.webp 640w, /img/americain.webp 1100w" sizes="(max-width: 900px) 100vw, 45vw" alt="L'Américain – Meilleur Restaurant Burger Carrières Poissy Verneuil Triel sur Seine – L'Arrêt Gourmand" width="1100" height="1100" loading="lazy"></figure>
-        <figure data-burger="montagnard" data-name="Le Montagnard" data-sub="Restez sur les pistes avec Le Montagnard !" data-prix="11 €"><img src="/img/montagnard.jpg" srcset="/img/montagnard-640.webp 640w, /img/montagnard.webp 1100w" sizes="(max-width: 900px) 100vw, 45vw" alt="Le Montagnard – Meilleur Restaurant Burger Carrières Poissy Verneuil Triel sur Seine – L'Arrêt Gourmand" width="1100" height="1100" loading="lazy"></figure>
-        <figure data-burger="poulet" data-name="Le Poulet" data-sub="Votre nouveau burger au poulet préféré !" data-prix="11 €"><img src="/img/poulet.jpg" srcset="/img/poulet-640.webp 640w, /img/poulet.webp 1100w" sizes="(max-width: 900px) 100vw, 45vw" alt="Le Poulet – Meilleur Burger au poulet Carrières Poissy Verneuil Triel sur Seine – L'Arrêt Gourmand" width="1100" height="1100" loading="lazy"></figure>
-        <figure data-burger="bbq" data-name="Le BBQ" data-sub="Vous avez dit « une sauce BBQ » ?" data-prix="11 €"><img src="/img/bbq.jpg" srcset="/img/bbq-640.webp 640w, /img/bbq.webp 1100w" sizes="(max-width: 900px) 100vw, 45vw" alt="Le BBQ – Meilleur Restaurant Burger Carrières Poissy Verneuil Triel sur Seine – L'Arrêt Gourmand" width="1100" height="1100" loading="lazy"></figure>
-        <figure data-burger="dragon" data-name="Le Dragon" data-sub="Poivrons rouges épicés maison, sauce épicée maison" data-prix="11 €"><img src="/img/dragon.jpg" srcset="/img/dragon-640.webp 640w, /img/dragon.webp 1100w" sizes="(max-width: 900px) 100vw, 45vw" alt="Le Dragon – Meilleur Restaurant Burger Carrières Poissy Verneuil Triel sur Seine – L'Arrêt Gourmand" width="1024" height="1024" loading="lazy"></figure>
-        <figure data-burger="myko" data-name="Le Myko" data-sub="Le meilleur mélange sucré-salé dans un Burger !" data-prix="11 €"><img src="/img/myko.jpg" srcset="/img/myko-640.webp 640w, /img/myko.webp 1100w" sizes="(max-width: 900px) 100vw, 45vw" alt="Le Myko – Meilleur Restaurant Burger Carrières Poissy Verneuil Triel sur Seine – L'Arrêt Gourmand" width="1100" height="1100" loading="lazy"></figure>
+        <figure class="is-on" data-burger="original" data-name="L'Original" data-sub="Steak VG sur demande" data-prix="11 €"><img src="/img/original.jpg" srcset="/img/original-640.webp 640w, /img/original-900.webp 900w, /img/original.webp 1100w" sizes="(max-width: 900px) 92vw, 340px" alt="L'Original – Meilleur Restaurant Burger Carrières Poissy Verneuil Triel sur Seine – L'Arrêt Gourmand" width="1024" height="1024" fetchpriority="high"></figure>
+        <figure data-burger="americain" data-name="L'Américain" data-sub="Can I get some Burger ?" data-prix="12 €"><img data-src="/img/americain.jpg" data-srcset="/img/americain-640.webp 640w, /img/americain-900.webp 900w, /img/americain.webp 1100w" sizes="(max-width: 900px) 100vw, 45vw" alt="L'Américain – Meilleur Restaurant Burger Carrières Poissy Verneuil Triel sur Seine – L'Arrêt Gourmand" width="1100" height="1100"></figure>
+        <figure data-burger="montagnard" data-name="Le Montagnard" data-sub="Restez sur les pistes avec Le Montagnard !" data-prix="11 €"><img data-src="/img/montagnard.jpg" data-srcset="/img/montagnard-640.webp 640w, /img/montagnard-900.webp 900w, /img/montagnard.webp 1100w" sizes="(max-width: 900px) 100vw, 45vw" alt="Le Montagnard – Meilleur Restaurant Burger Carrières Poissy Verneuil Triel sur Seine – L'Arrêt Gourmand" width="1100" height="1100"></figure>
+        <figure data-burger="poulet" data-name="Le Poulet" data-sub="Votre nouveau burger au poulet préféré !" data-prix="11 €"><img data-src="/img/poulet.jpg" data-srcset="/img/poulet-640.webp 640w, /img/poulet-900.webp 900w, /img/poulet.webp 1100w" sizes="(max-width: 900px) 100vw, 45vw" alt="Le Poulet – Meilleur Burger au poulet Carrières Poissy Verneuil Triel sur Seine – L'Arrêt Gourmand" width="1100" height="1100"></figure>
+        <figure data-burger="bbq" data-name="Le BBQ" data-sub="Vous avez dit « une sauce BBQ » ?" data-prix="11 €"><img data-src="/img/bbq.jpg" data-srcset="/img/bbq-640.webp 640w, /img/bbq-900.webp 900w, /img/bbq.webp 1100w" sizes="(max-width: 900px) 100vw, 45vw" alt="Le BBQ – Meilleur Restaurant Burger Carrières Poissy Verneuil Triel sur Seine – L'Arrêt Gourmand" width="1100" height="1100"></figure>
+        <figure data-burger="dragon" data-name="Le Dragon" data-sub="Poivrons rouges épicés maison, sauce épicée maison" data-prix="11 €"><img data-src="/img/dragon.jpg" data-srcset="/img/dragon-640.webp 640w, /img/dragon-900.webp 900w, /img/dragon.webp 1100w" sizes="(max-width: 900px) 100vw, 45vw" alt="Le Dragon – Meilleur Restaurant Burger Carrières Poissy Verneuil Triel sur Seine – L'Arrêt Gourmand" width="1024" height="1024"></figure>
+        <figure data-burger="myko" data-name="Le Myko" data-sub="Le meilleur mélange sucré-salé dans un Burger !" data-prix="11 €"><img data-src="/img/myko.jpg" data-srcset="/img/myko-640.webp 640w, /img/myko-900.webp 900w, /img/myko.webp 1100w" sizes="(max-width: 900px) 100vw, 45vw" alt="Le Myko – Meilleur Restaurant Burger Carrières Poissy Verneuil Triel sur Seine – L'Arrêt Gourmand" width="1100" height="1100"></figure>
         </div>
         <figcaption><span class="chip" id="showName">L'Original<small id="showSub">Steak VG sur demande</small></span><span class="chip price" id="showPrice">11 €</span></figcaption>
         <div class="show__dots" id="showDots" role="tablist" aria-label="Choisir un burger"></div>
@@ -167,31 +166,31 @@
 
       <ul class="menu reveal-stagger" data-menu>
         <li class="dish dish--featured" data-burger="poulet">
-          <div class="dish__img"><img src="/img/poulet.jpg" srcset="/img/poulet-640.webp 640w, /img/poulet.webp 1100w" sizes="(max-width: 900px) 100vw, 45vw" alt="Le Poulet – Meilleur Burger au poulet Carrières Poissy Verneuil Triel sur Seine" width="1100" height="1100" loading="lazy"><span class="dish__price" data-prix-burger="poulet">11 €</span></div>
+          <div class="dish__img"><img src="/img/poulet.jpg" srcset="/img/poulet-640.webp 640w, /img/poulet-900.webp 900w, /img/poulet.webp 1100w" sizes="(max-width: 900px) 100vw, 45vw" alt="Le Poulet – Meilleur Burger au poulet Carrières Poissy Verneuil Triel sur Seine" width="1100" height="1100" loading="lazy"><span class="dish__price" data-prix-burger="poulet">11 €</span></div>
           <div class="dish__body"><h3>Le Poulet</h3><span class="tag">Votre nouveau burger au poulet préféré !</span><p class="ing">Un bun boulanger, du Poulet Français croustillant maison, du cheddar, une sauce Ranch maison, des oignons frits et du mesclun !</p></div>
         </li>
         <li class="dish" data-burger="americain">
-          <div class="dish__img"><img src="/img/americain.jpg" srcset="/img/americain-640.webp 640w, /img/americain.webp 1100w" sizes="(max-width: 900px) 100vw, 45vw" alt="L'Américain – Meilleur Restaurant Burger Carrières Poissy Verneuil Triel sur Seine" width="1100" height="1100" loading="lazy"><span class="dish__price sup" data-prix-burger="americain">+1 €</span></div>
+          <div class="dish__img"><img src="/img/americain.jpg" srcset="/img/americain-640.webp 640w, /img/americain-900.webp 900w, /img/americain.webp 1100w" sizes="(max-width: 900px) 100vw, 45vw" alt="L'Américain – Meilleur Restaurant Burger Carrières Poissy Verneuil Triel sur Seine" width="1100" height="1100" loading="lazy"><span class="dish__price sup" data-prix-burger="americain">+1 €</span></div>
           <div class="dish__body"><h3>L'Américain</h3><span class="tag">Can I get some Burger ?</span><p class="ing">Un bun boulanger, 150g de Bœuf Charolais Français, double cheddar, de la poitrine fumée, des oignons frits et une sauce burger !</p></div>
         </li>
         <li class="dish" data-burger="dragon">
-          <div class="dish__img"><img src="/img/dragon.jpg" srcset="/img/dragon-640.webp 640w, /img/dragon.webp 1100w" sizes="(max-width: 900px) 100vw, 45vw" alt="Le Dragon – Meilleur Restaurant Burger Carrières Poissy Verneuil Triel sur Seine" width="1024" height="1024" loading="lazy"><span class="dish__price" data-prix-burger="dragon">11 €</span></div>
+          <div class="dish__img"><img src="/img/dragon.jpg" srcset="/img/dragon-640.webp 640w, /img/dragon-900.webp 900w, /img/dragon.webp 1100w" sizes="(max-width: 900px) 100vw, 45vw" alt="Le Dragon – Meilleur Restaurant Burger Carrières Poissy Verneuil Triel sur Seine" width="1024" height="1024" loading="lazy"><span class="dish__price" data-prix-burger="dragon">11 €</span></div>
           <div class="dish__body"><h3>Le Dragon</h3><p class="ing">Un bun boulanger, 150g de Bœuf Charolais Français, du cheddar, des poivrons rouges épicés maison, une sauce épicée maison et du mesclun !</p></div>
         </li>
         <li class="dish" data-burger="original">
-          <div class="dish__img"><img src="/img/original.jpg" srcset="/img/original-640.webp 640w, /img/original.webp 1100w" sizes="(max-width: 900px) 100vw, 45vw" alt="L'Original – Meilleur Restaurant Burger Carrières Poissy Verneuil Triel sur Seine" width="1024" height="1024" loading="lazy"><span class="dish__price" data-prix-burger="original">11 €</span></div>
+          <div class="dish__img"><img src="/img/original.jpg" srcset="/img/original-640.webp 640w, /img/original-900.webp 900w, /img/original.webp 1100w" sizes="(max-width: 900px) 100vw, 45vw" alt="L'Original – Meilleur Restaurant Burger Carrières Poissy Verneuil Triel sur Seine" width="1024" height="1024" loading="lazy"><span class="dish__price" data-prix-burger="original">11 €</span></div>
           <div class="dish__body"><h3>L'Original</h3><span class="tag">Steak VG sur demande</span><p class="ing">Un bun boulanger, 150g de Bœuf Charolais Français, du cheddar, des lamelles d'oignons rouges, des tranches de cornichons à l'aigre-douce, une tranche de tomate fraîche et du mesclun !</p></div>
         </li>
         <li class="dish" data-burger="bbq">
-          <div class="dish__img"><img src="/img/bbq.jpg" srcset="/img/bbq-640.webp 640w, /img/bbq.webp 1100w" sizes="(max-width: 900px) 100vw, 45vw" alt="Le BBQ – Meilleur Restaurant Burger Carrières Poissy Verneuil Triel sur Seine" width="1100" height="1100" loading="lazy"><span class="dish__price" data-prix-burger="bbq">11 €</span></div>
+          <div class="dish__img"><img src="/img/bbq.jpg" srcset="/img/bbq-640.webp 640w, /img/bbq-900.webp 900w, /img/bbq.webp 1100w" sizes="(max-width: 900px) 100vw, 45vw" alt="Le BBQ – Meilleur Restaurant Burger Carrières Poissy Verneuil Triel sur Seine" width="1100" height="1100" loading="lazy"><span class="dish__price" data-prix-burger="bbq">11 €</span></div>
           <div class="dish__body"><h3>Le BBQ</h3><span class="tag">Vous avez dit « une sauce BBQ » ?</span><p class="ing">Un bun boulanger, 150g de Bœuf Charolais Français, du cheddar, des oignons frits, de la poitrine fumée, une sauce BBQ et du mesclun !</p></div>
         </li>
         <li class="dish" data-burger="montagnard">
-          <div class="dish__img"><img src="/img/montagnard.jpg" srcset="/img/montagnard-640.webp 640w, /img/montagnard.webp 1100w" sizes="(max-width: 900px) 100vw, 45vw" alt="Le Montagnard – Meilleur Restaurant Burger Carrières Poissy Verneuil Triel sur Seine" width="1100" height="1100" loading="lazy"><span class="dish__price" data-prix-burger="montagnard">11 €</span></div>
+          <div class="dish__img"><img src="/img/montagnard.jpg" srcset="/img/montagnard-640.webp 640w, /img/montagnard-900.webp 900w, /img/montagnard.webp 1100w" sizes="(max-width: 900px) 100vw, 45vw" alt="Le Montagnard – Meilleur Restaurant Burger Carrières Poissy Verneuil Triel sur Seine" width="1100" height="1100" loading="lazy"><span class="dish__price" data-prix-burger="montagnard">11 €</span></div>
           <div class="dish__body"><h3>Le Montagnard</h3><span class="tag">Restez sur les pistes avec Le Montagnard !</span><p class="ing">Un bun boulanger, 150g de Bœuf Charolais Français, du reblochon, de la poitrine fumée, des chips allumettes et du mesclun !</p></div>
         </li>
         <li class="dish dish--wide" data-burger="myko">
-          <div class="dish__img"><img src="/img/myko.jpg" srcset="/img/myko-640.webp 640w, /img/myko.webp 1100w" sizes="(max-width: 900px) 100vw, 45vw" alt="Le Myko – Meilleur Restaurant Burger Carrières Poissy Verneuil Triel sur Seine" width="1100" height="1100" loading="lazy"><span class="dish__price" data-prix-burger="myko">11 €</span></div>
+          <div class="dish__img"><img src="/img/myko.jpg" srcset="/img/myko-640.webp 640w, /img/myko-900.webp 900w, /img/myko.webp 1100w" sizes="(max-width: 900px) 100vw, 45vw" alt="Le Myko – Meilleur Restaurant Burger Carrières Poissy Verneuil Triel sur Seine" width="1100" height="1100" loading="lazy"><span class="dish__price" data-prix-burger="myko">11 €</span></div>
           <div class="dish__body"><h3>Le Myko</h3><span class="tag">Le meilleur mélange sucré-salé dans un Burger !</span><p class="ing">Un bun boulanger, 150g de Bœuf Charolais Français, du fromage de chèvre, de la poitrine fumée, du miel et du mesclun !</p></div>
         </li>
       </ul>
@@ -330,7 +329,7 @@
           <p class="closing reveal">Alors, qu'attendez-vous pour faire <span>un Arrêt</span> ?</p>
         </div>
         <div class="guarantees">
-          <figure class="about__photo"><img src="/img/service.jpg" srcset="/img/service-640.webp 640w, /img/service.webp 1100w" sizes="(max-width: 900px) 100vw, 45vw" alt="Burgers artisanaux préparés à la minute dans le food truck L'Arrêt Gourmand" width="1400" height="1867" loading="lazy"></figure>
+          <figure class="about__photo"><img src="/img/service.jpg" srcset="/img/service-640.webp 640w, /img/service-900.webp 900w, /img/service.webp 1100w" sizes="(max-width: 900px) 100vw, 45vw" alt="Burgers artisanaux préparés à la minute dans le food truck L'Arrêt Gourmand" width="1400" height="1867" loading="lazy"></figure>
           <h3 style="font-family:var(--display);font-size:1.5rem;margin-bottom:4px">La Qualité sans compromis : Du Fait Maison !</h3>
           <p>Parce qu'un burger d'exception dépend de la qualité de ses ingrédients, nous avons fait le choix de l'excellence et du circuit court. En commandant chez nous, vous bénéficiez de garanties strictes :</p>
           <div class="g"><span class="g__ico bun" aria-hidden="true"></span><div><h3>Bun artisan boulanger</h3></div></div>
@@ -449,6 +448,6 @@
 </dialog>
 <!--/dialog-->
 
-<script src="/assets/site.js?v=20261028f" defer></script>
+<script src="/assets/site.js?v=20261028g" defer></script>
 </body>
 </html>
