@@ -143,7 +143,6 @@ img{max-width:100%;display:block}
 .dish__img img{width:100%;height:100%;object-fit:cover;transition:transform .7s ease}
 .dish:hover .dish__img img{transform:scale(1.04)}
 .dish__price{position:absolute;top:14px;left:14px;background:var(--ketchup);color:#2A1A10;font-family:var(--display);font-size:1rem;padding:6px 12px;border-radius:999px;box-shadow:0 6px 16px -6px rgba(0,0,0,.5)}
-.dish__price.sup{background:var(--cheddar);color:#2A1A10}
 .dish__body{padding:18px 20px 22px;display:grid;gap:8px;align-content:start}
 .dish h3{font-size:clamp(1.45rem,2.2vw,1.8rem);color:var(--encre)}
 .dish--featured h3{font-size:clamp(1.7rem,2.8vw,2.3rem)}
@@ -764,7 +763,6 @@ html[data-theme=paques] .band:not(.band--kraft):not(.band--photo)::after{content
 @media (max-width:600px){html[data-theme=saint-valentin] .band:not(.band--kraft):not(.band--photo)::before{height:56px;background-size:104px 56px}html[data-theme=noel] .nav::after{height:20px;background-size:86px 20px}}
 
 /* mention du supplément sur les cartes (le prix affiché est celui du burger, supplément compris) */
-.dish__sup{display:inline-block;width:max-content;font-size:.72rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--orange-text);background:rgba(232,96,16,.1);border:1px solid rgba(232,96,16,.35);border-radius:999px;padding:2px 9px;margin:-2px 0 2px}
 
 /* ---------- page /contact : le formulaire en pleine page (téléphone surtout) ---------- */
 .contact-page .page-hero{padding-bottom:clamp(20px,3vw,32px)}
