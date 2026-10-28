@@ -26,6 +26,8 @@ async function interroger(env, jours) {
     sources: ${grp('refererHost', 8, 'count_DESC')}
     appareils: ${grp('deviceType', 5, 'count_DESC')}
     pays: ${grp('countryName', 6, 'count_DESC')}
+    heures: ${grp('datetimeHour', 1000, 'datetimeHour_ASC')}
+    navigateurs: ${grp('userAgentBrowser', 6, 'count_DESC')}
   } } }`;
   const res = await fetch(GQL, { method: 'POST', headers: { authorization: `Bearer ${env.CF_API_TOKEN}`, 'content-type': 'application/json' }, body: JSON.stringify({ query }) });
   const data = await res.json().catch(() => ({}));
@@ -51,6 +53,11 @@ export function formatVisites(acc, jours, maintenant = new Date()) {
   const sem = serie.slice(-7);
   const total = acc.total && acc.total[0] ? ligne(acc.total[0], 'total') : { vues: somme(serie, 'vues'), visites: somme(serie, 'visites') };
   const liste = (rows, dim, libelle) => (rows || []).map((r) => ligne(r, libelle(r.dimensions[dim])));
+  // répartition par heure de la journée (heure de Paris) et par jour de la semaine
+  const heures = Array.from({ length: 24 }, () => 0), parJourSemaine = Array.from({ length: 7 }, () => 0);
+  const fmtH = new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', hour: 'numeric', hourCycle: 'h23' });
+  for (const r of acc.heures || []) { const h = Number((fmtH.formatToParts(new Date(r.dimensions.datetimeHour)).find((x) => x.type === 'hour') || {}).value); if (h >= 0 && h < 24) heures[h] += n(r.sum && r.sum.visits); }
+  for (const j of serie) { const d = new Date(j.nom + 'T12:00:00Z').getUTCDay(); parJourSemaine[(d + 6) % 7] += j.visites; } // lundi en premier
   return {
     jours: serie,
     total: { vues: total.vues, visites: total.visites },
@@ -60,6 +67,9 @@ export function formatVisites(acc, jours, maintenant = new Date()) {
     sources: liste(acc.sources, 'refererHost', (h) => (!h ? 'Accès direct' : h.replace(/^www\./, ''))).filter((r) => r.nom !== 'larretgourmand.com' && r.visites > 0),
     appareils: liste(acc.appareils, 'deviceType', (t) => ({ desktop: 'Ordinateur', mobile: 'Téléphone', tablet: 'Tablette' }[t] || t || 'Autre')),
     pays: liste(acc.pays, 'countryName', (c) => c || 'Inconnu'),
+    navigateurs: liste(acc.navigateurs, 'userAgentBrowser', (b) => b || 'Autre'),
+    heures,
+    jours_semaine: parJourSemaine,
     periode: jours,
     maj: maintenant.toISOString(),
   };
