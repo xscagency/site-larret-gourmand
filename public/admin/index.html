@@ -1025,13 +1025,13 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
   function svgBars(labels,series,tick,W){
     W=Math.max(240,W||600);var H=150,top=14,bot=20,n=labels.length,gw=W/n,max=0;
     series.forEach(function(se){se.vals.forEach(function(v){if(v>max)max=v;});});
-    if(!max)max=1;
+    var vide=!max;if(!max)max=1;
     var bw=Math.max(2,(gw-Math.min(6,gw*.3))/series.length),out='';
     for(var i=0;i<n;i++){
       series.forEach(function(se,k){var v=se.vals[i]||0,h=v/max*(H-top-bot),x=i*gw+(gw-bw*series.length)/2+k*bw;out+='<rect class="'+(v?se.cls:'b0')+'" x="'+x.toFixed(1)+'" y="'+(v?(H-bot-h):(H-bot-2)).toFixed(1)+'" width="'+(bw-1).toFixed(1)+'" height="'+(v?h:2).toFixed(1)+'" rx="2"><title>'+esc(labels[i])+' : '+nf(v)+'</title></rect>';});
       if(i%tick===0||n<=8)out+='<text x="'+(i*gw+gw/2).toFixed(1)+'" y="'+(H-5)+'" text-anchor="middle">'+esc(labels[i])+'</text>';
     }
-    out+='<line x1="0" y1="'+(H-bot)+'" x2="'+W+'" y2="'+(H-bot)+'"/><text x="0" y="10">'+nf(max)+'</text>';
+    out+='<line x1="0" y1="'+(H-bot)+'" x2="'+W+'" y2="'+(H-bot)+'"/><text x="0" y="10">'+(vide?'Pas encore de données':nf(max))+'</text>';
     return '<svg class="chart" viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'" aria-hidden="true">'+out+'</svg>';
   }
   function renderBord(){

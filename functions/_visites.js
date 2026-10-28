@@ -16,7 +16,8 @@ async function interroger(env, jours) {
   const to = new Date();
   const from = new Date(to.getTime() - (jours - 1) * 86400000);
   from.setUTCHours(0, 0, 0, 0);
-  const filtre = `datetime_geq: "${iso(from)}", datetime_leq: "${iso(to)}"${env.CF_SITE_TAG ? `, siteTag: "${hex(env.CF_SITE_TAG)}"` : ''}`;
+  // hors pages d'administration et hors robots connus : on ne compte que les vrais visiteurs du site public
+  const filtre = `datetime_geq: "${iso(from)}", datetime_leq: "${iso(to)}", requestPath_notlike: "/admin%", bot: 0${env.CF_SITE_TAG ? `, siteTag: "${hex(env.CF_SITE_TAG)}"` : ''}`;
   const grp = (dims, limit, order) => `rumPageloadEventsAdaptiveGroups(limit: ${limit}, filter: {${filtre}}${order ? `, orderBy: [${order}]` : ''}) { count sum { visits } ${dims ? `dimensions { ${dims} }` : ''} }`;
   const query = `{ viewer { accounts(filter: {accountTag: "${hex(env.CF_ACCOUNT_ID)}"}) {
     total: ${grp('', 1)}
@@ -55,7 +56,8 @@ export function formatVisites(acc, jours, maintenant = new Date()) {
     total: { vues: total.vues, visites: total.visites },
     semaine: { vues: somme(sem, 'vues'), visites: somme(sem, 'visites') },
     pages: liste(acc.pages, 'requestPath', (p) => (!p || p === '/' ? 'Accueil' : p)),
-    sources: liste(acc.sources, 'refererHost', (h) => (!h ? 'Accès direct' : h.replace(/^www\./, ''))),
+    // la navigation interne (page du site vers page du site) n'est pas une provenance
+    sources: liste(acc.sources, 'refererHost', (h) => (!h ? 'Accès direct' : h.replace(/^www\./, ''))).filter((r) => r.nom !== 'larretgourmand.com' && r.visites > 0),
     appareils: liste(acc.appareils, 'deviceType', (t) => ({ desktop: 'Ordinateur', mobile: 'Téléphone', tablet: 'Tablette' }[t] || t || 'Autre')),
     pays: liste(acc.pays, 'countryName', (c) => c || 'Inconnu'),
     periode: jours,
