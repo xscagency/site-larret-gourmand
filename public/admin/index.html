@@ -1371,7 +1371,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
   }
   $('#calGrid').addEventListener('click',function(e){var c=e.target.closest('[data-calday]');if(!c)return;openCalDay(c.dataset.calday);});
   $('#calDlgClose').addEventListener('click',function(){caldlg.close();});
-  caldlg.addEventListener('click',function(e){if(e.target===caldlg)caldlg.close();});
+  caldlg.addEventListener('click',function(e){if(e.target===caldlg){caldlg.close();return;}var b=e.target.closest('button');if(b&&(b.dataset.godemande||b.dataset.opendevis||b.dataset.openevent||b.dataset.mkdevis))caldlg.close();});
   caldlg.addEventListener('close',function(){calSel='';if(agView==='cal')renderAgenda();});
   $('#agView').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;agView=b.dataset.agv;try{localStorage.setItem('lag_agenda_vue',agView);}catch(err){}renderAgenda();});
   $('#agFilters').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;agFilter=b.dataset.agf;renderAgenda();});
