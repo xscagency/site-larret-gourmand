@@ -57,7 +57,8 @@ export function formatSearchConsole({ total, parJour, requetes, pages }, jours, 
   const serie = [];
   const d0 = new Date(de + 'T00:00:00Z'), d1 = new Date(a + 'T00:00:00Z');
   for (let d = d0; d <= d1; d = new Date(d.getTime() + 86400000)) { const k = d.toISOString().slice(0, 10); serie.push({ nom: k, clics: byDay[k] ? byDay[k].clics : 0, impressions: byDay[k] ? byDay[k].impressions : 0 }); }
-  const chemin = (u) => { try { const p = new URL(u).pathname; return p === '/' ? 'Accueil' : p; } catch (e) { return u; } };
+  // les pages du site actuel s'affichent par leur chemin ; une ancienne adresse (sans www, http, autre sous-domaine) garde son hôte pour qu'on la repère
+  const chemin = (u) => { try { const x = new URL(u); const p = x.pathname === '/' ? 'Accueil' : x.pathname; return x.hostname === 'www.larretgourmand.com' && x.protocol === 'https:' ? p : `${x.hostname}${x.pathname === '/' ? '' : x.pathname} (ancienne adresse)`; } catch (e) { return u; } };
   return {
     periode: jours, de, a,
     total: { clics: t.clics, impressions: t.impressions, ctr: t.ctr, position: t.position },
