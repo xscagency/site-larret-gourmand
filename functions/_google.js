@@ -69,9 +69,12 @@ export function formatSearchConsole({ total, parJour, requetes, pages }, jours, 
   };
 }
 
-export async function getSearchConsole(env, { jours = 28, force = false } = {}) {
+const pageOk = (p) => (/^\/[a-z0-9\-\/]{0,80}$/.test(p || '') ? p : '');
+
+export async function getSearchConsole(env, { jours = 28, force = false, page = '' } = {}) {
   if (!googleConfigure(env)) return { configure: false };
-  const cle = `gsc_cache_${jours}`;
+  page = pageOk(page);
+  const cle = `gsc_cache_${jours}${page ? '_' + page.replace(/[^a-z0-9]/g, '_') : ''}`;
   if (!force) {
     const row = await env.DB.prepare('SELECT valeur FROM reglages WHERE cle = ?').bind(cle).first();
     if (row && row.valeur) {
@@ -84,13 +87,16 @@ export async function getSearchConsole(env, { jours = 28, force = false } = {}) 
   const a = new Date(Date.now() - 2 * 86400000).toISOString().slice(0, 10);
   const de = new Date(Date.now() - (jours + 1) * 86400000).toISOString().slice(0, 10);
   const base = { startDate: de, endDate: a, type: 'web' };
+  // analyse d'une seule page : on ne garde que les lignes de cette adresse (www, https)
+  if (page) base.dimensionFilterGroups = [{ filters: [{ dimension: 'page', operator: 'equals', expression: `https://www.larretgourmand.com${page}` }] }];
   const [total, parJour, requetes, pages] = await Promise.all([
     requete(env, token, { ...base, rowLimit: 1 }),
     requete(env, token, { ...base, dimensions: ['date'], rowLimit: 100 }),
-    requete(env, token, { ...base, dimensions: ['query'], rowLimit: 15 }),
-    requete(env, token, { ...base, dimensions: ['page'], rowLimit: 8 }),
+    requete(env, token, { ...base, dimensions: ['query'], rowLimit: page ? 25 : 15 }),
+    page ? Promise.resolve([]) : requete(env, token, { ...base, dimensions: ['page'], rowLimit: 8 }),
   ]);
   const data = formatSearchConsole({ total, parJour, requetes, pages }, jours, de, a);
+  if (page) data.page = page;
   await env.DB.prepare('INSERT INTO reglages (cle, valeur) VALUES (?, ?) ON CONFLICT(cle) DO UPDATE SET valeur = excluded.valeur').bind(cle, JSON.stringify(data)).run();
   return { configure: true, ...data };
 }

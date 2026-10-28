@@ -149,6 +149,13 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--cheddar)
 .gq .pos{display:inline-block;min-width:34px;text-align:center;padding:1px 6px;border-radius:999px;font-size:.8rem;font-weight:700}
 .gq .pos.p1{background:rgba(123,166,86,.22);color:#B9DBA0}.gq .pos.p2{background:rgba(243,173,63,.18);color:var(--cheddar)}.gq .pos.p3{background:rgba(255,255,255,.06);color:var(--creme-3)}
 @media (max-width:640px){.gq .hide-m{display:none}}
+.gq tr[data-page]{cursor:pointer}.gq tr[data-page]:hover td{background:rgba(255,255,255,.04)}
+.al-bar[data-page]{cursor:pointer;border-radius:8px}.al-bar[data-page]:hover{background:rgba(255,255,255,.04)}
+.pg{background:var(--brun);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.pg .vcols{border-top:0;padding-top:0;margin-top:8px}
+.pgsel{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.pgsel button{background:transparent;border:1px solid var(--line);color:var(--creme-2);padding:6px 11px;border-radius:999px;font:500 .84rem var(--body);cursor:pointer}
+.pgsel button:hover{border-color:var(--cheddar);color:var(--creme)}
 .setup{font-size:.92rem;line-height:1.5;color:var(--creme-2)}.setup ol{padding-left:20px;margin:8px 0 0}.setup li{margin-bottom:6px}.setup code{background:rgba(255,255,255,.07);padding:1px 6px;border-radius:6px;font-size:.85rem;color:var(--creme)}
 @media (max-width:640px){.bd2{grid-template-columns:1fr}.kpis{grid-template-columns:1fr 1fr;gap:8px}.kpi{padding:11px 12px}.kpi .big{font-size:1.5rem}.vt{grid-template-columns:1fr 1fr}}
 /* demandes */
@@ -518,6 +525,15 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
     </section>
 
     <!-- Fiche burger (création / modification) -->
+    <!-- Analyse d'une page du site (visites Cloudflare + Google) -->
+    <dialog id="pageDlg">
+      <div class="card sheet" tabindex="-1" autofocus style="margin:0;width:min(820px,calc(100vw - 24px));display:grid;gap:14px;outline:none;align-content:start">
+        <div class="row"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;min-width:0"><h2 style="margin:0">Page</h2><select id="pgSel" style="width:auto;min-width:200px"></select></div><button class="btn sm" type="button" id="pgClose">Fermer</button></div>
+        <div id="pgVisites"></div>
+        <div id="pgGoogle"></div>
+      </div>
+    </dialog>
+
     <dialog id="evDlg">
       <div class="card sheet" tabindex="-1" autofocus style="margin:0;width:min(560px,calc(100vw - 24px));display:grid;gap:12px;outline:none">
         <div class="row"><h2 style="margin:0" id="evTitle">Événement</h2><button class="btn sm" type="button" id="evClose">Fermer</button></div>
@@ -1109,14 +1125,20 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
     if(visData.erreur){el.innerHTML=head+'<button class="btn sm" type="button" data-visforce="1">Réessayer</button></div><p class="muted" style="margin:0">Cloudflare n\'a pas répondu : '+esc(visData.erreur)+'</p>';return;}
     var v=visData,labels=v.jours.map(function(j){var p=j.nom.split('-');return (+p[2])+'/'+p[1];});
     var liste=function(rows){var o={};rows.forEach(function(r){o[r.nom]=r.visites;});return o;};
+    var barsPages=function(rows,total){return '<div class="al-bars">'+rows.map(function(r){var pp=pagePath(r.nom);return '<div class="al-bar"'+(pp?' data-page="'+esc(pp)+'" title="Analyser cette page"':'')+'><span>'+esc(r.nom)+'</span><b>'+nf(r.visites)+'</b><i style="--w:'+(total?Math.round(r.visites/total*100):0)+'%"></i></div>';}).join('')+'</div>';};
     el.innerHTML=head+'<div style="display:flex;gap:10px;align-items:center"><span class="muted">à jour '+esc(dateHeure(v.maj.replace('T',' ').slice(0,19)))+'</span><div class="seg"><button type="button" data-visj="30" class="'+(visJours===30?'is-on':'')+'">30 j</button><button type="button" data-visj="90" class="'+(visJours===90?'is-on':'')+'">90 j</button></div></div></div>'+
       '<div class="vt"><div><small>Visiteurs · 7 j</small><b>'+nf(v.semaine.visites)+'</b></div><div><small>Pages vues · 7 j</small><b>'+nf(v.semaine.vues)+'</b></div><div><small>Visiteurs · '+v.periode+' j</small><b>'+nf(v.total.visites)+'</b></div><div><small>Pages vues · '+v.periode+' j</small><b>'+nf(v.total.vues)+'</b></div>'+
       (v.vitesse&&v.vitesse.mesures?'<div><small>Page affichée</small><b>'+sec(v.vitesse.affichage)+'</b></div><div><small>Page complète</small><b>'+sec(v.vitesse.chargement)+' <em class="vv '+(v.vitesse.chargement75<=2500?'ok':v.vitesse.chargement75<=4000?'mid':'ko')+'">'+(v.vitesse.chargement75<=2500?'rapide':v.vitesse.chargement75<=4000?'correct':'lent')+'</em></b></div>':'')+'</div>'+
       svgBars(labels,[{vals:v.jours.map(function(j){return j.visites;}),cls:''}],v.periode>30?10:5,el.clientWidth-34)+'<div class="lg"><span><i></i>Visiteurs par jour</span></div>'+
-      '<div class="vcols"><div><div class="lab">Pages les plus vues</div>'+bars(liste(v.pages),v.total.visites)+'</div><div><div class="lab">D\'où viennent-ils</div>'+bars(liste(v.sources),v.total.visites)+'</div><div><div class="lab">Appareils</div>'+bars(liste(v.appareils),v.total.visites)+'</div></div>'+
+      '<div class="vcols"><div><div class="lab">Pages les plus vues</div>'+barsPages(v.pages,v.total.visites)+'</div><div><div class="lab">D\'où viennent-ils</div>'+bars(liste(v.sources),v.total.visites)+'</div><div><div class="lab">Appareils</div>'+bars(liste(v.appareils),v.total.visites)+'</div></div>'+
       (v.heures?'<div class="vcols"><div><div class="lab">À quelle heure ils regardent le site</div>'+svgBars(v.heures.map(function(_,h){return h+'h';}),[{vals:v.heures,cls:''}],3,colW(el))+'</div><div><div class="lab">Quel jour</div>'+svgBars(['lun.','mar.','mer.','jeu.','ven.','sam.','dim.'],[{vals:v.jours_semaine,cls:'b2'}],1,colW(el))+'</div></div>':'');
   }
   var gscData=null,gscJours=28;
+  var PAGES_SITE=[['/','Accueil'],['/contact','Demande de contact'],['/food-truck-mariage','Food-truck mariage'],['/food-truck-anniversaire','Food-truck anniversaire'],['/food-truck-entreprises','Food-truck entreprises'],['/food-truck-traiteur','Food-truck traiteur'],['/mentions-legales','Mentions légales']];
+  // chemin d'une page à partir du libellé affiché (Accueil, /contact, ancienne adresse…)
+  function pagePath(nom){if(nom==='Accueil')return '/';var m=/^(\/[a-z0-9\-\/]*)/.exec(nom||'');return m?m[1]:'';}
+  function posBadge(p){return '<span class="pos '+(p<=3?'p1':p<=10?'p2':'p3')+'">'+(Number(p)||0).toLocaleString('fr-FR',{maximumFractionDigits:1})+'</span>';}
+  function gqTable(rows,lab,cliquable){return rows.length?'<table class="gq"><thead><tr><th>'+lab+'</th><th class="n">Clics</th><th class="n hide-m">Vues</th><th class="n">Position</th></tr></thead><tbody>'+rows.map(function(r){var pp=cliquable?pagePath(r.nom):'';return '<tr'+(pp?' data-page="'+esc(pp)+'" title="Analyser cette page"':'')+'><td class="q">'+esc(r.nom)+'</td><td class="n"><b>'+nf(r.clics)+'</b></td><td class="n hide-m">'+nf(r.impressions)+'</td><td class="n">'+posBadge(r.position)+'</td></tr>';}).join('')+'</tbody></table>':'<p class="muted" style="margin:0">Pas encore de données.</p>';}
   function renderGoogle(){
     var el=$('#bdGoogle'),head='<div class="bdh"><h3>Sur Google</h3>';
     if(!gscData){el.innerHTML=head+'</div><p class="muted" style="margin:0">Chargement…</p>';return;}
@@ -1128,13 +1150,47 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
       '<li>Préviens Claude pour redéployer.</li></ol></div>';return;}
     if(gscData.erreur){el.innerHTML=head+'<button class="btn sm" type="button" data-gscforce="1">Réessayer</button></div><p class="muted" style="margin:0">'+esc(gscData.erreur)+'</p>';return;}
     var g=gscData,labels=g.jours.map(function(j){var p=j.nom.split('-');return (+p[2])+'/'+p[1];});
-    var pos=function(p){return '<span class="pos '+(p<=3?'p1':p<=10?'p2':'p3')+'">'+p.toLocaleString('fr-FR',{maximumFractionDigits:1})+'</span>';};
-    var table=function(rows,lab){return rows.length?'<table class="gq"><thead><tr><th>'+lab+'</th><th class="n">Clics</th><th class="n hide-m">Vues</th><th class="n">Position</th></tr></thead><tbody>'+rows.map(function(r){return '<tr><td class="q" title="'+esc(r.nom)+'">'+esc(r.nom)+'</td><td class="n"><b>'+nf(r.clics)+'</b></td><td class="n hide-m">'+nf(r.impressions)+'</td><td class="n">'+pos(r.position)+'</td></tr>';}).join('')+'</tbody></table>':'<p class="muted" style="margin:0">Pas encore de données.</p>';};
+    var table=gqTable;
     el.innerHTML=head+'<div style="display:flex;gap:10px;align-items:center"><span class="muted">du '+esc(dateFr(g.de).replace(/^\S+ /,''))+' au '+esc(dateFr(g.a).replace(/^\S+ /,''))+'</span><div class="seg"><button type="button" data-gscj="28" class="'+(gscJours===28?'is-on':'')+'">28 j</button><button type="button" data-gscj="90" class="'+(gscJours===90?'is-on':'')+'">90 j</button></div></div></div>'+
       '<div class="vt"><div><small>Clics depuis Google</small><b>'+nf(g.total.clics)+'</b></div><div><small>Fois affiché</small><b>'+nf(g.total.impressions)+'</b></div><div><small>Taux de clic</small><b>'+g.total.ctr.toLocaleString('fr-FR')+' %</b></div><div><small>Position moyenne</small><b>'+g.total.position.toLocaleString('fr-FR',{maximumFractionDigits:1})+'</b></div></div>'+
       svgBars(labels,[{vals:g.jours.map(function(j){return j.clics;}),cls:''}],g.periode>30?10:4,el.clientWidth-34)+'<div class="lg"><span><i></i>Clics par jour (Google a 2 jours de retard)</span></div>'+
-      '<div class="vcols vcols--2"><div><div class="lab">Ce que les gens tapent</div>'+table(g.requetes,'Recherche')+'</div><div><div class="lab">Pages qui ressortent</div>'+table(g.pages,'Page')+'</div></div>';
+      '<div class="vcols vcols--2"><div><div class="lab">Ce que les gens tapent</div>'+table(g.requetes,'Recherche')+'</div><div><div class="lab">Pages qui ressortent <span class="muted" style="font-weight:400">· cliquez-en une pour l\'analyser</span></div>'+table(g.pages,'Page',true)+'</div></div>'+'<div class="pgsel"><span class="muted" style="align-self:center">Analyser :</span>'+PAGES_SITE.map(function(x){return '<button type="button" data-page="'+esc(x[0])+'">'+esc(x[1])+'</button>';}).join('')+'</div>';
   }
+  // ---- analyse d'une page : visites Cloudflare + Google, pour la page choisie
+  var pgdlg=$('#pageDlg'),pgCur='';
+  function pgBloc(titre,corps){return '<div class="pg"><div class="bdh"><h3>'+titre+'</h3></div><p class="muted" style="margin:0">'+corps+'</p></div>';}
+  function openPage(path){
+    if(!path)return;pgCur=path;
+    var sel=$('#pgSel');sel.innerHTML=PAGES_SITE.map(function(x){return '<option value="'+esc(x[0])+'">'+esc(x[1])+' · '+esc(x[0])+'</option>';}).join('')+(PAGES_SITE.some(function(x){return x[0]===path;})?'':'<option value="'+esc(path)+'">'+esc(path)+'</option>');
+    sel.value=path;
+    $('#pgVisites').innerHTML=pgBloc('Visites','Chargement…');$('#pgGoogle').innerHTML=pgBloc('Sur Google','Chargement…');
+    if(!pgdlg.open){pgdlg.showModal();setTimeout(function(){var a=document.activeElement;if(a&&a!==document.body&&a.tagName!=='DIV')a.blur();try{pgdlg.querySelector('.sheet').focus({preventScroll:true});}catch(e){}},0);}
+    pgdlg.querySelector('.sheet').scrollTop=0;
+    var me=path;
+    api('visites?jours='+visJours+'&page='+encodeURIComponent(path)).then(function(v){if(pgCur!==me)return;var el=$('#pgVisites');
+      if(!v.configure){el.innerHTML=pgBloc('Visites','Visites non branchées (voir le tableau de bord).');return;}
+      if(v.erreur){el.innerHTML=pgBloc('Visites',esc(v.erreur));return;}
+      var W=el.clientWidth-34,labels=v.jours.map(function(j){var p=j.nom.split('-');return (+p[2])+'/'+p[1];});
+      var liste=function(rows){var o={};rows.forEach(function(r){o[r.nom]=r.visites;});return o;};
+      el.innerHTML='<div class="pg"><div class="bdh"><h3>Visites</h3><span class="muted">'+v.periode+' derniers jours</span></div>'+
+        '<div class="vt"><div><small>Visiteurs</small><b>'+nf(v.total.visites)+'</b></div><div><small>Pages vues</small><b>'+nf(v.total.vues)+'</b></div><div><small>Visiteurs · 7 j</small><b>'+nf(v.semaine.visites)+'</b></div>'+(v.vitesse&&v.vitesse.mesures?'<div><small>Page complète</small><b>'+sec(v.vitesse.chargement)+'</b></div>':'')+'</div>'+
+        svgBars(labels,[{vals:v.jours.map(function(j){return j.visites;}),cls:''}],v.periode>30?10:5,W)+'<div class="lg"><span><i></i>Visiteurs par jour</span></div>'+
+        '<div class="vcols"><div><div class="lab">D\'où viennent-ils</div>'+bars(liste(v.sources),v.total.visites)+'</div><div><div class="lab">Appareils</div>'+bars(liste(v.appareils),v.total.visites)+'</div></div>'+
+        (v.heures?'<div class="vcols" style="margin-top:6px"><div><div class="lab">À quelle heure</div>'+svgBars(v.heures.map(function(_,h){return h+'h';}),[{vals:v.heures,cls:''}],3,W<560?W:(W-22)/2)+'</div><div><div class="lab">Quel jour</div>'+svgBars(['lun.','mar.','mer.','jeu.','ven.','sam.','dim.'],[{vals:v.jours_semaine,cls:'b2'}],1,W<560?W:(W-22)/2)+'</div></div>':'')+'</div>';
+    }).catch(function(e){if(pgCur===me)$('#pgVisites').innerHTML=pgBloc('Visites',esc(e.message));});
+    api('google?jours='+gscJours+'&page='+encodeURIComponent(path)).then(function(g){if(pgCur!==me)return;var el=$('#pgGoogle');
+      if(!g.configure){el.innerHTML=pgBloc('Sur Google','Search Console non branchée (voir le tableau de bord).');return;}
+      if(g.erreur){el.innerHTML=pgBloc('Sur Google',esc(g.erreur));return;}
+      var W=el.clientWidth-34,labels=g.jours.map(function(j){var p=j.nom.split('-');return (+p[2])+'/'+p[1];});
+      el.innerHTML='<div class="pg"><div class="bdh"><h3>Sur Google</h3><span class="muted">du '+esc(dateFr(g.de).replace(/^\S+ /,''))+' au '+esc(dateFr(g.a).replace(/^\S+ /,''))+'</span></div>'+
+        '<div class="vt"><div><small>Clics</small><b>'+nf(g.total.clics)+'</b></div><div><small>Fois affichée</small><b>'+nf(g.total.impressions)+'</b></div><div><small>Taux de clic</small><b>'+g.total.ctr.toLocaleString('fr-FR')+' %</b></div><div><small>Position moyenne</small><b>'+g.total.position.toLocaleString('fr-FR',{maximumFractionDigits:1})+'</b></div></div>'+
+        svgBars(labels,[{vals:g.jours.map(function(j){return j.clics;}),cls:''}],g.periode>30?10:4,W)+'<div class="lg"><span><i></i>Clics par jour</span></div>'+
+        '<div class="vcols" style="grid-template-columns:1fr"><div><div class="lab">Ce que les gens tapent pour arriver sur cette page</div>'+gqTable(g.requetes,'Recherche')+'</div></div></div>';
+    }).catch(function(e){if(pgCur===me)$('#pgGoogle').innerHTML=pgBloc('Sur Google',esc(e.message));});
+  }
+  $('#pgSel').addEventListener('change',function(){openPage(this.value);});
+  $('#pgClose').addEventListener('click',function(){pgdlg.close();});
+  pgdlg.addEventListener('click',function(e){if(e.target===pgdlg)pgdlg.close();});
   function loadGoogle(force){
     return api('google?jours='+gscJours+(force?'&force=1':'')).then(function(r){gscData=r;}).catch(function(e){gscData={configure:true,erreur:e.message};}).then(function(){renderGoogle();});
   }
@@ -1142,6 +1198,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
     return api('visites?jours='+visJours+(force?'&force=1':'')).then(function(r){visData=r;}).catch(function(e){visData={configure:true,erreur:e.message};}).then(function(){if(state&&devisList)renderBord();});
   }
   $('#tab-bord').addEventListener('click',function(e){
+    var pg=e.target.closest('[data-page]');if(pg){openPage(pg.dataset.page);return;}
     var b=e.target.closest('[data-go],[data-visj],[data-visforce],[data-gscj],[data-gscforce]');if(!b)return;
     if(b.dataset.gscj){gscJours=+b.dataset.gscj;gscData=null;renderGoogle();loadGoogle();return;}
     if(b.dataset.gscforce){gscData=null;renderGoogle();loadGoogle(true);return;}

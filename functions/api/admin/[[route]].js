@@ -85,7 +85,7 @@ export async function onRequest({ request, env, params }) {
   if (route === 'visites' && method === 'GET') {
     const u = new URL(request.url);
     const jours = u.searchParams.get('jours') === '90' ? 90 : 30;
-    try { return json({ ok: true, ...(await getVisites(env, { jours, force: u.searchParams.get('force') === '1' })) }); }
+    try { return json({ ok: true, ...(await getVisites(env, { jours, force: u.searchParams.get('force') === '1', page: u.searchParams.get('page') || '' })) }); }
     catch (e) { return json({ ok: true, configure: true, erreur: String(e.message || e) }); }
   }
 
@@ -93,7 +93,7 @@ export async function onRequest({ request, env, params }) {
   if (route === 'google' && method === 'GET') {
     const u = new URL(request.url);
     const jours = u.searchParams.get('jours') === '90' ? 90 : 28;
-    try { return json({ ok: true, ...(await getSearchConsole(env, { jours, force: u.searchParams.get('force') === '1' })) }); }
+    try { return json({ ok: true, ...(await getSearchConsole(env, { jours, force: u.searchParams.get('force') === '1', page: u.searchParams.get('page') || '' })) }); }
     catch (e) { return json({ ok: true, configure: true, erreur: String(e.message || e) }); }
   }
 

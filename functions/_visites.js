@@ -12,12 +12,14 @@ const iso = (d) => d.toISOString().slice(0, 19) + 'Z';
 
 export const visitesConfigurees = (env) => !!(env.CF_API_TOKEN && env.CF_ACCOUNT_ID);
 
-async function interroger(env, jours) {
+const pageOk = (p) => (/^\/[a-z0-9\-\/]{0,80}$/.test(p || '') ? p : '');
+
+async function interroger(env, jours, page) {
   const to = new Date();
   const from = new Date(to.getTime() - (jours - 1) * 86400000);
   from.setUTCHours(0, 0, 0, 0);
   // hors pages d'administration et hors robots connus : on ne compte que les vrais visiteurs du site public
-  const filtre = `datetime_geq: "${iso(from)}", datetime_leq: "${iso(to)}", requestPath_notlike: "/admin%", bot: 0${env.CF_SITE_TAG ? `, siteTag: "${hex(env.CF_SITE_TAG)}"` : ''}`;
+  const filtre = `datetime_geq: "${iso(from)}", datetime_leq: "${iso(to)}", requestPath_notlike: "/admin%", bot: 0${page ? `, requestPath: "${page}"` : ''}${env.CF_SITE_TAG ? `, siteTag: "${hex(env.CF_SITE_TAG)}"` : ''}`;
   const grp = (dims, limit, order) => `rumPageloadEventsAdaptiveGroups(limit: ${limit}, filter: {${filtre}}${order ? `, orderBy: [${order}]` : ''}) { count sum { visits } ${dims ? `dimensions { ${dims} }` : ''} }`;
   const query = `{ viewer { accounts(filter: {accountTag: "${hex(env.CF_ACCOUNT_ID)}"}) {
     total: ${grp('', 1)}
@@ -100,9 +102,10 @@ async function diagnostiquer(env, erreur) {
   return `${erreur} [${etat.join(' · ')}]`;
 }
 
-export async function getVisites(env, { jours = 30, force = false } = {}) {
+export async function getVisites(env, { jours = 30, force = false, page = '' } = {}) {
   if (!visitesConfigurees(env)) return { configure: false };
-  const cle = `visites_cache_${jours}`;
+  page = pageOk(page);
+  const cle = `visites_cache_${jours}${page ? '_' + page.replace(/[^a-z0-9]/g, '_') : ''}`;
   if (!force) {
     const row = await env.DB.prepare('SELECT valeur FROM reglages WHERE cle = ?').bind(cle).first();
     if (row && row.valeur) {
@@ -113,9 +116,10 @@ export async function getVisites(env, { jours = 30, force = false } = {}) {
     }
   }
   let acc;
-  try { acc = await interroger(env, jours); }
+  try { acc = await interroger(env, jours, page); }
   catch (e) { throw new Error(await diagnostiquer(env, String(e.message || e))); }
   const data = formatVisites(acc, jours);
+  if (page) data.page = page;
   await env.DB.prepare('INSERT INTO reglages (cle, valeur) VALUES (?, ?) ON CONFLICT(cle) DO UPDATE SET valeur = excluded.valeur').bind(cle, JSON.stringify(data)).run();
   return { configure: true, ...data };
 }
