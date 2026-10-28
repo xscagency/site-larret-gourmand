@@ -63,21 +63,26 @@ export function formatVisites(acc, jours, maintenant = new Date()) {
   };
 }
 
-// En cas de refus de Cloudflare, on précise d'où vient le problème (jeton ou identifiant de compte)
+// En cas de refus de Cloudflare, on précise d'où vient le problème (jeton, identifiant de compte ou autorisation)
 async function diagnostiquer(env, erreur) {
-  const h = { authorization: `Bearer ${env.CF_API_TOKEN}` };
-  let msg = erreur;
+  const h = { authorization: `Bearer ${env.CF_API_TOKEN}`, 'content-type': 'application/json' };
+  const vise = hex(env.CF_ACCOUNT_ID);
+  const etat = [`compte visé ${vise.slice(0, 4)}…${vise.slice(-4)} (${vise.length} caractères${vise.length === 32 ? '' : ', il en faut 32'})`, `jeton de ${String(env.CF_API_TOKEN || '').trim().length} caractères`];
   try {
     const v = await fetch('https://api.cloudflare.com/client/v4/user/tokens/verify', { headers: h }).then((r) => r.json());
-    if (!v.success) return `${erreur} — le jeton CF_API_TOKEN est refusé par Cloudflare (${(v.errors && v.errors[0] && v.errors[0].message) || 'invalide'}) : vérifiez qu'il a été collé en entier.`;
-    if (v.result && v.result.status !== 'active') return `${erreur} — le jeton existe mais n'est pas actif (${v.result.status}).`;
+    if (!v.success) return `${erreur} — le jeton CF_API_TOKEN est refusé par Cloudflare (${(v.errors && v.errors[0] && v.errors[0].message) || 'invalide'}) : vérifiez qu'il a été collé en entier. [${etat.join(', ')}]`;
+    if (v.result && v.result.status !== 'active') return `${erreur} — le jeton existe mais n'est pas actif (${v.result.status}). [${etat.join(', ')}]`;
+    etat.push('jeton valide et actif');
     const a = await fetch('https://api.cloudflare.com/client/v4/accounts?per_page=20', { headers: h }).then((r) => r.json());
     const comptes = (a.result || []).map((x) => `${x.name} (${x.id})`);
-    const vise = hex(env.CF_ACCOUNT_ID);
-    if (a.success && comptes.length && !(a.result || []).some((x) => x.id === vise)) return `${erreur} — le jeton est valide mais ne donne pas accès au compte ${vise}. Comptes qu'il voit : ${comptes.join(', ')}.`;
-    msg = `${erreur} — le jeton est valide${comptes.length ? ` et voit le compte ${vise}` : ''}, mais il lui manque l'autorisation « Account Analytics : Read » (dans Mon profil → API Tokens → modifier le jeton « Stats site »).`;
-  } catch (e) { /* diagnostic impossible : on garde l'erreur d'origine */ }
-  return msg;
+    etat.push(a.success ? (comptes.length ? `comptes visibles par le jeton : ${comptes.join(', ')}` : 'le jeton ne voit aucun compte') : `liste des comptes refusée (${(a.errors && a.errors[0] && a.errors[0].message) || '?'})`);
+    // un autre jeu de données du même compte : si lui passe, seul Web Analytics est refusé
+    const now = new Date(), from = new Date(now.getTime() - 86400000);
+    const q = `{ viewer { accounts(filter: {accountTag: "${vise}"}) { pagesFunctionsInvocationsAdaptiveGroups(limit: 1, filter: {datetime_geq: "${iso(from)}", datetime_leq: "${iso(now)}"}) { count } } } }`;
+    const g = await fetch(GQL, { method: 'POST', headers: h, body: JSON.stringify({ query: q }) }).then((r) => r.json());
+    etat.push(g.errors && g.errors.length ? `autre jeu de données du compte : refusé aussi (${g.errors[0].message})` : 'autre jeu de données du compte : accepté, seul Web Analytics est refusé');
+  } catch (e) { etat.push(`diagnostic interrompu : ${String(e.message || e)}`); }
+  return `${erreur} [${etat.join(' · ')}]`;
 }
 
 export async function getVisites(env, { jours = 30, force = false } = {}) {
