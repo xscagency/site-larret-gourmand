@@ -193,7 +193,11 @@
       data.page = location.pathname;
       submit.disabled = true; submit.textContent = 'Envoi…';
       fetch('/api/devis', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(data) })
-        .then(function (r) { return r.json(); })
+        .then(function (r) {
+          // 429 = limite anti-spam Cloudflare : la réponse est une page HTML, pas du JSON
+          if (r.status === 429) throw new Error('Trop de tentatives. Patientez quelques secondes puis réessayez.');
+          return r.json().catch(function () { throw new Error('Erreur'); });
+        })
         .then(function (r) {
           if (!r.ok) throw new Error(r.error || 'Erreur');
           form.reset(); form.classList.remove('was-validated');
