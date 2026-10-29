@@ -428,10 +428,9 @@
       <label class="field"><span>Précisions</span><textarea id="f-msg" name="message" placeholder="Apportez vos précisions : horaires souhaités, nombre de burgers estimé, contraintes du lieu, envies particulières…"></textarea></label>
       <!-- piège à robots : laissé vide par les humains -->
       <input type="text" name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px" aria-hidden="true">
-      <!-- Anti-spam Turnstile (optionnel) : décommenter et mettre la clé de site
-      <div class="cf-turnstile" data-sitekey="VOTRE_CLE_SITE" data-theme="dark"></div>
+      <!-- Anti-spam Turnstile (clé secrète TURNSTILE_SECRET côté Cloudflare Pages) -->
+      <div class="cf-turnstile" data-sitekey="0x4AAAAAAFrHnrunz71R2N1O" data-theme="dark"></div>
       <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-      -->
       <div class="form__foot">
         <button class="btn btn--primary" type="submit">Envoyer ma demande</button>
         <p class="status" id="formStatus" role="status"></p>
