@@ -854,7 +854,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
   var $=function(s){return document.querySelector(s);};
   var state=null, demandes=[];
   var JOURS=['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
-  function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
   function dateHeure(sql){try{var d=new Date(sql.replace(' ','T')+'Z');return d.toLocaleString('fr-FR',{timeZone:'Europe/Paris',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}).replace(',',' à');}catch(e){return sql;}}
   function fmtTel(t){var n=String(t||'').replace(/[^\d+]/g,'');if(/^\+33\d{9}$/.test(n))n='0'+n.slice(3);if(/^0\d{9}$/.test(n))return n.replace(/(\d{2})(?=\d)/g,'$1 ');return t;}
   function dateFr(iso){if(!/^\d{4}-\d{2}-\d{2}$/.test(iso||''))return iso||'';var p=iso.split('-');var d=new Date(Date.UTC(+p[0],+p[1]-1,+p[2]));return JOURS[d.getUTCDay()].toLowerCase()+' '+(+p[2])+'/'+p[1]+'/'+p[0];}
