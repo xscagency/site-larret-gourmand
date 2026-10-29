@@ -134,7 +134,10 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--cheddar)
 .vt div{min-width:0}.vt b{display:block;font:700 1.55rem/1.1 var(--body);color:var(--cheddar);font-variant-numeric:tabular-nums}.vt .vv{font:700 .72rem var(--body);font-style:normal;letter-spacing:.05em;text-transform:uppercase;padding:2px 7px;border-radius:999px;vertical-align:middle;margin-left:4px}.vv.ok{background:rgba(123,166,86,.22);color:#B9DBA0}.vv.mid{background:rgba(243,173,63,.2);color:var(--cheddar)}.vv.ko{background:rgba(232,96,16,.22);color:#FFB380}.vt small{color:var(--creme-3);font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;font-weight:600}
 .chart{max-width:100%;height:auto;display:block;margin:6px 0 2px;overflow:visible}
 .chart rect{fill:var(--cheddar)}.chart rect.b2{fill:var(--mesclun)}.chart rect.b0{fill:rgba(255,255,255,.06)}.chart text{fill:var(--creme-3);font:11px var(--body)}.chart line{stroke:var(--line);stroke-width:1}
-.lg{display:flex;gap:14px;font-size:.82rem;color:var(--creme-3);margin-top:6px}.lg i{display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--cheddar);margin-right:5px;vertical-align:-1px}.lg i.b2{background:var(--mesclun)}
+.lg{display:flex;gap:14px;flex-wrap:wrap;font-size:.82rem;color:var(--creme-3);margin-top:6px}
+.chart rect.c-mar{fill:var(--cheddar)}.chart rect.c-jeu{fill:var(--mesclun)}.chart rect.c-ven{fill:var(--ketchup)}.chart rect.c-sam{fill:#C58AF9}.chart rect.c-aut{fill:var(--creme-3)}.chart rect.c-dim{fill:rgba(255,255,255,.22)}
+.lg i.c-mar{background:var(--cheddar)}.lg i.c-jeu{background:var(--mesclun)}.lg i.c-ven{background:var(--ketchup)}.lg i.c-sam{background:#C58AF9}.lg i.c-aut{background:var(--creme-3)}.lg i.c-dim{background:rgba(255,255,255,.22)}
+.vue-kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}.vue-kv div{background:var(--brun);border:1px solid var(--line);border-radius:12px;padding:10px 12px}.vue-kv small{display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--creme-3);font-weight:700}.vue-kv b{display:block;font:700 1.35rem/1.2 var(--body);color:var(--cheddar);margin-top:2px}.vue-kv span{font-size:.82rem;color:var(--creme-2)}.vue-kv .up{color:#B9DBA0}.vue-kv .down{color:#FFB380}.lg i{display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--cheddar);margin-right:5px;vertical-align:-1px}.lg i.b2{background:var(--mesclun)}
 .vcols{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px 22px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
 .vcols .lab{font-weight:600;font-size:.9rem;margin-bottom:8px}
 .vcols--2{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
@@ -742,6 +745,15 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
       <div id="csList"></div>
     </section>
 
+    <!-- Vue d'un service passé (graphiques) -->
+    <dialog id="csVueDlg">
+      <div class="card sheet" tabindex="-1" autofocus style="margin:0;width:min(720px,calc(100vw - 24px));display:grid;gap:12px;outline:none;align-content:start">
+        <div class="row"><div><h2 style="margin:0" id="csVueTitre">Service</h2><div class="muted" id="csVueSub"></div></div><button class="btn sm" type="button" id="csVueClose">Fermer</button></div>
+        <div id="csVueCorps"></div>
+        <div class="row" style="border-top:1px solid var(--line);padding-top:12px"><span class="muted" style="font-size:.86rem">Les chiffres viennent de la caisse ; en cas d'erreur de saisie ce soir-là :</span><button class="btn sm ghost" type="button" id="csVueCorriger">Corriger</button></div>
+      </div>
+    </dialog>
+
     <!-- Saisie / modification d'un service de caisse -->
     <dialog id="csDlg">
       <div class="card sheet" tabindex="-1" autofocus style="margin:0;width:min(640px,calc(100vw - 24px));display:grid;gap:12px;outline:none;align-content:start">
@@ -1108,6 +1120,33 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
   // libellé d'emplacement : celui saisi, sinon déduit du jour de semaine (planning du site)
   function svcEmpl(s){if(s.emplacement)return s.emplacement;var j=svcJour(s),e=(state&&state.emplacements||[]).filter(function(x){return +x.jour===j;})[0];return e?JCL[j]+' · '+e.ville:JCL[j]+' · hors planning';}
   function svcEmplLieu(s){if(s.emplacement)return '';var j=svcJour(s),e=(state&&state.emplacements||[]).filter(function(x){return +x.jour===j;})[0];return e?e.lieu:'';}
+  var SVC_CLS={2:'c-mar',4:'c-jeu',5:'c-ven',6:'c-sam'};
+  function svcCls(s){return SVC_CLS[svcJour(s)]||'c-aut';}
+  function svcLegende(list){var seen={};list.forEach(function(x){var k=svcCls(x);if(!seen[k])seen[k]=svcEmpl(x);});return Object.keys(seen).map(function(k){return '<span><i class="'+k+'"></i>'+esc(k==='c-aut'?'Autre jour / événement':seen[k])+'</span>';}).join('');}
+  // ---- vue d'un service passé : graphique de ses ventes et comparaison avec les autres services du même jour
+  var vuedlg=$('#csVueDlg');
+  function openServiceVue(s){
+    var all=csData.services,memes=all.filter(function(x){return svcJour(x)===svcJour(s)&&x.moment===s.moment;});
+    var moy=function(k){return memes.length?memes.reduce(function(t,x){return t+(Number(x[k])||0);},0)/memes.length:0;};
+    var ecart=function(v,m){if(!m)return '';var p=Math.round((v-m)/m*100);return '<span class="'+(p>=0?'up':'down')+'">'+(p>=0?'+':'')+p+' % vs moyenne</span>';};
+    var rang=memes.slice().sort(function(a,b){return b.ca_ttc-a.ca_ttc;}).findIndex(function(x){return x.id===s.id;})+1;
+    var jour=JCL[svcJour(s)].toLowerCase();
+    $('#csVueTitre').textContent=dateFr(s.date);$('#csVueSub').textContent=svcEmpl(s)+(svcEmplLieu(s)?' · '+svcEmplLieu(s):'')+(s.moment!=='soir'?' · '+s.moment:'');
+    var bo={};Object.keys(s.burgers).sort(function(a,b){return s.burgers[b]-s.burgers[a];}).forEach(function(k){bo[k]=s.burgers[k];});
+    // les 12 derniers services du même jour, celui-ci en couleur
+    var serie=memes.slice().sort(function(a,b){return a.date<b.date?-1:1;});var idx=serie.findIndex(function(x){return x.id===s.id;});var from=Math.max(0,Math.min(idx-6,serie.length-12));var fen=serie.slice(from,from+12);
+    vuedlg.showModal();
+    var W=Math.max(240,vuedlg.querySelector('.sheet').clientWidth-34);
+    $('#csVueCorps').innerHTML=
+      '<div class="vue-kv"><div><small>CA TTC</small><b>'+eur(s.ca_ttc)+'</b>'+ecart(s.ca_ttc,moy('ca_ttc'))+'</div><div><small>Burgers</small><b>'+nf(s.total_burgers)+'</b>'+ecart(s.total_burgers,moy('total_burgers'))+'</div><div><small>Frites</small><b>'+nf(s.frites)+'</b><span>'+(s.total_burgers?Math.round(s.frites/s.total_burgers*100)+' pour 100 burgers':'')+'</span></div><div><small>Par burger</small><b>'+(s.total_burgers?eur(s.ca_ttc/s.total_burgers):'—')+'</b><span>'+(s.doubles?s.doubles+' double'+(s.doubles>1?'s':''):'sans double')+(s.rates?' · '+s.rates+' raté'+(s.rates>1?'s':''):'')+'</span></div></div>'+
+      '<div class="pg" style="margin-top:12px"><div class="bdh"><h3>Burgers vendus ce soir-là</h3><span class="muted">'+nf(s.total_burgers)+'</span></div>'+(Object.keys(bo).length?bars(bo,s.total_burgers):'<p class="muted" style="margin:0">Pas de détail.</p>')+'</div>'+
+      '<div class="pg" style="margin-top:12px"><div class="bdh"><h3>Les '+jour+'s</h3><span class="muted">'+(rang?rang+(rang===1?'er':'e')+' meilleur sur '+memes.length:'')+'</span></div>'+svgBars(fen.map(function(x){var p=x.date.split('-');return (+p[2])+'/'+p[1];}),[{vals:fen.map(function(x){return Math.round(x.ca_ttc);}),cls:function(i){return fen[i].id===s.id?svcCls(s):'c-dim';},titres:fen.map(function(x){return dateFr(x.date)+' · '+eur(x.ca_ttc)+' · '+x.total_burgers+' burgers';})}],fen.length>8?2:1,W-32)+'<div class="lg"><span><i class="'+svcCls(s)+'"></i>ce service</span><span><i class="c-dim"></i>autres '+jour+'s · moyenne '+eur(moy('ca_ttc'))+' et '+Math.round(moy('total_burgers'))+' burgers</span></div></div>'+
+      (s.notes?'<p class="muted" style="margin:12px 0 0">'+esc(s.notes)+'</p>':'');
+    $('#csVueCorriger').onclick=function(){vuedlg.close();openService(s);};
+    setTimeout(function(){var a=document.activeElement;if(a&&a!==document.body&&a.tagName!=='DIV')a.blur();try{vuedlg.querySelector('.sheet').focus({preventScroll:true});}catch(e){}},0);vuedlg.querySelector('.sheet').scrollTop=0;
+  }
+  $('#csVueClose').addEventListener('click',function(){vuedlg.close();});
+  vuedlg.addEventListener('click',function(e){if(e.target===vuedlg)vuedlg.close();});
   function csFiltre(list){
     if(!state)return list;var today=state.today,y=today.slice(0,4);
     if(csPeriode==='30')return list.filter(function(s){return s.date>=isoAdd(today,-30);});
@@ -1125,10 +1164,11 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
     var pct=function(a,b){return b?(Math.round(a/b*1000)/10).toLocaleString('fr-FR')+' %':'—';};
     $('#csKpis').innerHTML=kpi('','CA TTC',eur(ca),'HT : '+eur(sum('ca_ht')),'caisse')+kpi('','Services',n,n?eur(ca/n)+' par service':'—','caisse')+kpi('','Burgers vendus',nf(bu),n?(Math.round(bu/n*10)/10).toLocaleString('fr-FR')+' par service':'—','caisse')+kpi('','Frites',nf(fr),bu?(Math.round(fr/bu*100))+' frites pour 100 burgers':'—','caisse')+
       kpi('','Option double',nf(db),pct(db,bu)+' des burgers','caisse')+kpi(ra?'warn':'','Ratés',nf(ra),pct(ra,bu)+' des burgers','caisse')+kpi('','Meilleur service',n?eur(Math.max.apply(null,list.map(function(s){return s.ca_ttc;}))):'—',n?esc(dateFr(list.slice().sort(function(a,b){return b.ca_ttc-a.ca_ttc;})[0].date)):'','caisse')+kpi('','Dernier service',all.length?eur(all[0].ca_ttc):'—',all.length?esc(dateFr(all[0].date))+' · '+nf(all[0].total_burgers)+' burgers':'','caisse');
-    // CA par semaine (lundi)
-    var byW={},order=[];list.slice().reverse().forEach(function(s){var p=s.date.split('-'),d=new Date(Date.UTC(+p[0],+p[1]-1,+p[2]));d.setUTCDate(d.getUTCDate()-((d.getUTCDay()+6)%7));var k=d.toISOString().slice(0,10);if(!(k in byW)){byW[k]=0;order.push(k);}byW[k]+=s.ca_ttc;});
-    var labels=order.map(function(k){var p=k.split('-');return (+p[2])+'/'+p[1];});
-    $('#csSemaines').innerHTML='<div class="bdh"><h3>Chiffre d\'affaires par semaine</h3><span class="muted">'+order.length+' semaine'+(order.length>1?'s':'')+'</span></div>'+(order.length?svgBars(labels,[{vals:order.map(function(k){return Math.round(byW[k]);}),cls:''}],Math.max(1,Math.ceil(order.length/Math.max(3,Math.floor(($('#csSemaines').clientWidth-34)/64)))),$('#csSemaines').clientWidth-34)+'<div class="lg"><span><i></i>CA TTC de la semaine (€)</span></div>':'<p class="muted" style="margin:0">Pas de données.</p>');
+    // chaque service = une barre, colorée selon l'emplacement (jour), avec le mois en repère
+    var chrono=list.slice().reverse(),lastMo='';
+    var labels=chrono.map(function(x){var mo=MOIS_C[+x.date.slice(5,7)-1]+(x.date.slice(0,4)!==state.today.slice(0,4)?' '+x.date.slice(2,4):'');if(mo!==lastMo){lastMo=mo;return mo;}return '';});
+    var moyS=n?ca/n:0;
+    $('#csSemaines').innerHTML='<div class="bdh"><h3>Chaque service</h3><span class="muted">une barre = un service · moyenne '+eur(moyS)+'</span></div>'+(chrono.length?svgBars(labels,[{vals:chrono.map(function(x){return Math.round(x.ca_ttc);}),cls:function(i){return svcCls(chrono[i]);},titres:chrono.map(function(x){return dateFr(x.date)+' · '+svcEmpl(x)+' · '+eur(x.ca_ttc)+' · '+x.total_burgers+' burgers';})}],0,$('#csSemaines').clientWidth-34)+'<div class="lg">'+svcLegende(chrono)+'</div>':'<p class="muted" style="margin:0">Pas de données.</p>');
     // par emplacement (jour de semaine)
     var byE={};list.forEach(function(s){var k=svcEmpl(s);(byE[k]=byE[k]||{n:0,ca:0,bu:0,fr:0,lieu:svcEmplLieu(s)});byE[k].n++;byE[k].ca+=s.ca_ttc;byE[k].bu+=s.total_burgers;byE[k].fr+=s.frites;});
     var ek=Object.keys(byE).sort(function(a,b){return byE[b].ca-byE[a].ca;});
@@ -1149,7 +1189,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
   }
   function loadCaisse(){return api('caisse').then(function(r){csData=r;renderCaisse();}).catch(function(e){$('#csList').innerHTML='<p class="empty">'+esc(e.message)+'</p>';});}
   $('#csPeriode').addEventListener('click',function(e){var b=e.target.closest('button[data-csp]');if(!b)return;csPeriode=b.dataset.csp;renderCaisse();});
-  $('#csList').addEventListener('click',function(e){var c=e.target.closest('[data-svc]');if(!c)return;var s=csData.services.filter(function(x){return x.id===+c.dataset.svc;})[0];if(s)openService(s);});
+  $('#csList').addEventListener('click',function(e){var c=e.target.closest('[data-svc]');if(!c)return;var s=csData.services.filter(function(x){return x.id===+c.dataset.svc;})[0];if(s)openServiceVue(s);});
   $('#csAdd').addEventListener('click',function(){openService(null);});
   // ---- saisie
   var csdlg=$('#csDlg');
@@ -1197,8 +1237,8 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
     var vide=!max;if(!max)max=1;
     var bw=Math.max(2,(gw-Math.min(6,gw*.3))/series.length),out='';
     for(var i=0;i<n;i++){
-      series.forEach(function(se,k){var v=se.vals[i]||0,h=v/max*(H-top-bot),x=i*gw+(gw-bw*series.length)/2+k*bw;out+='<rect class="'+(v?se.cls:'b0')+'" x="'+x.toFixed(1)+'" y="'+(v?(H-bot-h):(H-bot-2)).toFixed(1)+'" width="'+(bw-1).toFixed(1)+'" height="'+(v?h:2).toFixed(1)+'" rx="2"><title>'+esc(labels[i])+' : '+nf(v)+'</title></rect>';});
-      if(i%tick===0||n<=8)out+='<text x="'+(i*gw+gw/2).toFixed(1)+'" y="'+(H-5)+'" text-anchor="middle">'+esc(labels[i])+'</text>';
+      series.forEach(function(se,k){var v=se.vals[i]||0,h=v/max*(H-top-bot),x=i*gw+(gw-bw*series.length)/2+k*bw,cls=typeof se.cls==='function'?se.cls(i):se.cls,tt=se.titres?se.titres[i]:(labels[i]+' : '+nf(v));out+='<rect class="'+(v?cls:'b0')+'" x="'+x.toFixed(1)+'" y="'+(v?(H-bot-h):(H-bot-2)).toFixed(1)+'" width="'+(bw-1).toFixed(1)+'" height="'+(v?h:2).toFixed(1)+'" rx="2"><title>'+esc(tt)+'</title></rect>';});
+      if(tick?(i%tick===0||n<=8):!!labels[i])out+='<text x="'+(i*gw+gw/2).toFixed(1)+'" y="'+(H-5)+'" text-anchor="'+(tick?'middle':'start')+'">'+esc(labels[i])+'</text>';
     }
     out+='<line x1="0" y1="'+(H-bot)+'" x2="'+W+'" y2="'+(H-bot)+'"/><text x="0" y="10">'+(vide?'Pas encore de données':nf(max))+'</text>';
     return '<svg class="chart" viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'" aria-hidden="true">'+out+'</svg>';
