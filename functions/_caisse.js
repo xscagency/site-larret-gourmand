@@ -70,3 +70,16 @@ export function ligneService(row) {
   try { extra = JSON.parse(row.extra || '{}'); } catch (e) { /* ignore */ }
   return { ...row, burgers, extra };
 }
+
+// Tickets d'un service (envoyés par la caisse avec la synthèse) : remplacés à chaque envoi pour cette date
+export async function enregistrerCommandes(env, date, commandes) {
+  if (!Array.isArray(commandes)) return 0;
+  const rows = commandes.slice(0, 500).map((c) => ({
+    numero: Math.round(num(c.numero)), heure: String(c.heure || '').slice(0, 8), creneau: String(c.creneau || '').slice(0, 20),
+    statut: c.statut === 'annulee' ? 'annulee' : 'reglee', articles: String(c.articles || '').slice(0, 2000), total_ttc: r2(num(c.total_ttc)), fidelite: c.fidelite ? 1 : 0,
+  })).filter((c) => c.numero > 0);
+  const stmts = [env.DB.prepare('DELETE FROM commandes WHERE date = ?').bind(date)];
+  for (const c of rows) stmts.push(env.DB.prepare('INSERT OR REPLACE INTO commandes (date, numero, heure, creneau, statut, articles, total_ttc, fidelite) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').bind(date, c.numero, c.heure, c.creneau, c.statut, c.articles, c.total_ttc, c.fidelite));
+  await env.DB.batch(stmts);
+  return rows.length;
+}

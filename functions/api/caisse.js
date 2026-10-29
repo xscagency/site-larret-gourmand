@@ -5,7 +5,7 @@
 // Le même service renvoyé une seconde fois remplace les chiffres (corrections possibles depuis la caisse).
 
 import { json } from '../_lib.js';
-import { cleCaisse, normaliserService, enregistrerService } from '../_caisse.js';
+import { cleCaisse, normaliserService, enregistrerService, enregistrerCommandes } from '../_caisse.js';
 
 export async function onRequest({ request, env }) {
   if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors() });
@@ -15,15 +15,21 @@ export async function onRequest({ request, env }) {
   if (!cle || cle !== await cleCaisse(env)) return json({ ok: false, error: 'Clé de caisse refusée.' }, 401, cors());
   const body = await request.json().catch(() => null);
   if (!body) return json({ ok: false, error: 'Corps JSON attendu.' }, 400, cors());
+  if (body.ping) return json({ ok: true, ping: true }, 200, cors()); // test de connexion depuis la caisse
   // un service, ou une liste de services (rattrapage)
   const liste = Array.isArray(body.services) ? body.services : [body];
   const ids = [];
+  let tickets = 0;
   try {
-    for (const b of liste.slice(0, 100)) ids.push(await enregistrerService(env, normaliserService(b), 'caisse'));
+    for (const b of liste.slice(0, 100)) {
+      const s = normaliserService(b);
+      ids.push(await enregistrerService(env, s, 'caisse'));
+      if (Array.isArray(b.commandes)) tickets += await enregistrerCommandes(env, s.date, b.commandes);
+    }
   } catch (e) {
     return json({ ok: false, error: String(e.message || e) }, 400, cors());
   }
-  return json({ ok: true, enregistres: ids.length, ids }, 200, cors());
+  return json({ ok: true, enregistres: ids.length, ids, tickets }, 200, cors());
 }
 
 // la caisse peut tourner depuis un fichier local ou un autre domaine

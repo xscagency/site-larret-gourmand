@@ -89,6 +89,21 @@ const TABLE_SERVICES = `CREATE TABLE IF NOT EXISTS services (
     UNIQUE(date, moment)
   )`;
 
+// Commandes de la caisse (tickets), rattachées à un service par la date : pour les analyses par heure / créneau
+const TABLE_COMMANDES = `CREATE TABLE IF NOT EXISTS commandes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    date TEXT NOT NULL,
+    numero INTEGER NOT NULL,
+    heure TEXT,
+    creneau TEXT,
+    statut TEXT NOT NULL DEFAULT 'reglee',
+    articles TEXT,
+    total_ttc REAL NOT NULL DEFAULT 0,
+    fidelite INTEGER NOT NULL DEFAULT 0,
+    maj TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE(date, numero)
+  )`;
+
 export const STATEMENTS = [
   `CREATE TABLE IF NOT EXISTS burgers (
     id TEXT PRIMARY KEY,
@@ -140,6 +155,7 @@ export const STATEMENTS = [
   TABLE_FICHIERS,
   TABLE_EVENEMENTS,
   TABLE_SERVICES,
+  TABLE_COMMANDES,
   `CREATE TABLE IF NOT EXISTS devis (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     numero TEXT NOT NULL UNIQUE,
@@ -243,7 +259,7 @@ export async function ensureSchema(env) {
 
 // Mises à jour appliquées une seule fois sur une base déjà en ligne (numérotées, dans l'ordre).
 // Une base neuve reçoit directement le schéma complet ; une base existante rattrape les versions manquantes.
-export const SCHEMA_VERSION = 15;
+export const SCHEMA_VERSION = 16;
 export const MIGRATIONS = {
   1: ['ALTER TABLE demandes ADD COLUMN moment TEXT'],
   2: ['ALTER TABLE demandes ADD COLUMN adresse TEXT', 'ALTER TABLE demandes ADD COLUMN code_postal TEXT', 'ALTER TABLE demandes ADD COLUMN ville TEXT',
@@ -335,6 +351,7 @@ Sylvain')`],
   14: ["UPDATE abonnes SET sujets = replace(sujets, '\"concours\"', '\"offres\"')", "UPDATE reglages SET valeur = 'contact@larretgourmand.com' WHERE cle = 'devis_contact_email'"],
   // 15 : table des services de la caisse + reprise de l'historique de l'ancien classeur
   15: [TABLE_SERVICES, ...SERVICES_HISTORIQUE.map((r) => `INSERT OR IGNORE INTO services (date, moment, burgers, total_burgers, frites, ca_ttc, ca_ht, tva, doubles, rates, source) VALUES ('${r.date}', 'soir', '${JSON.stringify(r.burgers).replace(/'/g, "''")}', ${r.total}, ${r.frites}, ${r.ca_ttc}, ${r.ca_ht}, ${r.tva}, ${r.doubles}, ${r.rates}, 'import')`)],
+  16: [TABLE_COMMANDES],
 };
 export async function applyMigrations(env, from = 0) {
   for (let v = from + 1; v <= SCHEMA_VERSION; v++) {
