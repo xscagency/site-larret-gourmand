@@ -38,6 +38,7 @@ import { telegramConfig, detectChat } from '../../_telegram.js';
 import { runRappels } from '../../_rappels.js';
 import { getVisites } from '../../_visites.js';
 import { getSearchConsole } from '../../_google.js';
+import { cleCaisse, normaliserService, enregistrerService, ligneService, BURGERS_CAISSE } from '../../_caisse.js';
 import { addDays } from '../../_lib.js';
 
 function authorized(request, env) {
@@ -370,6 +371,41 @@ export async function onRequest({ request, env, params }) {
     return json({ ok: true });
   }
   // ---- Événements publics sans devis (marchés, festivals, fêtes de village…)
+  // ---- Caisse : services (chiffres de chaque soir)
+  if (route === 'caisse' && method === 'GET') {
+    await loadState(env);
+    const rows = await env.DB.prepare('SELECT * FROM services ORDER BY date DESC, moment DESC').all();
+    return json({ ok: true, services: rows.results.map(ligneService), cle: await cleCaisse(env), burgers: BURGERS_CAISSE, url: `${new URL(request.url).origin}/api/caisse` });
+  }
+  if (route === 'caisse' && method === 'POST') {
+    try { const s = normaliserService(body); const id = await enregistrerService(env, s, 'admin'); return json({ ok: true, id }); }
+    catch (e) { return json({ ok: false, error: String(e.message || e) }, 400); }
+  }
+  if (route === 'caisse/cle' && method === 'POST') {
+    const cle = 'lag_' + Array.from(crypto.getRandomValues(new Uint8Array(18)), (b) => b.toString(16).padStart(2, '0')).join('');
+    await env.DB.prepare("INSERT INTO reglages (cle, valeur) VALUES ('caisse_cle', ?) ON CONFLICT(cle) DO UPDATE SET valeur = excluded.valeur").bind(cle).run();
+    return json({ ok: true, cle });
+  }
+  const mSvc = /^caisse\/(\d+)$/.exec(route);
+  if (mSvc && method === 'PUT') {
+    const id = Number(mSvc[1]);
+    const cur = await env.DB.prepare('SELECT * FROM services WHERE id = ?').bind(id).first();
+    if (!cur) return json({ ok: false, error: 'Service introuvable.' }, 404);
+    try {
+      const s = normaliserService({ ...ligneService(cur), ...body, burgers: body.burgers !== undefined ? body.burgers : ligneService(cur).burgers });
+      // changement de date/moment : on vérifie que la place est libre
+      const clash = await env.DB.prepare('SELECT id FROM services WHERE date = ? AND moment = ? AND id <> ?').bind(s.date, s.moment, id).first();
+      if (clash) return json({ ok: false, error: 'Un autre service existe déjà à cette date.' }, 400);
+      await env.DB.prepare(`UPDATE services SET date = ?, moment = ?, emplacement = ?, burgers = ?, total_burgers = ?, frites = ?, ca_ttc = ?, ca_ht = ?, tva = ?, doubles = ?, rates = ?, extra = ?, notes = ?, maj = datetime('now') WHERE id = ?`)
+        .bind(s.date, s.moment, s.emplacement, JSON.stringify(s.burgers), s.total_burgers, s.frites, s.ca_ttc, s.ca_ht, s.tva, s.doubles, s.rates, JSON.stringify(s.extra), s.notes, id).run();
+      return json({ ok: true });
+    } catch (e) { return json({ ok: false, error: String(e.message || e) }, 400); }
+  }
+  if (mSvc && method === 'DELETE') {
+    await env.DB.prepare('DELETE FROM services WHERE id = ?').bind(Number(mSvc[1])).run();
+    return json({ ok: true });
+  }
+
   if (route === 'evenements' && method === 'GET') {
     const r = await env.DB.prepare('SELECT * FROM evenements WHERE date >= ? ORDER BY date, id').bind(addDays(todayParis(), -60)).all();
     return json({ ok: true, evenements: r.results.map((e) => ({ ...e, rappel: !!e.rappel })) });

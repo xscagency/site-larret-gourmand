@@ -1,3 +1,4 @@
+import { SERVICES_HISTORIQUE } from './_caisse_historique.js';
 // Structure de la base et données de départ, exécutées automatiquement si les tables manquent.
 // Même contenu que schema.sql (gardé lisible à la racine du projet). Toutes les requêtes sont
 // « si n'existe pas » / « ignorer si déjà présent » : les relancer ne modifie jamais des données existantes.
@@ -66,6 +67,28 @@ const TABLE_ALERTES = `CREATE TABLE IF NOT EXISTS alertes (
     cree TEXT NOT NULL DEFAULT (datetime('now'))
   )`;
 
+// Services de la caisse : une ligne par service (date + moment), avec le détail des burgers vendus
+const TABLE_SERVICES = `CREATE TABLE IF NOT EXISTS services (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    date TEXT NOT NULL,
+    moment TEXT NOT NULL DEFAULT 'soir',
+    emplacement TEXT,
+    burgers TEXT NOT NULL DEFAULT '{}',
+    total_burgers INTEGER NOT NULL DEFAULT 0,
+    frites INTEGER NOT NULL DEFAULT 0,
+    ca_ttc REAL NOT NULL DEFAULT 0,
+    ca_ht REAL NOT NULL DEFAULT 0,
+    tva REAL NOT NULL DEFAULT 0,
+    doubles INTEGER NOT NULL DEFAULT 0,
+    rates INTEGER NOT NULL DEFAULT 0,
+    extra TEXT NOT NULL DEFAULT '{}',
+    notes TEXT,
+    source TEXT NOT NULL DEFAULT 'caisse',
+    recu_le TEXT NOT NULL DEFAULT (datetime('now')),
+    maj TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE(date, moment)
+  )`;
+
 export const STATEMENTS = [
   `CREATE TABLE IF NOT EXISTS burgers (
     id TEXT PRIMARY KEY,
@@ -116,6 +139,7 @@ export const STATEMENTS = [
   TABLE_SUIVI,
   TABLE_FICHIERS,
   TABLE_EVENEMENTS,
+  TABLE_SERVICES,
   `CREATE TABLE IF NOT EXISTS devis (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     numero TEXT NOT NULL UNIQUE,
@@ -219,7 +243,7 @@ export async function ensureSchema(env) {
 
 // Mises à jour appliquées une seule fois sur une base déjà en ligne (numérotées, dans l'ordre).
 // Une base neuve reçoit directement le schéma complet ; une base existante rattrape les versions manquantes.
-export const SCHEMA_VERSION = 14;
+export const SCHEMA_VERSION = 15;
 export const MIGRATIONS = {
   1: ['ALTER TABLE demandes ADD COLUMN moment TEXT'],
   2: ['ALTER TABLE demandes ADD COLUMN adresse TEXT', 'ALTER TABLE demandes ADD COLUMN code_postal TEXT', 'ALTER TABLE demandes ADD COLUMN ville TEXT',
@@ -309,6 +333,8 @@ Cordialement,
 Sylvain')`],
   13: [TABLE_EVENEMENTS],
   14: ["UPDATE abonnes SET sujets = replace(sujets, '\"concours\"', '\"offres\"')", "UPDATE reglages SET valeur = 'contact@larretgourmand.com' WHERE cle = 'devis_contact_email'"],
+  // 15 : table des services de la caisse + reprise de l'historique de l'ancien classeur
+  15: [TABLE_SERVICES, ...SERVICES_HISTORIQUE.map((r) => `INSERT OR IGNORE INTO services (date, moment, burgers, total_burgers, frites, ca_ttc, ca_ht, tva, doubles, rates, source) VALUES ('${r.date}', 'soir', '${JSON.stringify(r.burgers).replace(/'/g, "''")}', ${r.total}, ${r.frites}, ${r.ca_ttc}, ${r.ca_ht}, ${r.tva}, ${r.doubles}, ${r.rates}, 'import')`)],
 };
 export async function applyMigrations(env, from = 0) {
   for (let v = from + 1; v <= SCHEMA_VERSION; v++) {
