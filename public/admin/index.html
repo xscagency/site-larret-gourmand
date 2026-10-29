@@ -381,7 +381,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
 /* en-têtes de section : titre + bouton */
 .sec-head{margin-bottom:14px;align-items:end}
 /* demandes : coordonnées alignées */
-.demande .contact{display:grid;grid-template-columns:auto 34px auto 34px;gap:8px;align-items:center;justify-content:start}
+.demande .contact{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .demande .contact .btn{min-width:0;max-width:100%}
 .ell{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
@@ -427,7 +427,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
   .demande .actions .btn,.ag .actions .btn{flex:1 1 calc(50% - 4px);justify-content:center;min-width:0;white-space:nowrap}
   .demande .actions select{flex:1 1 100%;width:auto;min-width:0}
   .demande .actions--devis .btn{flex:1 1 100%}
-  .demande .contact{grid-template-columns:minmax(0,1fr) 34px}
+  .demande .contact{flex-direction:column;align-items:stretch}
   .demande .contact .btn{width:100%;justify-content:flex-start}
   .demande .head .name{font-size:1rem}
   .ag{grid-template-columns:52px 1fr;gap:12px}
