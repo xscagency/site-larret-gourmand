@@ -246,12 +246,19 @@ dialog[open]{animation:pop .3s cubic-bezier(.2,.9,.3,1.1)}
 .x:hover{background:var(--brun-3)}
 .form{display:grid;gap:14px}
 .form h3{font-size:1.05rem;color:var(--cheddar);margin-top:6px}
-.form .row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form .row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
 @media (max-width:520px){.form .row{grid-template-columns:1fr}}
 .field{display:grid;gap:6px;min-width:0}
 .field span{font-size:.9rem;color:var(--creme-2);font-weight:500}
 .field input,.field select,.field textarea{width:100%;font:inherit;font-size:1rem;color:var(--creme);background:var(--brun);border:1px solid var(--brun-line);border-radius:10px;padding:12px 14px;min-width:0}
 .field textarea{min-height:110px;resize:vertical}
+/* iPhone : le champ date a une largeur « naturelle » qui ignore width:100 % tant qu'on ne neutralise pas son apparence */
+.field input[type=date]{display:block;-webkit-appearance:none;appearance:none;max-width:100%;min-height:48px;text-align:left;box-sizing:border-box}
+.field input[type=date]::-webkit-date-and-time-value{text-align:left;min-height:1.3em}
+/* champs obligatoires : étoile après l'intitulé */
+.field:has(:required)>span::after{content:" *";color:var(--cheddar);font-weight:700}
+.form__req{margin:-4px 0 0;font-size:.86rem;color:var(--creme-2)}
+.form__req b{color:var(--cheddar)}
 .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--cheddar);outline:none;box-shadow:0 0 0 3px rgba(243,173,63,.25)}
 .form__foot{display:grid;gap:12px;margin-top:6px}
 .form__foot .btn{text-transform:uppercase;letter-spacing:.04em}
@@ -532,7 +539,7 @@ p,li,.tag,.lede,.ing,h1,h2,h3,summary{text-wrap:pretty}
 h1,h2,h3{text-wrap:balance}
 
 /* Formulaire : code postal + ville */
-.form .row--cp{grid-template-columns:140px 1fr}
+.form .row--cp{grid-template-columns:140px minmax(0,1fr)}
 @media (max-width:520px){.form .row--cp{grid-template-columns:120px 1fr}}
 .field input:invalid:not(:placeholder-shown),.field select:invalid{border-color:var(--brun-line)}
 .form.was-validated :invalid{border-color:var(--ketchup)}
