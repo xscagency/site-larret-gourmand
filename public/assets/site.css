@@ -377,7 +377,8 @@ h2{font-size:clamp(2rem,4.4vw,3.2rem)}
   .nav .btn--primary{display:none}
   .nav__panel{display:none;border-top:1px solid var(--brun-line);background:var(--brun);padding-block:14px 18px}
   .nav.is-open .nav__panel{display:block}
-  .nav__panel .wrap{display:grid;gap:6px;min-height:0}
+  .nav__panel .wrap{display:grid;grid-template-columns:minmax(0,1fr);justify-content:stretch;gap:6px;min-height:0} /* pleine largeur : sans ça, le space-between de la barre fige la colonne à la largeur du plus long élément */
+  body:has(.nav.is-open) .fx-canvas{z-index:40} /* menu ouvert : les décorations animées passent dessous */
   .nav__panel a.lnk{display:block;padding:12px 4px;font-weight:500;text-decoration:none;color:var(--creme);border-bottom:1px solid var(--brun-line);font-size:1.05rem}
   .nav__panel .pill{display:inline-flex;margin-top:10px;white-space:normal}
   .nav__panel .btn{margin-top:12px;width:100%}
