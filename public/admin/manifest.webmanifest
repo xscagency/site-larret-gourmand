@@ -1,0 +1,16 @@
+{
+  "name": "Admin L'Arrêt Gourmand",
+  "short_name": "Admin LAG",
+  "description": "Tableau de contrôle du food-truck : demandes, devis, factures, Data Addict, agenda, alertes.",
+  "lang": "fr",
+  "start_url": "/admin/",
+  "scope": "/admin/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#3A2619",
+  "theme_color": "#3A2619",
+  "icons": [
+    { "src": "/img/icon-admin-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/img/icon-admin-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

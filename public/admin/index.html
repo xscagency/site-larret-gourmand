@@ -8,7 +8,12 @@
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#3A2619">
 <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="/img/favicon.svg">
+<link rel="apple-touch-icon" href="/img/icon-admin-180.png">
+<link rel="manifest" href="/admin/manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Admin LAG">
 <link rel="stylesheet" href="/fonts/fonts.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
 <style>
@@ -414,10 +419,18 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
 .demande .contact .btn{min-width:0;max-width:100%}
 .ell{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
+/* ---------- installé sur l'écran d'accueil (iPhone) ---------- */
+@media (display-mode:standalone){
+  body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:60;background:var(--brun)}
+  .top{padding-top:env(safe-area-inset-top,0px)}
+  #login{padding-top:calc(24px + env(safe-area-inset-top,0px))}
+  body{padding-bottom:max(32px,env(safe-area-inset-bottom,0px))}
+}
 /* ---------- mobile ---------- */
 @media (max-width:640px){
   /* en-tête compact : la ligne du logo (48 px) défile hors de l'écran, seule la rangée d'onglets reste collée en haut */
   .top{top:-48px}
+  @media (display-mode:standalone){.top{top:calc(env(safe-area-inset-top,0px) - 48px)}}
   .top .wrap:first-child{min-height:48px;gap:8px}
   .brand{gap:8px}
   .brand__logo{width:30px;height:30px}
