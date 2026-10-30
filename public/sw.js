@@ -1,6 +1,6 @@
 // Service worker : rend le site installable et consultable même sans réseau (dernière version vue),
 // et reçoit les alertes envoyées sur le téléphone (notifications).
-const CACHE = 'lag-site-v5';
+const CACHE = 'lag-site-v6';
 const SHELL = ['/', '/assets/site.css', '/assets/site.js', '/img/logo-t-192.png', '/img/icon-192-v2.png'];
 self.addEventListener('install', (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL).catch(() => null)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', (e) => { e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim())); });
