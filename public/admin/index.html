@@ -516,7 +516,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
         <button data-tab="demandes">Demandes<span class="n" id="nNew" hidden></span></button>
         <button data-tab="devis">Devis</button>
         <button data-tab="factures">Factures</button>
-        <button data-tab="caisse">Caisse</button>
+        <button data-tab="caisse">Data Addict</button>
         <button data-tab="agenda">Agenda<span class="n" id="nAg" hidden></span></button>
         <button data-tab="alertes">Alertes</button>
         <button data-tab="bandeau">Réglages</button>
@@ -708,7 +708,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
         </details>
       </div>
 
-      <h2 style="margin-top:28px">Caisse<small>Comment l'application de caisse envoie ses chiffres au site</small></h2>
+      <h2 style="margin-top:28px">Data Addict<small>Comment l'application de caisse Data Addict envoie ses chiffres au site</small></h2>
       <div class="card" style="display:grid;gap:10px">
         <div class="grid"><label class="f">Adresse d'envoi<input id="csUrl" type="text" readonly></label><label class="f">Clé de la caisse<input id="csCle" type="text" readonly></label></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn sm" type="button" id="csCopyCle">Copier la clé</button><button class="btn sm danger" type="button" id="csNewCle">Régénérer la clé</button></div>
@@ -737,7 +737,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
     </section>
 
     <section id="tab-caisse">
-      <div class="row sec-head"><h2 style="margin:0">Caisse<small>Les chiffres de chaque service : envoyés par la caisse, ou saisis ici</small></h2><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn sm" id="csExport" type="button">⬇ Export CSV</button><button class="btn primary sm" id="csAdd" type="button">+ Saisir un service</button></div></div>
+      <div class="row sec-head"><h2 style="margin:0">Data Addict<small>Les chiffres de chaque service : envoyés par la caisse Data Addict, ou saisis ici</small></h2><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn sm" id="csExport" type="button">⬇ Export CSV</button><button class="btn primary sm" id="csAdd" type="button">+ Saisir un service</button></div></div>
       <div class="row cs-top"><div class="seg" id="csPeriode"><button type="button" data-csp="30">30 jours</button><button type="button" data-csp="90">3 mois</button><button type="button" data-csp="annee">Cette année</button><button type="button" data-csp="tout" class="is-on">Tout</button></div><span class="muted" id="csInfo"></span></div>
       <div class="kpis kpis--4" id="csKpis"></div>
       <div class="card" id="csSemaines"></div>
@@ -1281,7 +1281,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
     k+=kpi('','Facturé en '+y,eur(facture),'Réglé : '+eur(regle)+(signe?'<br>Signé à venir : '+eur(signe):''),'factures');
     var svcs=csData?csData.services:[],svcMois=svcs.filter(function(x){return x.date.slice(0,7)===mois;}),caMois=svcMois.reduce(function(t,x){return t+x.ca_ttc;},0);
     var prevM=isoAdd(mois+'-01',-1).slice(0,7),caPrev=svcs.filter(function(x){return x.date.slice(0,7)===prevM;}).reduce(function(t,x){return t+x.ca_ttc;},0);
-    k+=kpi('','Caisse · ce mois',svcs.length?eur(caMois):'—',svcMois.length+' service'+(svcMois.length>1?'s':'')+(caPrev?' · mois précédent : '+eur(caPrev):''),'caisse');
+    k+=kpi('','Data Addict · ce mois',svcs.length?eur(caMois):'—',svcMois.length+' service'+(svcMois.length>1?'s':'')+(caPrev?' · mois précédent : '+eur(caPrev):''),'caisse');
     k+=kpi('','Dernier service',svcs.length?eur(svcs[0].ca_ttc):'—',svcs.length?esc(dateFr(svcs[0].date))+' · '+nf(svcs[0].total_burgers)+' burgers · '+esc(svcEmpl(svcs[0]).replace(/^\S+ · /,'')):'La caisse n\'a encore rien envoyé','caisse');
     var al=alData&&alData.historique&&alData.historique[0];
     k+=kpi('','Abonnés alertes',alData?nf(alData.actifs):'…',al?'Dernière alerte le '+esc(dateHeure(al.cree))+(al.cibles?' · '+al.envoyes+' envoi'+(al.envoyes>1?'s':''):''):'Aucune alerte envoyée','alertes');
