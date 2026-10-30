@@ -435,6 +435,9 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
   .top{padding-top:env(safe-area-inset-top,0px)}
   #login{padding-top:calc(24px + env(safe-area-inset-top,0px))}
   body{padding-bottom:max(32px,env(safe-area-inset-bottom,0px))}
+  /* fenêtres plein écran : leur en-tête (titre, Fermer) reste sous la barre d'état, jamais derrière */
+  dialog>.card,dialog>form.card{padding-top:calc(16px + env(safe-area-inset-top,0px))}
+  .sheet>.row:first-child,#burgerForm>.row:first-child{top:env(safe-area-inset-top,0px)}
 }
 /* ---------- mobile ---------- */
 @media (max-width:640px){
