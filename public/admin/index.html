@@ -69,7 +69,9 @@ select option{color:#222;background:#fff}
 textarea{min-height:110px;line-height:1.45}
 input[type=checkbox],input[type=file]{min-height:0;-webkit-appearance:auto;appearance:auto;width:auto}
 input:focus,select:focus,textarea:focus{outline:none;border-color:var(--cheddar);box-shadow:0 0 0 3px rgba(243,173,63,.22)}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}.grid>*{min-width:0}
+code{overflow-wrap:anywhere;word-break:break-word;white-space:pre-wrap;background:rgba(255,255,255,.07);padding:1px 6px;border-radius:6px;font-size:.85em;color:var(--creme)}
+.card{min-width:0}.card input,.card select,.card textarea{max-width:100%;min-width:0}
 /* interrupteur */
 .sw{position:relative;width:52px;height:30px;flex:none}
 .sw input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer;width:100%;height:100%}
@@ -712,7 +714,9 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
       <div class="card" style="display:grid;gap:10px">
         <div class="grid"><label class="f">Adresse d'envoi<input id="csUrl" type="text" readonly></label><label class="f">Clé de la caisse<input id="csCle" type="text" readonly></label></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn sm" type="button" id="csCopyCle">Copier la clé</button><button class="btn sm danger" type="button" id="csNewCle">Régénérer la clé</button></div>
-        <p class="muted" style="margin:0;line-height:1.5">La caisse envoie un service en <code>POST</code> à cette adresse, avec l'en-tête <code>Authorization: Bearer &lt;clé&gt;</code> et un corps JSON : <code>{"date":"2026-10-29","burgers":{"L'Américain":17},"frites":56,"ca_ttc":787,"doubles":2,"rates":0}</code>. Renvoyer un service déjà reçu remplace ses chiffres. Si la clé est régénérée, il faut la remettre dans la caisse.</p>
+        <p class="muted" style="margin:0;line-height:1.5">La caisse envoie un service en <code>POST</code> à cette adresse, avec l'en-tête <code>Authorization: Bearer &lt;clé&gt;</code> et un corps JSON du type :</p>
+        <pre class="muted" style="margin:0;white-space:pre-wrap;overflow-wrap:anywhere;font-size:.82rem;line-height:1.5;background:rgba(255,255,255,.06);padding:8px 10px;border-radius:8px">{"date":"2026-10-29", "burgers":{"L'Américain":17, "Le BBQ":14}, "frites":56, "ca_ttc":787, "doubles":2, "rates":0}</pre>
+        <p class="muted" style="margin:0;line-height:1.5"> Renvoyer un service déjà reçu remplace ses chiffres. Si la clé est régénérée, il faut la remettre dans la caisse.</p>
       </div>
 
       <h2 style="margin-top:28px">Rappels des privatisations<small>Un message Telegram 7 jours avant, la veille et le jour même à 9h, pour chaque devis validé et chaque événement</small></h2>
