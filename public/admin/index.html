@@ -423,15 +423,10 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
   .brand h1{font-size:1.02rem}
   .brand small{display:none}
   .top .btn.sm{padding:5px 9px;font-size:.8rem}
-  /* onglets : une seule rangée qui défile latéralement, l'onglet actif est amené en vue */
-  .tabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;border-radius:14px;gap:3px;padding:3px;margin-bottom:6px;scroll-padding:12px}
-  .tabs::-webkit-scrollbar{display:none}
-  /* un dégradé à droite signale qu'il y a d'autres onglets ; il disparaît en bout de rangée */
-  .top .wrap:last-child{position:relative}
-  .top .wrap:last-child::after{content:"";position:absolute;right:16px;top:0;bottom:6px;width:44px;border-radius:0 14px 14px 0;background:linear-gradient(90deg,rgba(58,38,25,0),rgba(58,38,25,.96) 70%);pointer-events:none;transition:opacity .2s}
-  .top .wrap:last-child.at-end::after{opacity:0}
-  .tabs button{flex:0 0 auto;padding:7px 11px;font-size:.84rem}
-  .tabs button .n{margin-left:4px}
+  /* onglets : tous visibles (pas de défilement), rangées serrées */
+  .tabs{flex-wrap:wrap;overflow:visible;border-radius:14px;gap:2px;padding:3px;margin-bottom:6px}
+  .tabs button{flex:1 1 auto;padding:6px 8px;font-size:.8rem;line-height:1.2}
+  .tabs button .n{margin-left:4px;min-width:16px;line-height:16px;font-size:.68rem}
   /* carte « affiché sur le site » : une ligne forte, le reste en petit */
   .state{padding:9px 12px;gap:10px;margin-top:8px;border-radius:12px}
   .state small{display:none}
@@ -502,7 +497,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
   #burgerForm>.row:last-of-type{flex-wrap:wrap}
   #burgerForm>.row:last-of-type .btn{flex:1 1 auto;justify-content:center}
 }
-@media (max-width:400px){.tabs button{padding:7px 9px;font-size:.82rem}.top .btn.sm{padding:5px 8px}}
+@media (max-width:400px){.tabs button{padding:6px 7px;font-size:.78rem}.top .btn.sm{padding:5px 8px}}
 </style>
 </head>
 <body>
@@ -987,11 +982,9 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
   })();
 
   // ---------- onglets
-  (function(){var t=$('#tabs'),w=t.parentElement,f=function(){w.classList.toggle('at-end',t.scrollLeft+t.clientWidth>=t.scrollWidth-4);};t.addEventListener('scroll',f,{passive:true});window.addEventListener('resize',f);setTimeout(f,100);})();
   $('#tabs').addEventListener('click',function(e){
     var b=e.target.closest('button');if(!b)return;
     document.querySelectorAll('#tabs button').forEach(function(x){x.classList.toggle('is-on',x===b);});
-    try{b.scrollIntoView({inline:'center',block:'nearest'});}catch(e){}
     document.querySelectorAll('main section').forEach(function(s){s.classList.toggle('is-on',s.id==='tab-'+b.dataset.tab);});
     try{localStorage.setItem('lag_admin_tab',b.dataset.tab);}catch(e){}
     if(b.dataset.tab==='bord'&&state)renderBord();
