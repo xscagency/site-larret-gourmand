@@ -13,7 +13,7 @@
 <link rel="manifest" href="/admin/manifest.webmanifest">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Admin LAG">
 <link rel="stylesheet" href="/fonts/fonts.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
@@ -529,10 +529,9 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
   #burgerForm>.row:last-of-type .btn{flex:1 1 auto;justify-content:center}
 }
 @media (max-width:400px){.tabs button{padding:9px 10px;font-size:.86rem}.top .btn.sm{padding:5px 8px}}
-/* installé sur l'écran d'accueil + téléphone : l'en-tête des fenêtres plein écran (titre, Fermer) reste sous la barre d'état */
+/* installé sur l'écran d'accueil + téléphone : les fenêtres plein écran se calent sur les bords réels de l'écran */
 @media (display-mode:standalone) and (max-width:640px){
-  dialog>.card,dialog>form.card{padding-top:calc(16px + env(safe-area-inset-top,0px))}
-  .sheet>.row:first-child,#burgerForm>.row:first-child{top:env(safe-area-inset-top,0px)}
+  dialog{height:auto;top:0;bottom:0}
 }
 </style>
 </head>
