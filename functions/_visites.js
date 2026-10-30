@@ -16,8 +16,11 @@ const pageOk = (p) => (/^\/[a-z0-9\-\/]{0,80}$/.test(p || '') ? p : '');
 
 async function interroger(env, jours, page) {
   const to = new Date();
-  const from = new Date(to.getTime() - (jours - 1) * 86400000);
-  from.setUTCHours(0, 0, 0, 0);
+  // début de la période à minuit, heure de Paris (pour « aujourd'hui » notamment)
+  const partsParis = new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit', hour: 'numeric', hourCycle: 'h23' }).formatToParts(to);
+  const hParis = Number((partsParis.find((x) => x.type === 'hour') || {}).value || 0);
+  const minuitParis = new Date(to.getTime() - hParis * 3600000 - (to.getUTCMinutes() * 60000) - to.getUTCSeconds() * 1000);
+  const from = new Date(minuitParis.getTime() - (jours - 1) * 86400000);
   // hors pages d'administration et hors robots connus : on ne compte que les vrais visiteurs du site public
   const filtre = `datetime_geq: "${iso(from)}", datetime_leq: "${iso(to)}", requestPath_notlike: "/admin%", bot: 0${page ? `, requestPath: "${page}"` : ''}${env.CF_SITE_TAG ? `, siteTag: "${hex(env.CF_SITE_TAG)}"` : ''}`;
   const grp = (dims, limit, order) => `rumPageloadEventsAdaptiveGroups(limit: ${limit}, filter: {${filtre}}${order ? `, orderBy: [${order}]` : ''}) { count sum { visits } ${dims ? `dimensions { ${dims} }` : ''} }`;
