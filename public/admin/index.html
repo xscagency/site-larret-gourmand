@@ -1334,7 +1334,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
     else k+=kpi('dim','Visites du site',visData&&visData.erreur?'Indisponible':'À brancher','Détails ci-dessous','bord');
     k+=kpi(nouv.length?'warn':'','Demandes ce mois',demMois,dem30+' sur 30 jours'+(nouv.length?' · <b>'+nouv.length+' à traiter</b>':''),'demandes');
     k+=kpi('','Devis en cours',attente.length+arrhes.length,decides.length?pct(gagnes,decides.length)+' % signés ('+gagnes+' sur '+decides.length+')':'Aucun devis décidé','devis');
-    k+=kpi(conf+evs?'good':'','Prestations à venir',conf+evs,(conf+evs?conf+' confirmée'+(conf>1?'s':'')+(evs?' · '+evs+' événement'+(evs>1?'s':''):''):'Rien de confirmé')+(wait?' · '+wait+' demande'+(wait>1?'s':'')+' sans date sûre':''),'agenda');
+    k+=kpi(conf+evs?'good':'','Prestations à venir',conf+evs,(conf+evs?conf+' confirmée'+(conf>1?'s':'')+(evs?' · '+evs+' événement'+(evs>1?'s':''):''):'Rien de confirmé')+(wait?' · '+wait+' non validée'+(wait>1?'s':''):''),'agenda');
     k+=kpi('','Facturé en '+y,eur(facture),'Réglé : '+eur(regle)+(signe?'<br>Signé à venir : '+eur(signe):''),'factures');
     var svcs=csData?csData.services:[],svcMois=svcs.filter(function(x){return x.date.slice(0,7)===mois;}),caMois=svcMois.reduce(function(t,x){return t+x.ca_ttc;},0);
     var prevM=isoAdd(mois+'-01',-1).slice(0,7),caPrev=svcs.filter(function(x){return x.date.slice(0,7)===prevM;}).reduce(function(t,x){return t+x.ca_ttc;},0);
