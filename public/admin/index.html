@@ -123,7 +123,12 @@ code{overflow-wrap:anywhere;word-break:break-word;white-space:pre-wrap;backgroun
 .bd2 .card{margin:0}
 .bd2--wide{grid-template-columns:3fr 2fr}
 @media (max-width:640px){.bd2--wide{grid-template-columns:1fr}}
-.csm{margin-bottom:10px}.csm>summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px 12px;border-radius:12px;background:var(--brun-2);border:1px solid var(--line);font-weight:600}.csm>summary::-webkit-details-marker{display:none}.csm>summary::before{content:'▸';color:var(--creme-3);margin-right:8px}.csm[open]>summary::before{content:'▾'}.csm>summary .muted{font-weight:500;font-size:.9rem}.csm>div{padding-top:8px}
+.csm{margin-bottom:10px}.csm>summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:auto max-content minmax(0,1fr);gap:8px;align-items:center;text-align:left;padding:10px 12px;border-radius:12px;background:var(--brun-2);border:1px solid var(--line);font-weight:600}
+.csm>summary>span:first-of-type,.csm>summary .t{white-space:nowrap}
+.csm>summary .muted,.csm>summary .s{font-size:.78rem;font-weight:500;color:var(--creme-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;text-align:right}
+.chart .gl{stroke:rgba(255,255,255,.08);stroke-width:1}.chart .ln{fill:none;stroke:rgba(255,255,255,.16);stroke-width:1}.chart .avg{fill:none;stroke:var(--cheddar);stroke-width:2.2;stroke-linejoin:round;stroke-linecap:round}.chart .moy{stroke:var(--creme-3);stroke-dasharray:4 4;stroke-width:1}
+.chart .pt{stroke:var(--brun-2);stroke-width:1}.chart .pt.c-mar{fill:var(--cheddar)}.chart .pt.c-jeu{fill:var(--mesclun)}.chart .pt.c-ven{fill:var(--ketchup)}.chart .pt.c-sam{fill:#C58AF9}.chart .pt.c-aut{fill:var(--creme-3)}
+.chart text.v{fill:var(--creme-2);font-weight:600}.chart text.hl{fill:var(--cheddar);font-weight:700;font-size:12px}.csm>summary::-webkit-details-marker{display:none}.csm>summary::before{content:'▸';color:var(--creme-3)}.csm[open]>summary::before{content:'▾'}.csm>summary .muted{font-weight:500;font-size:.9rem}.csm>div{padding-top:8px}
 .bdh{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
 .bdh h3{font-size:1.15rem}
 .bdh .muted{font-size:.84rem}
@@ -743,11 +748,11 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
     <section id="tab-caisse">
       <div class="row sec-head"><h2 style="margin:0">Data Addict<small>Les chiffres de chaque service : envoyés par la caisse Data Addict, ou saisis ici</small></h2><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn sm" id="csExport" type="button">⬇ Export CSV</button><button class="btn primary sm" id="csAdd" type="button">+ Saisir un service</button></div></div>
       <div class="row cs-top"><div class="seg" id="csPeriode"><button type="button" data-csp="30">30 jours</button><button type="button" data-csp="90">3 mois</button><button type="button" data-csp="annee">Cette année</button><button type="button" data-csp="tout" class="is-on">Tout</button></div><span class="muted" id="csInfo"></span></div>
-      <div class="card" id="csSemaines"></div>
-      <div class="card" id="csMois"></div>
-      <details class="csm cs-sec"><summary><span>Chiffres de la période</span><span class="muted" id="csKpiSum"></span></summary><div class="kpis kpis--4" id="csKpis" style="margin-top:10px"></div></details>
-      <details class="csm cs-sec"><summary><span>Par emplacement</span><span class="muted" id="csEmplSum"></span></summary><div class="card" id="csEmpl" style="margin-top:10px"></div></details>
-      <details class="csm cs-sec"><summary><span>Classement des burgers</span><span class="muted" id="csBurgersSum"></span></summary><div class="card" id="csBurgers" style="margin-top:10px"></div></details>
+      <details class="csm cs-sec" data-sec="evo"><summary><span class="t">Évolution du CA</span><span class="s" id="csEvoSum"></span></summary><div class="card" id="csSemaines" style="margin-top:10px"></div></details>
+      <details class="csm cs-sec" data-sec="mois"><summary><span class="t">CA par mois</span><span class="s" id="csMoisSum"></span></summary><div class="card" id="csMois" style="margin-top:10px"></div></details>
+      <details class="csm cs-sec" data-sec="kpi"><summary><span class="t">Chiffres de la période</span><span class="s" id="csKpiSum"></span></summary><div class="kpis kpis--4" id="csKpis" style="margin-top:10px"></div></details>
+      <details class="csm cs-sec" data-sec="empl"><summary><span class="t">Par emplacement</span><span class="s" id="csEmplSum"></span></summary><div class="card" id="csEmpl" style="margin-top:10px"></div></details>
+      <details class="csm cs-sec" data-sec="burgers"><summary><span class="t">Classement des burgers</span><span class="s" id="csBurgersSum"></span></summary><div class="card" id="csBurgers" style="margin-top:10px"></div></details>
       <div class="bdh" style="margin:18px 0 8px"><h3>Historique</h3><span class="muted">le mois en cours est déplié, touche un service pour le détail</span></div>
       <div id="csList"></div>
     </section>
@@ -1170,22 +1175,27 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
     var pct=function(a,b){return b?(Math.round(a/b*1000)/10).toLocaleString('fr-FR')+' %':'—';};
     $('#csKpis').innerHTML=kpi('','CA TTC',eur(ca),'HT : '+eur(sum('ca_ht')),'caisse')+kpi('','Services',n,n?eur(ca/n)+' par service':'—','caisse')+kpi('','Burgers vendus',nf(bu),n?(Math.round(bu/n*10)/10).toLocaleString('fr-FR')+' par service':'—','caisse')+kpi('','Frites',bu?Math.round(fr/bu*100)+' %':'—',nf(fr)+' frites pour '+nf(bu)+' burgers','caisse')+
       kpi('','Option double',pct(db,bu),nf(db)+' doubles','caisse')+kpi('','Meilleur service',n?eur(Math.max.apply(null,list.map(function(s){return s.ca_ttc;}))):'—',n?esc(dateFr(list.slice().sort(function(a,b){return b.ca_ttc-a.ca_ttc;})[0].date)):'','caisse')+kpi('','Dernier service',all.length?eur(all[0].ca_ttc):'—',all.length?esc(dateFr(all[0].date))+' · '+nf(all[0].total_burgers)+' burgers':'','caisse');
-    $('#csKpiSum').textContent=n?eur(ca)+' · '+n+' service'+(n>1?'s':''):'';
+    $('#csKpiSum').textContent=n?kEur(ca)+' · '+n+' services':'';
     // chaque service = une barre, colorée selon l'emplacement (jour), avec le mois en repère
     var chrono=list.slice().reverse(),lastMo='';
     var labels=chrono.map(function(x){var mo=MOIS_C[+x.date.slice(5,7)-1]+(x.date.slice(0,4)!==state.today.slice(0,4)?' '+x.date.slice(2,4):'');if(mo!==lastMo){lastMo=mo;return mo;}return '';});
     var moyS=n?ca/n:0;
-    $('#csSemaines').innerHTML='<div class="bdh"><h3>Évolution du CA</h3><span class="muted">une barre = un service · moyenne '+eur(moyS)+'</span></div>'+(chrono.length?svgBars(labels,[{vals:chrono.map(function(x){return Math.round(x.ca_ttc);}),cls:function(i){return svcCls(chrono[i]);},titres:chrono.map(function(x){return dateFr(x.date)+' · '+svcEmpl(x)+' · '+eur(x.ca_ttc)+' · '+x.total_burgers+' burgers · '+x.doubles+' doubles';})}],0,$('#csSemaines').clientWidth-34)+'<div class="lg">'+svcLegende(chrono)+'</div>':'<p class="muted" style="margin:0">Pas de données.</p>');
+    $('#csEvoSum').textContent=n?'moy. '+kEur(moyS)+' / service':'';
+    var secW=function(id){var el=$(id);return (el.clientWidth||el.parentElement.clientWidth||el.parentElement.parentElement.clientWidth||600)-34;};
+    $('#csSemaines').innerHTML='<p class="muted" style="margin:0 0 4px;font-size:.84rem">Un point par service, coloré selon l\'emplacement · la ligne cheddar lisse la tendance sur 5 services</p>'+svgEvolution(chrono,secW('#csSemaines'))+'<div class="lg">'+svcLegende(chrono)+'<span><i style="background:var(--cheddar);border-radius:2px;height:4px;width:16px"></i>tendance</span></div>';
     // CA par mois : tous les mois connus, le mois en cours en couleur
     var byM={};all.forEach(function(x){var k=x.date.slice(0,7);(byM[k]=byM[k]||{ca:0,n:0,bu:0});byM[k].ca+=x.ca_ttc;byM[k].n++;byM[k].bu+=x.total_burgers;});
     var mk=Object.keys(byM).sort(),moisCour=state.today.slice(0,7);
     var mLab=mk.map(function(k){return MOIS_C[+k.slice(5,7)-1]+(k.slice(0,4)!==state.today.slice(0,4)?' '+k.slice(2,4):'');});
     var meilleur=mk.slice().sort(function(a,b){return byM[b].ca-byM[a].ca;})[0];
-    $('#csMois').innerHTML='<div class="bdh"><h3>CA par mois</h3><span class="muted">'+(meilleur?'meilleur mois : '+MOIS[+meilleur.slice(5,7)-1]+' '+meilleur.slice(0,4)+' · '+eur(byM[meilleur].ca):'')+'</span></div>'+(mk.length?svgBars(mLab,[{vals:mk.map(function(k){return Math.round(byM[k].ca);}),cls:function(i){return mk[i]===moisCour?'c-mar':'c-aut';},titres:mk.map(function(k){return MOIS[+k.slice(5,7)-1]+' '+k.slice(0,4)+' · '+eur(byM[k].ca)+' · '+byM[k].n+' service'+(byM[k].n>1?'s':'')+' · '+eur(byM[k].n?byM[k].ca/byM[k].n:0)+' par service · '+nf(byM[k].bu)+' burgers';})}],Math.max(1,Math.ceil(mk.length/9)),$('#csMois').clientWidth-34)+'<div class="lg"><span><i class="c-mar"></i>mois en cours</span><span><i class="c-aut"></i>mois précédents</span></div>':'<p class="muted" style="margin:0">Pas de données.</p>');
+    $('#csMoisSum').textContent=meilleur?'record '+MOIS_C[+meilleur.slice(5,7)-1]+' · '+kEur(byM[meilleur].ca):'';
+    var cm=byM[moisCour];
+    var complets=mk.filter(function(k){return k!==moisCour;}),moyM=complets.length?complets.reduce(function(t,k){return t+byM[k].ca;},0)/complets.length:0;
+    $('#csMois').innerHTML='<p class="muted" style="margin:0 0 4px;font-size:.84rem">'+(cm?'Mois en cours : '+eur(cm.ca)+' sur '+cm.n+' service'+(cm.n>1?'s':'')+(moyM?' · ':''):'')+(moyM?'pointillé : moyenne des mois complets, '+eur(moyM):'')+'</p>'+svgMois(mk,byM,secW('#csMois'))+'<div class="lg"><span><i class="c-mar"></i>mois en cours</span><span><i class="c-aut"></i>mois précédents</span></div>';
     // par emplacement (jour de semaine)
     var byE={};list.forEach(function(s){var k=svcEmpl(s);(byE[k]=byE[k]||{n:0,ca:0,bu:0,fr:0,lieu:svcEmplLieu(s)});byE[k].n++;byE[k].ca+=s.ca_ttc;byE[k].bu+=s.total_burgers;byE[k].fr+=s.frites;});
     var ek=Object.keys(byE).sort(function(a,b){return byE[b].ca-byE[a].ca;});
-    $('#csEmplSum').textContent=ek.length?ek.length+' emplacement'+(ek.length>1?'s':''):'';
+    $('#csEmplSum').textContent=ek.length?ek.length+' lieu'+(ek.length>1?'x':''):'';
     $('#csEmpl').innerHTML=(ek.length?'<table class="gq"><thead><tr><th>Emplacement</th><th class="n">Services</th><th class="n">CA moyen</th><th class="n hide-m">CA total</th><th class="n hide-m">Burgers / serv.</th><th class="n">% du CA</th></tr></thead><tbody>'+ek.map(function(k){var e=byE[k];return '<tr><td class="q">'+esc(k)+(e.lieu?'<br><span class="muted hide-m" style="font-size:.8rem">'+esc(e.lieu)+'</span>':'')+'</td><td class="n">'+e.n+'</td><td class="n"><b>'+eur(e.ca/e.n)+'</b></td><td class="n hide-m">'+eur(e.ca)+'</td><td class="n hide-m">'+(Math.round(e.bu/e.n*10)/10).toLocaleString('fr-FR')+'</td><td class="n">'+pct(e.ca,ca)+'</td></tr>';}).join('')+'</tbody></table>':'<p class="muted" style="margin:0">Pas de données.</p>');
     // classement des burgers
     var byB={};list.forEach(function(s){Object.keys(s.burgers).forEach(function(b){byB[b]=(byB[b]||0)+s.burgers[b];});});
@@ -1204,6 +1214,8 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
   }
   function loadCaisse(){return api('caisse').then(function(r){csData=r;renderCaisse();}).catch(function(e){$('#csList').innerHTML='<p class="empty">'+esc(e.message)+'</p>';});}
   $('#csPeriode').addEventListener('click',function(e){var b=e.target.closest('button[data-csp]');if(!b)return;csPeriode=b.dataset.csp;renderCaisse();});
+  (function(){var K='lag_cs_open',open={};try{open=JSON.parse(localStorage.getItem(K)||'{}');}catch(e){}
+    document.querySelectorAll('.cs-sec').forEach(function(d){if(open[d.dataset.sec])d.open=true;d.addEventListener('toggle',function(){open[d.dataset.sec]=d.open;try{localStorage.setItem(K,JSON.stringify(open));}catch(e){}if(d.open&&csData)renderCaisse();});});})();
   $('#csList').addEventListener('click',function(e){var c=e.target.closest('[data-svc]');if(!c)return;var s=csData.services.filter(function(x){return x.id===+c.dataset.svc;})[0];if(s)openServiceVue(s);});
   $('#csAdd').addEventListener('click',function(){openService(null);});
   // ---- saisie
@@ -1258,6 +1270,33 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
       if(tick?(i%tick===0||n<=8):!!labels[i])out+='<text x="'+(i*gw+gw/2).toFixed(1)+'" y="'+(H-5)+'" text-anchor="'+(tick?'middle':'start')+'">'+esc(labels[i])+'</text>';
     }
     out+='<line x1="0" y1="'+(H-bot)+'" x2="'+W+'" y2="'+(H-bot)+'"/><text x="0" y="10">'+(vide?'Pas encore de données':nf(max))+'</text>';
+    return '<svg class="chart" viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'" aria-hidden="true">'+out+'</svg>';
+  }
+  function pasJoli(max){var c=[50,100,200,250,500,1000,2000,2500,5000,10000,20000];for(var i=0;i<c.length;i++)if(max/c[i]<=5)return c[i];return 50000;}
+  function kEur(v){return v>=1000?(Math.round(v/100)/10).toLocaleString('fr-FR')+' k€':Math.round(v)+' €';}
+  // Évolution du CA service par service : points colorés par emplacement, tendance (moyenne glissante sur 5 services)
+  function svgEvolution(chrono,W){
+    W=Math.max(260,W||600);var n=chrono.length;if(!n)return '<p class="muted" style="margin:0">Pas de données.</p>';
+    var H=220,L=46,R=14,T=16,B=28,vals=chrono.map(function(x){return Number(x.ca_ttc)||0;}),max=Math.max.apply(null,vals),st=pasJoli(max),ymax=Math.max(st,Math.ceil(max/st)*st);
+    var X=function(i){return n===1?(L+(W-L-R)/2):L+i*(W-L-R)/(n-1);},Y=function(v){return T+(H-T-B)*(1-v/ymax);},out='';
+    for(var g=0;g<=ymax;g+=st)out+='<line class="gl" x1="'+L+'" y1="'+Y(g).toFixed(1)+'" x2="'+(W-R)+'" y2="'+Y(g).toFixed(1)+'"/><text x="'+(L-6)+'" y="'+(Y(g)+4).toFixed(1)+'" text-anchor="end">'+(g>=1000?(g/1000).toLocaleString('fr-FR')+' k':g)+'</text>';
+    var lastMo='',lastLx=-99;chrono.forEach(function(x,i){var mo=x.date.slice(0,7);if(mo!==lastMo){lastMo=mo;out+='<line class="gl" x1="'+X(i).toFixed(1)+'" y1="'+T+'" x2="'+X(i).toFixed(1)+'" y2="'+(H-B)+'"/>';if(X(i)-lastLx>=38){lastLx=X(i);out+='<text x="'+(X(i)+3).toFixed(1)+'" y="'+(H-8)+'">'+MOIS_C[+mo.slice(5,7)-1]+(mo.slice(0,4)!==state.today.slice(0,4)?' '+mo.slice(2,4):'')+'</text>';}}});
+    out+='<path class="ln" d="'+chrono.map(function(x,i){return (i?'L':'M')+X(i).toFixed(1)+' '+Y(vals[i]).toFixed(1);}).join(' ')+'"/>';
+    if(n>=4){var win=Math.min(5,n),mm=vals.map(function(v,i){var a=Math.max(0,i-win+1),sl=vals.slice(a,i+1);return sl.reduce(function(t,q){return t+q;},0)/sl.length;});out+='<path class="avg" d="'+mm.map(function(v,i){return (i?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1);}).join(' ')+'"/>';}
+    chrono.forEach(function(x,i){var last=i===n-1;out+='<circle class="pt '+svcCls(x)+'" cx="'+X(i).toFixed(1)+'" cy="'+Y(vals[i]).toFixed(1)+'" r="'+(last?5:3.2)+'"><title>'+esc(dateFr(x.date)+' · '+svcEmpl(x)+' · '+eur(x.ca_ttc)+' · '+x.total_burgers+' burgers')+'</title></circle>';});
+    var lx=X(n-1),ly=Y(vals[n-1]);out+='<text class="hl" x="'+(lx-8).toFixed(1)+'" y="'+(ly-10).toFixed(1)+'" text-anchor="end">'+eur(vals[n-1])+'</text>';
+    return '<svg class="chart" viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'" aria-hidden="true">'+out+'</svg>';
+  }
+  // CA par mois : barres avec valeur, moyenne des mois complets en pointillé, mois en cours en couleur
+  function svgMois(mk,byM,W){
+    W=Math.max(260,W||600);var n=mk.length;if(!n)return '<p class="muted" style="margin:0">Pas de données.</p>';
+    var H=220,L=46,R=10,T=22,B=28,vals=mk.map(function(k){return byM[k].ca;}),max=Math.max.apply(null,vals),st=pasJoli(max),ymax=Math.max(st,Math.ceil(max/st)*st),gw=(W-L-R)/n,bw=Math.min(64,gw*.68),cour=state.today.slice(0,7);
+    var Y=function(v){return T+(H-T-B)*(1-v/ymax);},out='';
+    for(var g=0;g<=ymax;g+=st)out+='<line class="gl" x1="'+L+'" y1="'+Y(g).toFixed(1)+'" x2="'+(W-R)+'" y2="'+Y(g).toFixed(1)+'"/><text x="'+(L-6)+'" y="'+(Y(g)+4).toFixed(1)+'" text-anchor="end">'+(g>=1000?(g/1000).toLocaleString('fr-FR')+' k':g)+'</text>';
+    var complets=mk.filter(function(k){return k!==cour;}),moy=complets.length?complets.reduce(function(t,k){return t+byM[k].ca;},0)/complets.length:0;
+    if(moy)out+='<line class="moy" x1="'+L+'" y1="'+Y(moy).toFixed(1)+'" x2="'+(W-R)+'" y2="'+Y(moy).toFixed(1)+'"/>';
+    mk.forEach(function(k,i){var v=vals[i],x=L+i*gw+(gw-bw)/2,h=(H-T-B)*v/ymax;out+='<rect class="'+(k===cour?'c-mar':'c-aut')+'" x="'+x.toFixed(1)+'" y="'+(H-B-h).toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+Math.max(2,h).toFixed(1)+'" rx="4"><title>'+esc(MOIS[+k.slice(5,7)-1]+' '+k.slice(0,4)+' · '+eur(v)+' · '+byM[k].n+' service'+(byM[k].n>1?'s':'')+' · '+eur(byM[k].n?v/byM[k].n:0)+' par service')+'</title></rect>';
+      out+='<text class="v" x="'+(x+bw/2).toFixed(1)+'" y="'+(H-B-h-5).toFixed(1)+'" text-anchor="middle">'+kEur(v)+'</text><text x="'+(x+bw/2).toFixed(1)+'" y="'+(H-8)+'" text-anchor="middle">'+MOIS_C[+k.slice(5,7)-1]+(k.slice(0,4)!==state.today.slice(0,4)?' '+k.slice(2,4):'')+'</text>';});
     return '<svg class="chart" viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'" aria-hidden="true">'+out+'</svg>';
   }
   function renderBord(){
