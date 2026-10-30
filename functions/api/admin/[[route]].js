@@ -402,7 +402,13 @@ export async function onRequest({ request, env, params }) {
     } catch (e) { return json({ ok: false, error: String(e.message || e) }, 400); }
   }
   if (mSvc && method === 'DELETE') {
+    // le service et ses tickets partent ensemble (un test envoyé depuis la caisse ne laisse rien derrière lui)
+    const svc = await env.DB.prepare('SELECT date FROM services WHERE id = ?').bind(Number(mSvc[1])).first();
     await env.DB.prepare('DELETE FROM services WHERE id = ?').bind(Number(mSvc[1])).run();
+    if (svc && svc.date) {
+      const reste = await env.DB.prepare('SELECT COUNT(*) AS n FROM services WHERE date = ?').bind(svc.date).first();
+      if (!reste || !reste.n) await env.DB.prepare('DELETE FROM commandes WHERE date = ?').bind(svc.date).run();
+    }
     return json({ ok: true });
   }
 
