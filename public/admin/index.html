@@ -76,6 +76,8 @@ section.is-on{display:block}
 .btn.ok{background:transparent;border-color:rgba(123,166,86,.6);color:#B9DBA0;font-weight:600}
 .btn.ok.armed{background:var(--mesclun);border-color:var(--mesclun);color:#13200c}
 .btn.sm{padding:7px 12px;font-size:.88rem}
+.btn.x{flex:none;width:36px;height:36px;padding:0;border-radius:50%;font-size:1.05rem;line-height:1;align-self:flex-start}
+button{overflow-wrap:normal} /* un libellé de bouton ne se coupe jamais au milieu d'un mot */
 label.f{display:grid;gap:5px;font-size:.86rem;color:var(--creme-2);min-width:0}
 input,select,textarea{font:inherit;font-size:16px;line-height:1.3;color:var(--creme);background:var(--brun);border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:100%;min-width:0;min-height:46px;-webkit-appearance:none;appearance:none;margin:0}
 input[type=number]{width:110px;-moz-appearance:textfield}
@@ -148,7 +150,9 @@ code{overflow-wrap:anywhere;word-break:break-word;white-space:pre-wrap;backgroun
 .csm>summary .muted,.csm>summary .s{font-size:.78rem;font-weight:500;color:var(--creme-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;text-align:right}
 .chart .gl{stroke:rgba(255,255,255,.08);stroke-width:1}.chart .ln{fill:none;stroke:rgba(255,255,255,.16);stroke-width:1}.chart .avg{fill:none;stroke:var(--cheddar);stroke-width:2.2;stroke-linejoin:round;stroke-linecap:round}.chart .moy{stroke:var(--creme-3);stroke-dasharray:4 4;stroke-width:1}
 .chart .pt{stroke:var(--brun-2);stroke-width:1}.chart .pt.c-mar{fill:var(--cheddar)}.chart .pt.c-jeu{fill:var(--mesclun)}.chart .pt.c-ven{fill:var(--ketchup)}.chart .pt.c-sam{fill:#C58AF9}.chart .pt.c-aut{fill:var(--creme-3)}
-.chart text.v{fill:var(--creme-2);font-weight:600}.chart text.hl{fill:var(--cheddar);font-weight:700;font-size:12px}.csm>summary::-webkit-details-marker{display:none}.csm>summary::before{content:'▸';color:var(--creme-3)}.csm[open]>summary::before{content:'▾'}.csm>summary .muted{font-weight:500;font-size:.9rem}.csm>div{padding-top:8px}
+.chart text.v{fill:var(--creme-2);font-weight:600}.chart text.hl{fill:var(--cheddar);font-weight:700;font-size:12px}.chart .hlbg{fill:var(--brun);stroke:var(--line-2);stroke-width:1}.chart .ln.dense{stroke:rgba(255,255,255,.09)}
+.chart-wrap{display:flex;align-items:flex-start;margin:6px 0 2px}.chart-wrap .chart-axis{flex:none;margin:0}.chart-scroll{flex:1;min-width:0;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch}.chart-scroll .chart{max-width:none;margin:0}
+.cs-moy{display:flex;align-items:center;gap:6px 8px;flex-wrap:wrap;font-size:.84rem;margin:0 0 4px}.seg.seg-sm button{padding:3px 9px;font-size:.78rem}.csm>summary::-webkit-details-marker{display:none}.csm>summary::before{content:'▸';color:var(--creme-3)}.csm[open]>summary::before{content:'▾'}.csm>summary .muted{font-weight:500;font-size:.9rem}.csm>div{padding-top:8px}
 .bdh{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
 .bdh h3{font-size:1.15rem}
 .bdh .muted{font-size:.84rem}
@@ -612,7 +616,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
     <!-- Analyse d'une page du site (visites Cloudflare + Google) -->
     <dialog id="pageDlg">
       <div class="card sheet" tabindex="-1" autofocus style="margin:0;width:min(820px,calc(100vw - 24px));display:grid;gap:14px;outline:none;align-content:start">
-        <div class="row"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;min-width:0"><h2 style="margin:0">Page</h2><select id="pgSel" style="width:auto;min-width:200px"></select></div><button class="btn sm" type="button" id="pgClose">Fermer</button></div>
+        <div class="row"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;min-width:0"><h2 style="margin:0">Page</h2><select id="pgSel" style="width:auto;min-width:200px"></select></div><button class="btn sm x" type="button" id="pgClose" aria-label="Fermer" title="Fermer">✕</button></div>
         <div id="pgVisites"></div>
         <div id="pgGoogle"></div>
       </div>
@@ -620,7 +624,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
 
     <dialog id="evDlg">
       <div class="card sheet" tabindex="-1" autofocus style="margin:0;width:min(560px,calc(100vw - 24px));display:grid;gap:12px;outline:none">
-        <div class="row"><h2 style="margin:0" id="evTitle">Événement</h2><button class="btn sm" type="button" id="evClose">Fermer</button></div>
+        <div class="row"><h2 style="margin:0" id="evTitle">Événement</h2><button class="btn sm x" type="button" id="evClose" aria-label="Fermer" title="Fermer">✕</button></div>
         <input type="hidden" id="ev_id">
         <label class="f">Titre<input id="ev_titre" type="text" maxlength="120" placeholder="Marché de Noël de Triel, Fête de la musique, Festival…"></label>
         <div class="grid">
@@ -640,7 +644,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
     </dialog>
     <dialog id="burgerDlg">
       <form class="card" id="burgerForm" method="dialog" style="margin:0;width:min(560px,calc(100vw - 32px));display:grid;gap:12px">
-        <div class="row"><h2 id="burgerDlgTitle" style="margin:0">Nouveau burger</h2><button class="btn sm" type="button" id="burgerCancel">Fermer</button></div>
+        <div class="row"><h2 id="burgerDlgTitle" style="margin:0">Nouveau burger</h2><button class="btn sm x" type="button" id="burgerCancel" aria-label="Fermer" title="Fermer">✕</button></div>
         <input type="hidden" id="b_id">
         <div class="photoPick">
           <img id="b_preview" alt="" hidden>
@@ -818,7 +822,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
     <!-- Vue d'un service passé (graphiques) -->
     <dialog id="csVueDlg">
       <div class="card sheet" tabindex="-1" autofocus style="margin:0;width:min(720px,calc(100vw - 24px));display:grid;gap:12px;outline:none;align-content:start">
-        <div class="row"><div><h2 style="margin:0" id="csVueTitre">Service</h2><div class="muted" id="csVueSub"></div></div><button class="btn sm" type="button" id="csVueClose">Fermer</button></div>
+        <div class="row" style="flex-wrap:nowrap;align-items:flex-start"><div style="min-width:0;flex:1"><h2 style="margin:0" id="csVueTitre">Service</h2><div class="muted" id="csVueSub"></div></div><button class="btn sm x" type="button" id="csVueClose" aria-label="Fermer" title="Fermer">✕</button></div>
         <div id="csVueCorps"></div>
         <div class="row" style="border-top:1px solid var(--line);padding-top:12px"><span class="muted" style="font-size:.86rem">Les chiffres viennent de la caisse ; en cas d'erreur de saisie ce soir-là :</span><button class="btn sm ghost" type="button" id="csVueCorriger">Corriger</button></div>
       </div>
@@ -827,7 +831,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
     <!-- Saisie / modification d'un service de caisse -->
     <dialog id="csDlg">
       <div class="card sheet" tabindex="-1" autofocus style="margin:0;width:min(640px,calc(100vw - 24px));display:grid;gap:12px;outline:none;align-content:start">
-        <div class="row"><h2 style="margin:0" id="csTitle">Service</h2><button class="btn sm" type="button" id="csClose">Fermer</button></div>
+        <div class="row"><h2 style="margin:0" id="csTitle">Service</h2><button class="btn sm x" type="button" id="csClose" aria-label="Fermer" title="Fermer">✕</button></div>
         <input type="hidden" id="cs_id">
         <div class="grid">
           <label class="f">Date<input id="cs_date" type="date"></label>
@@ -866,7 +870,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
       </div>
       <dialog id="calDlg">
         <div class="card sheet" tabindex="-1" autofocus style="margin:0;width:min(640px,calc(100vw - 24px));display:grid;gap:12px;outline:none">
-          <div class="row"><h2 style="margin:0;text-transform:capitalize" id="calDlgTitle">Jour</h2><button class="btn sm" type="button" id="calDlgClose">Fermer</button></div>
+          <div class="row"><h2 style="margin:0;text-transform:capitalize" id="calDlgTitle">Jour</h2><button class="btn sm x" type="button" id="calDlgClose" aria-label="Fermer" title="Fermer">✕</button></div>
           <div id="calDlgBody" style="display:grid;gap:10px"></div>
         </div>
       </dialog>
@@ -875,7 +879,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
     <!-- Éditeur de devis -->
     <dialog id="devisDlg">
       <div class="card sheet" tabindex="-1" autofocus style="margin:0;width:min(760px,calc(100vw - 24px));display:grid;gap:14px;outline:none">
-        <div class="row"><h2 style="margin:0"><span id="dvKind">Devis</span> <span id="dvNumero"></span><small id="dvSub"></small></h2><div style="display:flex;gap:8px;align-items:center"><select id="dvStatut"><option value="brouillon">Brouillon</option><option value="envoye">Envoyé</option><option value="accepte">Accepté (arrhes attendues)</option><option value="solde">Payé · confirmé</option><option value="refuse">Refusé</option></select><button class="btn sm" type="button" id="dvClose">Fermer</button></div></div>
+        <div class="row"><h2 style="margin:0"><span id="dvKind">Devis</span> <span id="dvNumero"></span><small id="dvSub"></small></h2><div style="display:flex;gap:8px;align-items:center"><select id="dvStatut"><option value="brouillon">Brouillon</option><option value="envoye">Envoyé</option><option value="accepte">Accepté (arrhes attendues)</option><option value="solde">Payé · confirmé</option><option value="refuse">Refusé</option></select><button class="btn sm x" type="button" id="dvClose" aria-label="Fermer" title="Fermer">✕</button></div></div>
         <input type="hidden" id="dvId">
         <h3 class="sub">Client</h3>
         <div class="grid">
@@ -1201,6 +1205,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
 
   // ---------- caisse : services
   var csData=null,csPeriode='tout';
+  var csMoy=(function(){try{var v=+localStorage.getItem('lag_cs_moy');return [3,5,10,20].indexOf(v)>=0?v:5;}catch(e){return 5;}})(); // largeur de la tendance lissée (en services)
   var JCL=['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
   function svcJour(s){var p=s.date.split('-');return new Date(Date.UTC(+p[0],+p[1]-1,+p[2])).getUTCDay();}
   // libellé d'emplacement : celui saisi, sinon déduit du jour de semaine (planning du site)
@@ -1257,7 +1262,8 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
     var moyS=n?ca/n:0;
     $('#csEvoSum').textContent=n?'moy. '+kEur(moyS)+' / service':'';
     var secW=function(id){var el=$(id);return (el.clientWidth||el.parentElement.clientWidth||el.parentElement.parentElement.clientWidth||600)-34;};
-    $('#csSemaines').innerHTML='<p class="muted" style="margin:0 0 4px;font-size:.84rem">Un point par service, coloré selon l\'emplacement · la ligne cheddar lisse la tendance sur 5 services</p>'+svgEvolution(chrono,secW('#csSemaines'))+'<div class="lg">'+svcLegende(chrono)+'<span><i style="background:var(--cheddar);border-radius:2px;height:4px;width:16px"></i>tendance</span></div>';
+    $('#csSemaines').innerHTML='<div class="cs-moy"><span class="muted">Un point par service, coloré selon l\'emplacement · tendance lissée sur</span><div class="seg seg-sm" id="csMoySeg">'+[3,5,10,20].map(function(w){return '<button type="button" data-moy="'+w+'"'+(w===csMoy?' class="is-on"':'')+'>'+w+'</button>';}).join('')+'</div><span class="muted">services</span></div>'+svgEvolution(chrono,secW('#csSemaines'),csMoy)+'<div class="lg">'+svcLegende(chrono)+'<span><i style="background:var(--cheddar);border-radius:2px;height:4px;width:16px"></i>tendance</span></div>';
+    var scr=$('#csSemaines .chart-scroll');if(scr)scr.scrollLeft=scr.scrollWidth; // quand le graphique défile, on montre la fin (les derniers services)
     // CA par mois : tous les mois connus, le mois en cours en couleur
     var byM={};all.forEach(function(x){var k=x.date.slice(0,7);(byM[k]=byM[k]||{ca:0,n:0,bu:0});byM[k].ca+=x.ca_ttc;byM[k].n++;byM[k].bu+=x.total_burgers;});
     var mk=Object.keys(byM).sort(),moisCour=state.today.slice(0,7);
@@ -1289,6 +1295,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
   }
   function loadCaisse(){return api('caisse').then(function(r){csData=r;renderCaisse();}).catch(function(e){$('#csList').innerHTML='<p class="empty">'+esc(e.message)+'</p>';});}
   $('#csPeriode').addEventListener('click',function(e){var b=e.target.closest('button[data-csp]');if(!b)return;csPeriode=b.dataset.csp;renderCaisse();});
+  $('#csSemaines').addEventListener('click',function(e){var b=e.target.closest('button[data-moy]');if(!b)return;csMoy=+b.dataset.moy;try{localStorage.setItem('lag_cs_moy',csMoy);}catch(err){}renderCaisse();});
   (function(){var K='lag_cs_open',open={};try{open=JSON.parse(localStorage.getItem(K)||'{}');}catch(e){}
     document.querySelectorAll('.cs-sec').forEach(function(d){if(open[d.dataset.sec])d.open=true;d.addEventListener('toggle',function(){open[d.dataset.sec]=d.open;try{localStorage.setItem(K,JSON.stringify(open));}catch(e){}if(d.open&&csData)renderCaisse();});});})();
   $('#csList').addEventListener('click',function(e){var c=e.target.closest('[data-svc]');if(!c)return;var s=csData.services.filter(function(x){return x.id===+c.dataset.svc;})[0];if(s)openServiceVue(s);});
@@ -1350,17 +1357,24 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
   function pasJoli(max){var c=[50,100,200,250,500,1000,2000,2500,5000,10000,20000];for(var i=0;i<c.length;i++)if(max/c[i]<=5)return c[i];return 50000;}
   function kEur(v){return v>=1000?(Math.round(v/100)/10).toLocaleString('fr-FR')+' k€':Math.round(v)+' €';}
   // Évolution du CA service par service : points colorés par emplacement, tendance (moyenne glissante sur 5 services)
-  function svgEvolution(chrono,W){
+  function svgEvolution(chrono,W,fen){
     W=Math.max(260,W||600);var n=chrono.length;if(!n)return '<p class="muted" style="margin:0">Pas de données.</p>';
-    var H=220,L=46,R=14,T=16,B=28,vals=chrono.map(function(x){return Number(x.ca_ttc)||0;}),max=Math.max.apply(null,vals),st=pasJoli(max),ymax=Math.max(st,Math.ceil(max/st)*st);
-    var X=function(i){return n===1?(L+(W-L-R)/2):L+i*(W-L-R)/(n-1);},Y=function(v){return T+(H-T-B)*(1-v/ymax);},out='';
-    for(var g=0;g<=ymax;g+=st)out+='<line class="gl" x1="'+L+'" y1="'+Y(g).toFixed(1)+'" x2="'+(W-R)+'" y2="'+Y(g).toFixed(1)+'"/><text x="'+(L-6)+'" y="'+(Y(g)+4).toFixed(1)+'" text-anchor="end">'+(g>=1000?(g/1000).toLocaleString('fr-FR')+' k':g)+'</text>';
+    var AX=46,defile=(n-1)*6>W-AX-14; // au moins 6 px entre deux services : au-delà, le graphique défile et l'axe des valeurs reste fixe à gauche
+    var H=220,L=defile?6:AX,R=14,T=16,B=28;if(defile)W=Math.max(W-AX,L+R+(n-1)*6);
+    var vals=chrono.map(function(x){return Number(x.ca_ttc)||0;}),max=Math.max.apply(null,vals),st=pasJoli(max),ymax=Math.max(st,Math.ceil(max/st)*st);
+    var X=function(i){return n===1?(L+(W-L-R)/2):L+i*(W-L-R)/(n-1);},Y=function(v){return T+(H-T-B)*(1-v/ymax);},out='',axe='';
+    for(var g=0;g<=ymax;g+=st){out+='<line class="gl" x1="'+L+'" y1="'+Y(g).toFixed(1)+'" x2="'+(W-R)+'" y2="'+Y(g).toFixed(1)+'"/>';axe+='<text x="'+(AX-6)+'" y="'+(Y(g)+4).toFixed(1)+'" text-anchor="end">'+(g>=1000?(g/1000).toLocaleString('fr-FR')+' k':g)+'</text>';}
+    if(!defile)out+=axe;
     var lastMo='',lastLx=-99;chrono.forEach(function(x,i){var mo=x.date.slice(0,7);if(mo!==lastMo){lastMo=mo;out+='<line class="gl" x1="'+X(i).toFixed(1)+'" y1="'+T+'" x2="'+X(i).toFixed(1)+'" y2="'+(H-B)+'"/>';if(X(i)-lastLx>=38){lastLx=X(i);out+='<text x="'+(X(i)+3).toFixed(1)+'" y="'+(H-8)+'">'+MOIS_C[+mo.slice(5,7)-1]+(mo.slice(0,4)!==state.today.slice(0,4)?' '+mo.slice(2,4):'')+'</text>';}}});
-    out+='<path class="ln" d="'+chrono.map(function(x,i){return (i?'L':'M')+X(i).toFixed(1)+' '+Y(vals[i]).toFixed(1);}).join(' ')+'"/>';
-    if(n>=4){var win=Math.min(5,n),mm=vals.map(function(v,i){var a=Math.max(0,i-win+1),sl=vals.slice(a,i+1);return sl.reduce(function(t,q){return t+q;},0)/sl.length;});out+='<path class="avg" d="'+mm.map(function(v,i){return (i?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1);}).join(' ')+'"/>';}
-    chrono.forEach(function(x,i){var last=i===n-1;out+='<circle class="pt '+svcCls(x)+'" cx="'+X(i).toFixed(1)+'" cy="'+Y(vals[i]).toFixed(1)+'" r="'+(last?5:3.2)+'"><title>'+esc(dateFr(x.date)+' · '+svcEmpl(x)+' · '+eur(x.ca_ttc)+' · '+x.total_burgers+' burgers')+'</title></circle>';});
-    var lx=X(n-1),ly=Y(vals[n-1]);out+='<text class="hl" x="'+(lx-8).toFixed(1)+'" y="'+(ly-10).toFixed(1)+'" text-anchor="end">'+eur(vals[n-1])+'</text>';
-    return '<svg class="chart" viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'" aria-hidden="true">'+out+'</svg>';
+    var pas=n>1?(W-L-R)/(n-1):99,r=pas>=14?3.2:pas>=9?2.7:2.2; // points plus fins quand les services sont serrés
+    out+='<path class="ln'+(pas<9?' dense':'')+'" d="'+chrono.map(function(x,i){return (i?'L':'M')+X(i).toFixed(1)+' '+Y(vals[i]).toFixed(1);}).join(' ')+'"/>';
+    if(n>=3){var win=Math.min(fen||5,n),mm=vals.map(function(v,i){var a=Math.max(0,i-win+1),sl=vals.slice(a,i+1);return sl.reduce(function(t,q){return t+q;},0)/sl.length;});out+='<path class="avg" d="'+mm.map(function(v,i){return (i?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1);}).join(' ')+'"/>';}
+    chrono.forEach(function(x,i){var last=i===n-1;out+='<circle class="pt '+svcCls(x)+'" cx="'+X(i).toFixed(1)+'" cy="'+Y(vals[i]).toFixed(1)+'" r="'+(last?4.6:r)+'"><title>'+esc(dateFr(x.date)+' · '+svcEmpl(x)+' · '+eur(x.ca_ttc)+' · '+x.total_burgers+' burgers')+'</title></circle>';});
+    // dernier service : étiquette sur fond sombre, posée au-dessus du point, ramenée dans le cadre si besoin
+    var lab=eur(vals[n-1]),lw=lab.length*7+12,lx=Math.min(W-R-lw,Math.max(L,X(n-1)-lw/2)),ly=Y(vals[n-1])-12;if(ly-16<T)ly=Y(vals[n-1])+22;
+    out+='<rect class="hlbg" x="'+lx.toFixed(1)+'" y="'+(ly-13).toFixed(1)+'" width="'+lw+'" height="18" rx="9"/><text class="hl" x="'+(lx+lw/2).toFixed(1)+'" y="'+ly.toFixed(1)+'" text-anchor="middle">'+lab+'</text>';
+    var svg='<svg class="chart" viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'" aria-hidden="true">'+out+'</svg>';
+    return defile?'<div class="chart-wrap"><svg class="chart chart-axis" viewBox="0 0 '+AX+' '+H+'" width="'+AX+'" height="'+H+'" aria-hidden="true">'+axe+'</svg><div class="chart-scroll">'+svg+'</div></div><div class="muted" style="font-size:.78rem;margin-top:2px">◂ fais glisser le graphique pour remonter dans le temps</div>':svg;
   }
   // CA par mois : barres avec valeur, moyenne des mois complets en pointillé, mois en cours en couleur
   function svgMois(mk,byM,W){
