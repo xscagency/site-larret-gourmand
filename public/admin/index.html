@@ -537,6 +537,15 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
 @media (display-mode:standalone) and (max-width:640px){
   dialog{height:auto;top:0;bottom:0;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);background:var(--brun-2)}
 }
+/* Tuiles chiffrées : titre, nombre et sous-texte alignés d'une tuile à l'autre sur la même rangée
+   (chaque tuile partage les 3 lignes de la grille ; l'écart entre rangées est porté par une marge) */
+.kpis{row-gap:0;margin-bottom:2px}
+.kpi{display:flex;flex-direction:column;justify-content:flex-start;margin-bottom:10px}
+@media (max-width:640px){.kpi{margin-bottom:8px}}
+@supports (grid-template-rows:subgrid){
+  .kpi{display:grid;grid-template-rows:subgrid;grid-row:span 3;align-content:start}
+  .kpi .lab{align-self:end}
+}
 </style>
 </head>
 <body>
