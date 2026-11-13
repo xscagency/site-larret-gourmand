@@ -40,12 +40,8 @@ import { getVisites } from '../../_visites.js';
 import { getSearchConsole } from '../../_google.js';
 import { cleCaisse, normaliserService, enregistrerService, ligneService, BURGERS_CAISSE } from '../../_caisse.js';
 import { addDays } from '../../_lib.js';
+import { identifier, routesAuth, preparerAuth } from '../../_auth.js';
 
-function authorized(request, env) {
-  const h = request.headers.get('authorization') || '';
-  const token = h.startsWith('Bearer ') ? h.slice(7) : '';
-  return !!env.ADMIN_TOKEN && token === env.ADMIN_TOKEN;
-}
 
 const num = (v, def = 0) => (v === '' || v === null || v === undefined || Number.isNaN(Number(v)) ? def : Number(v));
 const bool = (v) => (v === true || v === 1 || v === '1' || v === 'true' ? 1 : 0);
@@ -54,11 +50,17 @@ const str = (v, max) => String(v ?? '').trim().slice(0, max);
 const photoPath = (v) => { const s = str(v, 300); return /^\/(img|photos|f)\/[A-Za-z0-9._-]+$/.test(s) ? s : ''; };
 
 export async function onRequest({ request, env, params }) {
-  if (!authorized(request, env)) return json({ ok: false, error: 'Accès refusé.' }, 401);
-
   const route = (params.route || []).join('/');
   const method = request.method;
   const isJson = (request.headers.get('content-type') || '').includes('application/json');
+  await preparerAuth(env);
+  // Accès : comptes, sessions, code à 6 chiffres (voir _auth.js). Les routes auth/… gèrent elles-mêmes qui a le droit de quoi.
+  if (route.startsWith('auth/')) {
+    const b = (method === 'PUT' || method === 'POST') && isJson ? await request.json().catch(() => ({})) : {};
+    return routesAuth({ request, env, route, method, body: b });
+  }
+  const qui = await identifier(request, env);
+  if (!qui.ok) return json({ ok: false, error: 'Accès refusé.', besoin: qui.besoin || '' }, 401);
   const body = (method === 'PUT' || method === 'POST') && isJson ? await request.json().catch(() => ({})) : {};
 
   // ---- État complet

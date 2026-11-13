@@ -1,4 +1,5 @@
 import { SERVICES_HISTORIQUE } from './_caisse_historique.js';
+import { TABLE_ADMIN_USERS, TABLE_ADMIN_SESSIONS, TABLE_ADMIN_ESSAIS } from './_auth.js';
 // Structure de la base et données de départ, exécutées automatiquement si les tables manquent.
 // Même contenu que schema.sql (gardé lisible à la racine du projet). Toutes les requêtes sont
 // « si n'existe pas » / « ignorer si déjà présent » : les relancer ne modifie jamais des données existantes.
@@ -259,7 +260,7 @@ export async function ensureSchema(env) {
 
 // Mises à jour appliquées une seule fois sur une base déjà en ligne (numérotées, dans l'ordre).
 // Une base neuve reçoit directement le schéma complet ; une base existante rattrape les versions manquantes.
-export const SCHEMA_VERSION = 16;
+export const SCHEMA_VERSION = 17;
 export const MIGRATIONS = {
   1: ['ALTER TABLE demandes ADD COLUMN moment TEXT'],
   2: ['ALTER TABLE demandes ADD COLUMN adresse TEXT', 'ALTER TABLE demandes ADD COLUMN code_postal TEXT', 'ALTER TABLE demandes ADD COLUMN ville TEXT',
@@ -352,6 +353,8 @@ Sylvain')`],
   // 15 : table des services de la caisse + reprise de l'historique de l'ancien classeur
   15: [TABLE_SERVICES, ...SERVICES_HISTORIQUE.map((r) => `INSERT OR IGNORE INTO services (date, moment, burgers, total_burgers, frites, ca_ttc, ca_ht, tva, doubles, rates, source) VALUES ('${r.date}', 'soir', '${JSON.stringify(r.burgers).replace(/'/g, "''")}', ${r.total}, ${r.frites}, ${r.ca_ttc}, ${r.ca_ht}, ${r.tva}, ${r.doubles}, ${r.rates}, 'import')`)],
   16: [TABLE_COMMANDES],
+  // 17 : comptes, sessions et blocage des essais pour l'accès à l'admin
+  17: [TABLE_ADMIN_USERS, TABLE_ADMIN_SESSIONS, TABLE_ADMIN_ESSAIS],
 };
 export async function applyMigrations(env, from = 0) {
   for (let v = from + 1; v <= SCHEMA_VERSION; v++) {

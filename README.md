@@ -101,7 +101,7 @@ Cloudflare > Turnstile > Add site > `larretgourmand.com`, type Managed. Copier l
 - Fermer ClickFunnels et Zapier.
 
 ## Tableau de contrôle (/admin)
-Ouvrir `https://www.larretgourmand.com/admin`, coller le jeton (`ADMIN_TOKEN`). Il reste mémorisé sur l'appareil.
+Ouvrir `https://www.larretgourmand.com/admin`. Tant qu'aucun compte n'existe, le jeton (`ADMIN_TOKEN`) ouvre l'admin et propose de créer le premier compte. Ensuite l'accès se fait par compte personnel (identifiant, mot de passe, code à 6 chiffres) ; l'appareil reste connecté et ne redemande que le code tous les N jours (Réglages → Accès et sécurité). `ADMIN_TOKEN` ne sert alors plus qu'à l'« accès de secours » (remise à zéro d'un compte). Détails : `functions/_auth.js`.
 Sur iPhone : Partager > « Sur l'écran d'accueil » pour l'avoir comme une appli.
 
 - **Carte** : ajouter un burger (nom, accroche, composition, supplément, photo prise ou choisie depuis le téléphone), le modifier, le supprimer, changer l'ordre avec les flèches (le premier est mis en avant en grand), le retirer / remettre, le marquer « Épuisé ce soir » (se remet seul le lendemain). La carte du site, le carrousel du haut de page et les données structurées pour Google sont régénérés à partir de la base à chaque visite.

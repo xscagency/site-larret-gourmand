@@ -115,6 +115,10 @@ code{overflow-wrap:anywhere;word-break:break-word;white-space:pre-wrap;backgroun
 .login .brand{justify-content:center;margin-bottom:18px}
 .login h1{font-size:2rem;margin-bottom:6px}
 .login .card{display:grid;gap:12px;text-align:left;margin-top:22px}
+.login .card[hidden]{display:none}
+.code6{font-size:1.5rem!important;letter-spacing:.3em;text-align:center;font-variant-numeric:tabular-nums}
+.qr{display:flex;justify-content:center}.qr svg,.qr img{background:#fff;padding:10px;border-radius:12px;width:200px;height:200px}
+.acc-l{display:grid;gap:8px}.acc-l>div{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-bottom:1px dashed var(--line)}.acc-l>div:last-child{border-bottom:0}.acc-l small{display:block;color:var(--creme-3)}
 /* bandeau d'état */
 .state{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:center;padding:14px 16px;margin-top:16px;border-radius:16px;background:linear-gradient(135deg,rgba(243,173,63,.14),rgba(74,50,36,.6));border:1px solid rgba(243,173,63,.35)}
 .state .dot{width:12px;height:12px;border-radius:50%;background:var(--mesclun);box-shadow:0 0 0 4px rgba(123,166,86,.2)}
@@ -557,11 +561,56 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
 <div id="login" class="login" hidden>
   <div class="brand"><img class="brand__logo" src="/img/logo-t-192.png" alt="" width="40" height="40"><div><h1>L'Arrêt Gourmand</h1><small>Tableau de contrôle</small></div></div>
   <p class="muted">Carte, emplacements, tarifs, bandeau et demandes de devis.</p>
-  <div class="card">
+  <!-- avant la création des comptes : l'ancien jeton -->
+  <div class="card lv" id="lvJeton" hidden>
     <label class="f">Jeton d'accès<input id="token" type="password" autocomplete="current-password" placeholder="Collez votre jeton"></label>
     <button class="btn primary" id="loginBtn" type="button">Entrer</button>
-    <p class="muted">Le jeton est défini dans Cloudflare Pages (variable ADMIN_TOKEN). Il reste mémorisé sur cet appareil.</p>
+    <p class="muted">Le jeton est défini dans Cloudflare Pages (variable ADMIN_TOKEN).</p>
   </div>
+  <!-- nouvel appareil : identifiant + mot de passe, puis code -->
+  <form class="card lv" id="lvCompte" hidden autocomplete="on">
+    <label class="f">Identifiant<input id="lgNom" type="text" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false"></label>
+    <label class="f">Mot de passe<input id="lgMdp" type="password" autocomplete="current-password"></label>
+    <label class="f" id="lgCodeWrap" hidden>Code à 6 chiffres (appli d'authentification)<input id="lgCode" class="code6" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="7" placeholder="000 000"></label>
+    <button class="btn primary" id="lgBtn" type="submit">Se connecter</button>
+    <p class="muted" style="margin:0">Cet appareil restera connecté. <a href="#" id="lgSecours">Accès de secours</a></p>
+  </form>
+  <!-- appareil connu : seulement le code -->
+  <form class="card lv" id="lvCode" hidden>
+    <p style="margin:0"><b>Vérification périodique</b><br><span class="muted">Entrez le code à 6 chiffres de votre appli d'authentification pour continuer sur cet appareil.</span></p>
+    <label class="f">Code à 6 chiffres<input id="rcCode" class="code6" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="7" placeholder="000 000"></label>
+    <button class="btn primary" type="submit">Valider</button>
+    <p class="muted" style="margin:0"><a href="#" id="rcSortir">Se déconnecter de cet appareil</a></p>
+  </form>
+  <!-- première connexion d'un compte : installation du code -->
+  <form class="card lv" id="lvEnrol" hidden>
+    <p style="margin:0"><b>Installer le code à 6 chiffres</b><br><span class="muted">1. Ouvrez Google Authenticator (ou une autre appli d'authentification).<br>2. Ajoutez un compte en scannant ce QR code — ou, sur ce téléphone, touchez le bouton ci-dessous.<br>3. Tapez le code à 6 chiffres affiché par l'appli.</span></p>
+    <div id="enQr" class="qr"></div>
+    <a class="btn" id="enLien" href="#">Ouvrir dans l'appli d'authentification</a>
+    <p class="muted" style="margin:0;text-align:center">ou saisie manuelle de la clé :<br><code id="enSecret" style="font-size:1rem;letter-spacing:.06em;user-select:all"></code></p>
+    <label class="f">Code à 6 chiffres<input id="enCode" class="code6" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="7" placeholder="000 000"></label>
+    <button class="btn primary" type="submit">Activer</button>
+    <p class="muted" style="margin:0"><a href="#" id="enSortir">Annuler</a></p>
+  </form>
+  <!-- création du premier compte (connecté avec l'ancien jeton) -->
+  <form class="card lv" id="lvCreer" hidden autocomplete="off">
+    <p style="margin:0"><b>Sécuriser l'accès</b><br><span class="muted">Créez votre compte personnel : identifiant, mot de passe, puis code à 6 chiffres. L'ancien jeton cessera d'ouvrir l'admin.</span></p>
+    <label class="f">Identifiant (ex. sly)<input id="crNom" type="text" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false"></label>
+    <label class="f">Mot de passe (10 caractères minimum)<input id="crMdp" type="password" autocomplete="new-password"></label>
+    <label class="f">Mot de passe, encore<input id="crMdp2" type="password" autocomplete="new-password"></label>
+    <button class="btn primary" type="submit">Créer mon compte</button>
+    <p class="muted" style="margin:0"><a href="#" id="crPlusTard">Plus tard</a></p>
+  </form>
+  <!-- secours : jeton Cloudflare → remise à zéro d'un compte -->
+  <form class="card lv" id="lvSecours" hidden autocomplete="off">
+    <p style="margin:0"><b>Accès de secours</b><br><span class="muted">Téléphone perdu ou mot de passe oublié : le jeton ADMIN_TOKEN (visible uniquement dans Cloudflare) remet un compte à zéro. Une alerte Telegram est envoyée.</span></p>
+    <label class="f">Jeton ADMIN_TOKEN<input id="scJeton" type="password" autocomplete="off"></label>
+    <label class="f">Identifiant du compte<input id="scNom" type="text" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="off"></label>
+    <label class="f">Nouveau mot de passe (10 caractères minimum)<input id="scMdp" type="password" autocomplete="new-password"></label>
+    <button class="btn primary" type="submit">Réinitialiser ce compte</button>
+    <p class="muted" style="margin:0"><a href="#" id="scRetour">Retour</a></p>
+  </form>
+  <p class="muted" id="lgErr" style="color:var(--ketchup);min-height:1.2em;margin-top:10px"></p>
 </div>
 
 <div id="app" hidden>
@@ -716,6 +765,8 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
     </section>
 
     <section id="tab-bandeau">
+      <h2>Accès et sécurité<small>Comptes, appareils connectés et fréquence du code à 6 chiffres</small></h2>
+      <div class="card" id="accCard" style="display:grid;gap:16px;margin-bottom:28px"><p class="muted" style="margin:0">Chargement…</p></div>
       <h2>Affichage de l'admin<small>Les couleurs de ce tableau de contrôle, mémorisées sur cet appareil (le site public n'est pas concerné)</small></h2>
       <div class="card"><div class="seg" id="adminTheme"><button type="button" data-at="noir">Noir</button><button type="button" data-at="brun">Brun</button></div></div>
       <h2 style="margin-top:28px">Thème du site<small>Habillez le site pour une occasion : couleurs, guirlande et animation. Un clic sur « Appliquer » et le site bascule.</small></h2>
@@ -1009,7 +1060,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
   function api(path,opts){
     opts=opts||{};
     return fetch('/api/admin/'+path,{method:opts.method||'GET',headers:{'authorization':'Bearer '+token,'content-type':'application/json'},body:opts.body?JSON.stringify(opts.body):undefined})
-      .then(function(r){if(r.status===401){logout();throw new Error('Jeton refusé');}return r.json();})
+      .then(function(r){if(r.status===401){return r.json().catch(function(){return {};}).then(function(j){if(j.besoin==='code')vue('lvCode');else if(j.besoin==='enrolement')enrol();else logout();throw new Error(j.besoin?'Vérification demandée':'Accès refusé');});}return r.json();})
       .then(function(r){if(!r.ok)throw new Error(r.error||'Erreur');return r;});
   }
   function save(path,body,label){
@@ -1017,11 +1068,77 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
   }
 
   // ---------- connexion
-  function showLogin(){$('#login').hidden=false;$('#app').hidden=true;}
-  function logout(){token='';try{localStorage.removeItem(TOKEN_KEY);}catch(e){}showLogin();}
-  $('#loginBtn').addEventListener('click',function(){token=$('#token').value.trim();if(!token)return;try{localStorage.setItem(TOKEN_KEY,token);}catch(e){}load(true);});
+  // Appels d'accès : pas de redirection automatique, c'est l'écran de connexion qui affiche l'erreur
+  function auth(path,body,method){
+    return fetch('/api/admin/auth/'+path,{method:method||(body?'POST':'GET'),headers:{'authorization':'Bearer '+token,'content-type':'application/json'},body:body?JSON.stringify(body):undefined})
+      .then(function(r){return r.json().catch(function(){return {ok:false,error:'Réponse illisible'};});});
+  }
+  function setToken(t){token=t||'';try{if(token)localStorage.setItem(TOKEN_KEY,token);else localStorage.removeItem(TOKEN_KEY);}catch(e){}}
+  function err(m){$('#lgErr').textContent=m||'';}
+  function vue(id){$('#login').hidden=false;$('#app').hidden=true;err('');document.querySelectorAll('#login .lv').forEach(function(v){v.hidden=v.id!==id;});var i=$('#'+id+' input:not([type=hidden])');if(i&&id!=='lvEnrol')setTimeout(function(){try{i.focus();}catch(e){}},50);}
+  function showLogin(){auth('etat').then(function(r){vue(r.comptes?'lvCompte':'lvJeton');}).catch(function(){vue('lvCompte');});}
+  function logout(){setToken('');showLogin();}
+  function entrer(){$('#lgMdp').value='';$('#lgCode').value='';$('#rcCode').value='';$('#enCode').value='';$('#lgCodeWrap').hidden=true;return load(true);}
+  // ancien jeton (tant qu'aucun compte n'existe)
+  $('#loginBtn').addEventListener('click',function(){setToken($('#token').value.trim());if(!token)return;load(true).then(function(){if(token)auth('moi').then(function(m){if(m.ancien)vue('lvCreer');});});});
   $('#token').addEventListener('keydown',function(e){if(e.key==='Enter')$('#loginBtn').click();});
-  $('#logout').addEventListener('click',logout);
+  // identifiant + mot de passe (+ code)
+  $('#lvCompte').addEventListener('submit',function(e){e.preventDefault();err('');
+    auth('login',{nom:$('#lgNom').value,mdp:$('#lgMdp').value,code:$('#lgCode').value}).then(function(r){
+      if(r.ok){setToken(r.jeton);if(r.besoin==='enrolement')enrol();else entrer();return;}
+      if(r.besoin==='code'){$('#lgCodeWrap').hidden=false;$('#lgCode').focus();return;}
+      err(r.error||'Connexion refusée');$('#lgCode').value='';
+    });});
+  // appareil connu : seulement le code
+  $('#lvCode').addEventListener('submit',function(e){e.preventDefault();err('');
+    auth('code',{code:$('#rcCode').value}).then(function(r){if(r.ok)return entrer();$('#rcCode').value='';if(!r.besoin){logout();setTimeout(function(){err(r.error);},300);}else err(r.error);});});
+  // installation du code
+  function enrol(){vue('lvEnrol');auth('totp',{}).then(function(r){
+    if(!r.ok){err(r.error);return;}
+    $('#enSecret').textContent=r.secret.replace(/(.{4})/g,'$1 ').trim();$('#enLien').href=r.uri;
+    var dessiner=function(){try{var q=qrcode(0,'M');q.addData(r.uri);q.make();$('#enQr').innerHTML=q.createSvgTag({cellSize:4,margin:0,scalable:true});}catch(e){}};
+    if(window.qrcode)dessiner();else{var sc=document.createElement('script');sc.src='/admin/qrcode.js';sc.onload=dessiner;document.head.appendChild(sc);}
+  });}
+  $('#lvEnrol').addEventListener('submit',function(e){e.preventDefault();err('');auth('totp',{code:$('#enCode').value}).then(function(r){if(r.ok){entrer().then(function(){toast('Accès sécurisé ✓');});}else{err(r.error);$('#enCode').value='';}});});
+  // premier compte
+  $('#lvCreer').addEventListener('submit',function(e){e.preventDefault();err('');
+    if($('#crMdp').value!==$('#crMdp2').value){err('Les deux mots de passe ne sont pas identiques.');return;}
+    auth('comptes',{nom:$('#crNom').value,mdp:$('#crMdp').value}).then(function(r){if(!r.ok){err(r.error);return;}setToken(r.jeton);enrol();});});
+  $('#crPlusTard').addEventListener('click',function(e){e.preventDefault();$('#login').hidden=true;$('#app').hidden=false;});
+  // secours
+  $('#lgSecours').addEventListener('click',function(e){e.preventDefault();vue('lvSecours');});
+  $('#scRetour').addEventListener('click',function(e){e.preventDefault();showLogin();});
+  $('#lvSecours').addEventListener('submit',function(e){e.preventDefault();err('');auth('secours',{jeton:$('#scJeton').value,nom:$('#scNom').value,mdp:$('#scMdp').value}).then(function(r){if(!r.ok){err(r.error);return;}$('#scJeton').value='';$('#scMdp').value='';setToken(r.jeton);enrol();});});
+  function quitter(e){if(e)e.preventDefault();auth('deconnexion',{}).then(logout,logout);}
+  $('#rcSortir').addEventListener('click',quitter);$('#enSortir').addEventListener('click',quitter);
+  $('#logout').addEventListener('click',quitter);
+  // espaces automatiques dans les codes (123 456)
+  document.querySelectorAll('.code6').forEach(function(i){i.addEventListener('input',function(){var d=i.value.replace(/\D/g,'').slice(0,6);i.value=d.length>3?d.slice(0,3)+' '+d.slice(3):d;});});
+
+  // ---------- Réglages : accès et sécurité
+  function loadAcces(){
+    var box=$('#accCard');if(!box)return;
+    auth('moi').then(function(m){
+      if(!m.ok){box.innerHTML='<p class="muted" style="margin:0">Indisponible.</p>';return;}
+      if(m.ancien){box.innerHTML='<p style="margin:0">⚠️ L\'admin est encore ouvert par un simple jeton partagé.</p><button class="btn primary" type="button" id="accCreer">Créer mon compte sécurisé</button>';$('#accCreer').onclick=function(){vue('lvCreer');};return;}
+      var h='<div><b>Connecté : '+esc(m.moi.nom)+'</b><div class="row" style="margin-top:8px;justify-content:flex-start;gap:8px;flex-wrap:wrap"><button class="btn sm" type="button" id="accMdp">Changer mon mot de passe</button></div></div>';
+      h+='<div><b>Redemander le code à 6 chiffres</b><small class="muted" style="display:block;margin:2px 0 8px">Les appareils restent connectés ; seul le code est redemandé à cette fréquence.</small><div class="seg" id="accJours">'+[[1,'Chaque jour'],[7,'7 j'],[14,'14 j'],[30,'30 j'],[60,'60 j'],[90,'90 j']].map(function(o){return '<button type="button" data-j="'+o[0]+'"'+(o[0]===m.code_jours?' class="is-on"':'')+'>'+o[1]+'</button>';}).join('')+'</div></div>';
+      h+='<div><b>Appareils connectés</b><div class="acc-l" style="margin-top:6px">'+m.sessions.map(function(x){var ici=x.id===m.session_id;return '<div><span>'+esc(x.appareil||'Appareil')+(ici?' <span class="muted">(celui-ci)</span>':'')+'<small>'+esc(x.nom)+' · vu le '+esc(dateHeure(x.vu))+' · '+esc(x.ip||'')+(x.code_le?'':' · code pas encore installé')+'</small></span>'+(ici?'':'<button class="btn sm" type="button" data-ses="'+x.id+'">Déconnecter</button>')+'</div>';}).join('')+'</div></div>';
+      h+='<div><b>Comptes</b><div class="acc-l" style="margin-top:6px">'+m.comptes.map(function(u){var moi=u.id===m.moi.id;return '<div><span>'+esc(u.nom)+(moi?' <span class="muted">(vous)</span>':'')+'<small>'+(u.totp_actif?'protégé par code':'code pas encore installé')+'</small></span>'+(moi?'':'<span style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end"><button class="btn sm" type="button" data-reinit="'+u.id+'" data-nom="'+esc(u.nom)+'">Remettre à zéro</button><button class="btn sm" type="button" data-supp="'+u.id+'" data-nom="'+esc(u.nom)+'">Supprimer</button></span>')+'</div>';}).join('')+'</div><button class="btn sm" type="button" id="accAjout" style="margin-top:10px">+ Ajouter un compte</button></div>';
+      h+='<p class="muted" style="margin:0;font-size:.84rem">5 erreurs de suite bloquent l\'accès 15 min. Chaque nouvel appareil et chaque blocage sont signalés sur Telegram. Téléphone perdu : l\'autre compte peut vous « remettre à zéro », ou « Accès de secours » sur l\'écran de connexion.</p>';
+      box.innerHTML=h;
+    });
+  }
+  function accRep(r,msg){if(r.ok){toast(msg||'Enregistré');loadAcces();}else toast(r.error||'Erreur',true);}
+  document.addEventListener('click',function(e){
+    var b=e.target.closest('#accCard button');if(!b)return;
+    if(b.dataset.j){auth('reglage',{code_jours:+b.dataset.j},'PUT').then(function(r){accRep(r);});}
+    else if(b.dataset.ses){auth('sessions/'+b.dataset.ses,null,'DELETE').then(function(r){accRep(r,'Appareil déconnecté');});}
+    else if(b.dataset.supp){if(confirm('Supprimer le compte « '+b.dataset.nom+' » ? Ses appareils seront déconnectés.'))auth('comptes/'+b.dataset.supp,null,'DELETE').then(function(r){accRep(r,'Compte supprimé');});}
+    else if(b.dataset.reinit){var p=prompt('Mot de passe provisoire pour « '+b.dataset.nom+' » (10 caractères minimum). Ses appareils seront déconnectés et il devra réinstaller son code.');if(p)auth('comptes/'+b.dataset.reinit+'/reinit',{mdp:p}).then(function(r){accRep(r,'Compte remis à zéro');});}
+    else if(b.id==='accAjout'){var n=prompt('Identifiant du nouveau compte (ex. xav) :');if(!n)return;var p2=prompt('Mot de passe provisoire pour « '+n+' » (10 caractères minimum). Il installera son code à sa première connexion et pourra changer ce mot de passe.');if(p2)auth('comptes',{nom:n,mdp:p2}).then(function(r){accRep(r,'Compte créé');});}
+    else if(b.id==='accMdp'){var a=prompt('Mot de passe actuel :');if(!a)return;var nv=prompt('Nouveau mot de passe (10 caractères minimum) :');if(nv)auth('mdp',{ancien:a,nouveau:nv},'PUT').then(function(r){accRep(r,'Mot de passe changé — vos autres appareils devront se reconnecter');});}
+  });
 
   // ---------- fenêtres : la page derrière est figée (iOS compris) tant qu'une fenêtre est ouverte
   (function(){
@@ -1537,7 +1654,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
   function load(first){
     return api('state').then(function(r){
       state=r.state;$('#login').hidden=true;$('#app').hidden=false;
-      render();
+      render();loadAcces();
       if(!visData)loadVisites();
       if(!gscData)loadGoogle();
       return api('demandes').then(function(d){demandes=d.demandes;return api('evenements');}).then(function(e){evenements=e.evenements;return loadDevis();}).then(function(){renderDemandes();return loadCaisse();}).then(function(){return renderAlertes();}).then(function(){renderBord();});
@@ -2106,7 +2223,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
     if(b.id==='bandeauClear'){$('#bandeau').value='';save('reglages',{bandeau:''},'Bandeau retiré');}
   });
 
-  if(token)load(true);else showLogin();
+  if(token)load(true).then(function(){if(token&&!$('#app').hidden)auth('moi').then(function(m){if(m.ancien)vue('lvCreer');});});else showLogin();
 })();
 </script>
 </body>
