@@ -1038,6 +1038,16 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
   </main>
 </div>
 
+<dialog id="accDlg"><form method="dialog" class="dlg" id="accForm" style="display:grid;gap:12px;padding:18px" autocomplete="off">
+  <div class="row" style="flex-wrap:nowrap"><h2 style="margin:0" id="accDlgT"></h2><button class="btn sm x" type="button" id="accDlgX" aria-label="Fermer">✕</button></div>
+  <p class="muted" style="margin:0" id="accDlgP"></p>
+  <label class="f" id="accF1">Identifiant<input id="accI1" type="text" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="off"></label>
+  <label class="f" id="accF2"><span id="accL2">Mot de passe</span><input id="accI2" type="text" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="off" style="font-family:ui-monospace,Menlo,monospace"></label>
+  <label class="f" id="accF3"><span id="accL3">Nouveau mot de passe</span><input id="accI3" type="text" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="off" style="font-family:ui-monospace,Menlo,monospace"></label>
+  <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn sm" type="button" id="accGen">Générer un mot de passe</button><button class="btn sm" type="button" id="accCopie">Copier</button></div>
+  <p class="muted" style="margin:0;font-size:.84rem">Le mot de passe est affiché en clair pour le recopier sans erreur : majuscules et minuscules comptent, pas d'espace.</p>
+  <button class="btn primary" type="submit" id="accOk">Valider</button>
+</form></dialog>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -1084,7 +1094,7 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
   $('#token').addEventListener('keydown',function(e){if(e.key==='Enter')$('#loginBtn').click();});
   // identifiant + mot de passe (+ code)
   $('#lvCompte').addEventListener('submit',function(e){e.preventDefault();err('');
-    auth('login',{nom:$('#lgNom').value,mdp:$('#lgMdp').value,code:$('#lgCode').value}).then(function(r){
+    auth('login',{nom:$('#lgNom').value,mdp:$('#lgMdp').value.trim(),code:$('#lgCode').value}).then(function(r){
       if(r.ok){setToken(r.jeton);if(r.besoin==='enrolement')enrol();else entrer();return;}
       if(r.besoin==='code'){$('#lgCodeWrap').hidden=false;$('#lgCode').focus();return;}
       err(r.error||'Connexion refusée');$('#lgCode').value='';
@@ -1125,19 +1135,28 @@ dialog::backdrop{background:rgba(20,12,8,.72);backdrop-filter:blur(3px)}
       h+='<div><b>Redemander le code à 6 chiffres</b><small class="muted" style="display:block;margin:2px 0 8px">Les appareils restent connectés ; seul le code est redemandé à cette fréquence.</small><div class="seg" id="accJours">'+[[1,'Chaque jour'],[7,'7 j'],[14,'14 j'],[30,'30 j'],[60,'60 j'],[90,'90 j']].map(function(o){return '<button type="button" data-j="'+o[0]+'"'+(o[0]===m.code_jours?' class="is-on"':'')+'>'+o[1]+'</button>';}).join('')+'</div></div>';
       h+='<div><b>Appareils connectés</b><div class="acc-l" style="margin-top:6px">'+m.sessions.map(function(x){var ici=x.id===m.session_id;return '<div><span>'+esc(x.appareil||'Appareil')+(ici?' <span class="muted">(celui-ci)</span>':'')+'<small>'+esc(x.nom)+' · vu le '+esc(dateHeure(x.vu))+' · '+esc(x.ip||'')+(x.code_le?'':' · code pas encore installé')+'</small></span>'+(ici?'':'<button class="btn sm" type="button" data-ses="'+x.id+'">Déconnecter</button>')+'</div>';}).join('')+'</div></div>';
       h+='<div><b>Comptes</b><div class="acc-l" style="margin-top:6px">'+m.comptes.map(function(u){var moi=u.id===m.moi.id;return '<div><span>'+esc(u.nom)+(moi?' <span class="muted">(vous)</span>':'')+'<small>'+(u.totp_actif?'protégé par code':'code pas encore installé')+'</small></span>'+(moi?'':'<span style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end"><button class="btn sm" type="button" data-reinit="'+u.id+'" data-nom="'+esc(u.nom)+'">Remettre à zéro</button><button class="btn sm" type="button" data-supp="'+u.id+'" data-nom="'+esc(u.nom)+'">Supprimer</button></span>')+'</div>';}).join('')+'</div><button class="btn sm" type="button" id="accAjout" style="margin-top:10px">+ Ajouter un compte</button></div>';
+      if(m.blocages&&m.blocages.length)h+='<div style="border:1px solid var(--ketchup);border-radius:12px;padding:10px 12px"><b>⛔ Accès bloqués après trop d\'essais</b><small class="muted" style="display:block;margin:2px 0 8px">'+m.blocages.map(function(x){return esc(x.quoi)+' · encore '+x.minutes+' min';}).join('<br>')+'</small><button class="btn sm" type="button" id="accDebloq">Débloquer maintenant</button></div>';
       h+='<p class="muted" style="margin:0;font-size:.84rem">5 erreurs de suite bloquent l\'accès 15 min. Chaque nouvel appareil et chaque blocage sont signalés sur Telegram. Téléphone perdu : l\'autre compte peut vous « remettre à zéro », ou « Accès de secours » sur l\'écran de connexion.</p>';
       box.innerHTML=h;
     });
   }
+  var accCb=null;
+  function accDlg(o){accCb=o;$('#accDlgT').textContent=o.t;$('#accDlgP').textContent=o.p;$('#accF1').hidden=!o.nom;$('#accF2').hidden=!o.l2;$('#accL2').textContent=o.l2||'';$('#accL3').textContent=o.l3+' (10 caractères minimum)';$('#accI1').value='';$('#accI2').value='';$('#accI3').value='';$('#accDlg').showModal();}
+  $('#accDlgX').addEventListener('click',function(){$('#accDlg').close();});
+  $('#accGen').addEventListener('click',function(){var a='abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789',b=crypto.getRandomValues(new Uint8Array(14)),o='';for(var i=0;i<14;i++)o+=a[b[i]%a.length];$('#accI3').value=o;});
+  $('#accCopie').addEventListener('click',function(){var t=(accCb&&accCb.nom?'Identifiant : '+$('#accI1').value.trim().toLowerCase()+'\n':'')+'Mot de passe : '+$('#accI3').value;try{navigator.clipboard.writeText(t).then(function(){toast('Copié');});}catch(e){}});
+  $('#accForm').addEventListener('submit',function(e){e.preventDefault();if(!accCb)return;var v={nom:$('#accI1').value.trim(),m2:$('#accI2').value,m3:$('#accI3').value.trim()};
+    accCb.ok(v).then(function(r){if(r.ok){$('#accDlg').close();toast(accCb.msg);loadAcces();}else toast(r.error||'Erreur',true);});});
   function accRep(r,msg){if(r.ok){toast(msg||'Enregistré');loadAcces();}else toast(r.error||'Erreur',true);}
   document.addEventListener('click',function(e){
     var b=e.target.closest('#accCard button');if(!b)return;
     if(b.dataset.j){auth('reglage',{code_jours:+b.dataset.j},'PUT').then(function(r){accRep(r);});}
     else if(b.dataset.ses){auth('sessions/'+b.dataset.ses,null,'DELETE').then(function(r){accRep(r,'Appareil déconnecté');});}
     else if(b.dataset.supp){if(confirm('Supprimer le compte « '+b.dataset.nom+' » ? Ses appareils seront déconnectés.'))auth('comptes/'+b.dataset.supp,null,'DELETE').then(function(r){accRep(r,'Compte supprimé');});}
-    else if(b.dataset.reinit){var p=prompt('Mot de passe provisoire pour « '+b.dataset.nom+' » (10 caractères minimum). Ses appareils seront déconnectés et il devra réinstaller son code.');if(p)auth('comptes/'+b.dataset.reinit+'/reinit',{mdp:p}).then(function(r){accRep(r,'Compte remis à zéro');});}
-    else if(b.id==='accAjout'){var n=prompt('Identifiant du nouveau compte (ex. xav) :');if(!n)return;var p2=prompt('Mot de passe provisoire pour « '+n+' » (10 caractères minimum). Il installera son code à sa première connexion et pourra changer ce mot de passe.');if(p2)auth('comptes',{nom:n,mdp:p2}).then(function(r){accRep(r,'Compte créé');});}
-    else if(b.id==='accMdp'){var a=prompt('Mot de passe actuel :');if(!a)return;var nv=prompt('Nouveau mot de passe (10 caractères minimum) :');if(nv)auth('mdp',{ancien:a,nouveau:nv},'PUT').then(function(r){accRep(r,'Mot de passe changé — vos autres appareils devront se reconnecter');});}
+    else if(b.dataset.reinit){accDlg({t:'Remettre à zéro « '+b.dataset.nom+' »',p:'Ses appareils seront déconnectés et il réinstallera son code à 6 chiffres à la prochaine connexion.',nom:false,l3:'Mot de passe provisoire',ok:function(v){return auth('comptes/'+b.dataset.reinit+'/reinit',{mdp:v.m3});},msg:'Compte remis à zéro'});}
+    else if(b.id==='accAjout'){accDlg({t:'Nouveau compte',p:'Transmettez-lui l\'identifiant et ce mot de passe provisoire. Il installera son code à sa première connexion.',nom:true,l3:'Mot de passe provisoire',ok:function(v){return auth('comptes',{nom:v.nom,mdp:v.m3});},msg:'Compte créé'});}
+    else if(b.id==='accMdp'){accDlg({t:'Changer mon mot de passe',p:'Vos autres appareils devront se reconnecter.',nom:false,l2:'Mot de passe actuel',l3:'Nouveau mot de passe',ok:function(v){return auth('mdp',{ancien:v.m2,nouveau:v.m3},'PUT');},msg:'Mot de passe changé'});}
+    else if(b.id==='accDebloq'){auth('blocages',null,'DELETE').then(function(r){accRep(r,'Débloqué');});}
   });
 
   // ---------- fenêtres : la page derrière est figée (iOS compris) tant qu'une fenêtre est ouverte

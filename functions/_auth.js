@@ -114,7 +114,7 @@ async function echec(env, cle) {
   const blo = n >= MAX_ESSAIS ? t + BLOCAGE : 0;
   await env.DB.prepare('INSERT INTO admin_essais (cle, n, debut, bloque_jusqua) VALUES (?, ?, ?, ?) ON CONFLICT(cle) DO UPDATE SET n = excluded.n, debut = excluded.debut, bloque_jusqua = excluded.bloque_jusqua')
     .bind(cle, blo ? 0 : n, debut, blo).run();
-  return !!blo;
+  return blo ? { bloque: true, reste: 0 } : { bloque: false, reste: MAX_ESSAIS - n };
 }
 const reussite = (env, cle) => env.DB.prepare('DELETE FROM admin_essais WHERE cle = ?').bind(cle).run();
 const attendre = (s) => json({ ok: false, error: `Trop d'essais. Réessayez dans ${Math.ceil(s / 60)} min.` }, 429);
@@ -169,6 +169,7 @@ export async function identifier(request, env) {
 export async function routesAuth({ request, env, route, method, body }) {
   if (!route.startsWith('auth/') && route !== 'auth') return null;
   const ip = ipDe(request), r = route.slice(5);
+  for (const k of ['mdp', 'ancien', 'nouveau']) if (typeof body[k] === 'string') body[k] = body[k].trim(); // pas d'espace parasite autour d'un mot de passe collé
 
   // l'écran de connexion a besoin de savoir s'il y a déjà des comptes
   if (r === 'etat' && method === 'GET') return json({ ok: true, comptes: (await nbComptes(env)) > 0 });
@@ -182,9 +183,10 @@ export async function routesAuth({ request, env, route, method, body }) {
     // même travail de calcul que le compte existe ou non (ne révèle pas quels identifiants existent)
     const ok = egal(await hashMdp(String(body.mdp || ''), u ? u.sel : '00'.repeat(16)), u ? u.hash : 'x') && !!u;
     const rate = async (quoi) => {
-      const b1 = await echec(env, kIp), b2 = await echec(env, kNom);
+      const e1 = await echec(env, kIp), e2 = await echec(env, kNom), b1 = e1.bloque, b2 = e2.bloque, reste = Math.min(e1.reste, e2.reste);
       if (b1 || b2) await alerte(env, `⛔ ${MAX_ESSAIS} essais ratés (${quoi}) sur le compte « ${nom || '?'} » — bloqué 15 min.\nDepuis ${ip}${lieuDe(request) ? ' (' + lieuDe(request) + ')' : ''} · ${appareilDe(request)}`);
-      return json({ ok: false, error: quoi === 'code' ? 'Code incorrect.' : 'Identifiant ou mot de passe incorrect.' }, 401);
+      if (b1 || b2) return json({ ok: false, error: `Trop d'essais : accès bloqué 15 min. L'autre compte peut vous débloquer depuis Réglages → Accès et sécurité.` }, 429);
+      return json({ ok: false, error: (quoi === 'code' ? 'Code incorrect.' : 'Identifiant ou mot de passe incorrect.') + ` Encore ${reste} essai${reste > 1 ? 's' : ''} avant blocage.` }, 401);
     };
     if (!ok) return rate('mot de passe');
     if (!u.totp_actif) { // premier passage : la session sert uniquement à installer le code à 6 chiffres
@@ -229,6 +231,7 @@ export async function routesAuth({ request, env, route, method, body }) {
       const u = await env.DB.prepare('SELECT * FROM admin_users WHERE nom = ?').bind(nom).first();
       return json({ ok: true, jeton: await ouvrirSession(env, request, u, false), besoin: 'enrolement' });
     }
+    await reussite(env, 'nom:' + nom);
     await alerte(env, `👤 Compte « ${nom} » créé par ${qui.user.nom}.`);
     return json({ ok: true });
   }
@@ -259,7 +262,7 @@ export async function routesAuth({ request, env, route, method, body }) {
     if (b) return attendre(b);
     const u = await env.DB.prepare('SELECT * FROM admin_users WHERE id = ?').bind(qui.user.id).first();
     if (!(await verifierCode(env, u, body.code))) {
-      if (await echec(env, k)) { // trop d'erreurs : l'appareil est déconnecté, il faudra le mot de passe
+      if ((await echec(env, k)).bloque) { // trop d'erreurs : l'appareil est déconnecté, il faudra le mot de passe
         await env.DB.prepare('DELETE FROM admin_sessions WHERE id = ?').bind(qui.session.id).run();
         await alerte(env, `⛔ ${MAX_ESSAIS} codes faux sur un appareil de « ${u.nom} » : appareil déconnecté.\n${appareilDe(request)} · ${ip}`);
         return json({ ok: false, error: 'Trop de codes faux : appareil déconnecté.' }, 401);
@@ -283,7 +286,9 @@ export async function routesAuth({ request, env, route, method, body }) {
     if (qui.ancien) return json({ ok: true, ancien: true });
     const ses = await env.DB.prepare('SELECT s.id, s.appareil, s.ip, s.cree, s.vu, s.code_le, u.nom FROM admin_sessions s JOIN admin_users u ON u.id = s.user_id ORDER BY s.vu DESC').all();
     const us = await env.DB.prepare('SELECT id, nom, totp_actif, cree FROM admin_users ORDER BY id').all();
-    return json({ ok: true, moi: qui.user, session_id: qui.session.id, code_jours: await codeJours(env), sessions: ses.results, comptes: us.results });
+    const blo = await env.DB.prepare('SELECT cle, bloque_jusqua FROM admin_essais WHERE bloque_jusqua > ?').bind(now()).all();
+    return json({ ok: true, moi: qui.user, session_id: qui.session.id, code_jours: await codeJours(env), sessions: ses.results, comptes: us.results,
+      blocages: blo.results.map((x) => ({ quoi: x.cle.replace(/^nom:/, 'compte ').replace(/^ip:/, 'adresse ').replace(/^ses:.*/, 'un appareil'), minutes: Math.ceil((x.bloque_jusqua - now()) / 60) })) });
   }
   if (qui.ancien) return json({ ok: false, error: 'Créez d\'abord votre compte.' }, 400);
 
@@ -307,6 +312,7 @@ export async function routesAuth({ request, env, route, method, body }) {
     await alerte(env, `🔑 Mot de passe de « ${u.nom} » changé.`);
     return json({ ok: true });
   }
+  if (r === 'blocages' && method === 'DELETE') { await env.DB.prepare('DELETE FROM admin_essais').run(); return json({ ok: true }); }
   let m;
   if ((m = r.match(/^sessions\/(\d+)$/)) && method === 'DELETE') {
     await env.DB.prepare('DELETE FROM admin_sessions WHERE id = ?').bind(Number(m[1])).run();
@@ -332,6 +338,8 @@ export async function routesAuth({ request, env, route, method, body }) {
       env.DB.prepare('UPDATE admin_users SET sel = ?, hash = ?, totp_secret = NULL, totp_actif = 0, totp_pas = 0 WHERE id = ?').bind(sel, await hashMdp(body.mdp, sel), id),
       env.DB.prepare('DELETE FROM admin_sessions WHERE user_id = ?').bind(id),
     ]);
+    await reussite(env, 'nom:' + u.nom);
+    await env.DB.prepare("DELETE FROM admin_essais WHERE cle LIKE 'ip:%'").run();
     await alerte(env, `♻️ Compte « ${u.nom} » remis à zéro par ${qui.user.nom}.`);
     return json({ ok: true });
   }
