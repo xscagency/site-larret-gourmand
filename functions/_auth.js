@@ -127,6 +127,32 @@ function appareilDe(request) {
   return (os + (nav ? ' · ' + nav : '')).slice(0, 60);
 }
 const lieuDe = (request) => { const cf = request.cf || {}; return [cf.city, cf.country].filter(Boolean).join(', '); };
+// Tout ce qu'on sait de l'appareil qui appelle : adresse, lieu, opérateur, appareil, langue, heure, passage Cloudflare
+function fiche(request) {
+  const cf = request.cf || {}, h = request.headers, ua = h.get('user-agent') || '';
+  const lieu = [cf.city, cf.postalCode, cf.region, cf.country].filter(Boolean).join(', ');
+  const heure = new Date().toLocaleString('fr-FR', { timeZone: 'Europe/Paris', dateStyle: 'short', timeStyle: 'medium' });
+  const mail = h.get('cf-access-authenticated-user-email');
+  return [
+    `🕒 ${heure}`,
+    `🌐 Adresse : ${ipDe(request)}`,
+    lieu ? `📍 Lieu approximatif : ${lieu}` : '',
+    cf.asOrganization ? `📡 Opérateur : ${cf.asOrganization}${cf.asn ? ' (AS' + cf.asn + ')' : ''}` : '',
+    `📱 Appareil : ${appareilDe(request)}`,
+    ua ? `🔎 Détail : ${ua.slice(0, 180)}` : '',
+    h.get('accept-language') ? `🗣 Langue : ${h.get('accept-language').slice(0, 40)}` : '',
+    cf.timezone ? `⏰ Fuseau : ${cf.timezone}` : '',
+    `🔗 Site : ${new URL(request.url).hostname}${h.get('referer') ? ' · venu de ' + h.get('referer').slice(0, 120) : ''}`,
+    mail ? `✉️ Passé par Cloudflare avec : ${mail}` : '✉️ Pas d\'identité Cloudflare (verrou non franchi ou adresse technique)',
+  ].filter(Boolean).join('\n');
+}
+// Une alerte au plus par heure et par adresse pour un même motif (évite les rafales)
+async function uneParHeure(env, cle) {
+  const t = now(), r = await env.DB.prepare('SELECT debut FROM admin_essais WHERE cle = ?').bind(cle).first();
+  if (r && t - r.debut < 3600) return false;
+  await env.DB.prepare('INSERT INTO admin_essais (cle, n, debut, bloque_jusqua) VALUES (?, 0, ?, 0) ON CONFLICT(cle) DO UPDATE SET debut = excluded.debut').bind(cle, t).run();
+  return true;
+}
 const alerte = (env, texte) => sendTelegram(env, '🔐 Admin L\'Arrêt Gourmand\n' + texte).catch(() => null);
 
 async function codeJours(env) {
@@ -172,7 +198,11 @@ export async function routesAuth({ request, env, route, method, body }) {
   for (const k of ['mdp', 'ancien', 'nouveau']) if (typeof body[k] === 'string') body[k] = body[k].trim(); // pas d'espace parasite autour d'un mot de passe collé
 
   // l'écran de connexion a besoin de savoir s'il y a déjà des comptes
-  if (r === 'etat' && method === 'GET') return json({ ok: true, comptes: (await nbComptes(env)) > 0 });
+  if (r === 'etat' && method === 'GET') {
+    const comptes = (await nbComptes(env)) > 0;
+    if (comptes && await uneParHeure(env, 'vu:' + ip)) await alerte(env, `👀 Un appareil non connecté a ouvert la page de l'admin.\n${fiche(request)}\n\nSi c'est l'un de vous sur un nouvel appareil, un message « Nouvel appareil connecté » suivra.`);
+    return json({ ok: true, comptes });
+  }
 
   // ---- connexion d'un nouvel appareil : identifiant + mot de passe, puis code à 6 chiffres
   if (r === 'login' && method === 'POST') {
@@ -184,7 +214,8 @@ export async function routesAuth({ request, env, route, method, body }) {
     const ok = egal(await hashMdp(String(body.mdp || ''), u ? u.sel : '00'.repeat(16)), u ? u.hash : 'x') && !!u;
     const rate = async (quoi) => {
       const e1 = await echec(env, kIp), e2 = await echec(env, kNom), b1 = e1.bloque, b2 = e2.bloque, reste = Math.min(e1.reste, e2.reste);
-      if (b1 || b2) await alerte(env, `⛔ ${MAX_ESSAIS} essais ratés (${quoi}) sur le compte « ${nom || '?'} » — bloqué 15 min.\nDepuis ${ip}${lieuDe(request) ? ' (' + lieuDe(request) + ')' : ''} · ${appareilDe(request)}`);
+      if (b1 || b2) await alerte(env, `⛔ ${MAX_ESSAIS} essais ratés (${quoi}) sur le compte « ${nom || '?'} » — bloqué 15 min.\n${fiche(request)}`);
+      else await alerte(env, `⚠️ Essai de connexion raté (${quoi === 'code' ? 'mot de passe correct, code faux' : 'mauvais identifiant ou mot de passe'}).\nIdentifiant tapé : « ${String(body.nom || '').slice(0, 40) || '?'} »${u ? ' (compte existant)' : ' (compte inconnu)'} · encore ${reste} essai${reste > 1 ? 's' : ''}\n${fiche(request)}`);
       if (b1 || b2) return json({ ok: false, error: `Trop d'essais : accès bloqué 15 min. L'autre compte peut vous débloquer depuis Réglages → Accès et sécurité.` }, 429);
       return json({ ok: false, error: (quoi === 'code' ? 'Code incorrect.' : 'Identifiant ou mot de passe incorrect.') + ` Encore ${reste} essai${reste > 1 ? 's' : ''} avant blocage.` }, 401);
     };
@@ -197,7 +228,7 @@ export async function routesAuth({ request, env, route, method, body }) {
     if (!(await verifierCode(env, u, body.code))) return rate('code');
     await reussite(env, kIp); await reussite(env, kNom);
     const jeton = await ouvrirSession(env, request, u, true);
-    await alerte(env, `✅ Nouvel appareil connecté : ${u.nom}\n${appareilDe(request)} · ${ip}${lieuDe(request) ? ' (' + lieuDe(request) + ')' : ''}\nSi ce n'est pas vous : Réglages → Accès → Déconnecter, puis changez le mot de passe.`);
+    await alerte(env, `✅ Nouvel appareil connecté : ${u.nom}\n${fiche(request)}\n\nSi ce n'est pas vous : Réglages → Accès → Déconnecter, puis changez le mot de passe.`);
     return json({ ok: true, jeton });
   }
 
@@ -205,14 +236,14 @@ export async function routesAuth({ request, env, route, method, body }) {
   if (r === 'secours' && method === 'POST') {
     const kIp = 'ip:' + ip, b = await bloque(env, kIp);
     if (b) return attendre(b);
-    if (!env.ADMIN_TOKEN || !egal(String(body.jeton || ''), env.ADMIN_TOKEN)) { await echec(env, kIp); return json({ ok: false, error: 'Jeton de secours refusé.' }, 401); }
+    if (!env.ADMIN_TOKEN || !egal(String(body.jeton || ''), env.ADMIN_TOKEN)) { await echec(env, kIp); await alerte(env, `🚨 Tentative d'accès de secours avec un mauvais jeton (compte visé : « ${nomPropre(body.nom) || '?'} »).\n${fiche(request)}`); return json({ ok: false, error: 'Jeton de secours refusé.' }, 401); }
     const nom = nomPropre(body.nom);
     if (!nom || !mdpValide(body.mdp)) return json({ ok: false, error: 'Identifiant et nouveau mot de passe (10 caractères minimum) requis.' }, 400);
     const sel = hex(alea(16)), hash = await hashMdp(body.mdp, sel);
     await env.DB.prepare('INSERT INTO admin_users (nom, sel, hash) VALUES (?, ?, ?) ON CONFLICT(nom) DO UPDATE SET sel = excluded.sel, hash = excluded.hash, totp_secret = NULL, totp_actif = 0, totp_pas = 0').bind(nom, sel, hash).run();
     const u = await env.DB.prepare('SELECT * FROM admin_users WHERE nom = ?').bind(nom).first();
     await env.DB.prepare('DELETE FROM admin_sessions WHERE user_id = ?').bind(u.id).run();
-    await alerte(env, `🆘 Accès de secours utilisé : compte « ${nom} » réinitialisé.\nDepuis ${ip}${lieuDe(request) ? ' (' + lieuDe(request) + ')' : ''} · ${appareilDe(request)}`);
+    await alerte(env, `🆘 Accès de secours utilisé : compte « ${nom} » réinitialisé.\n${fiche(request)}`);
     return json({ ok: true, jeton: await ouvrirSession(env, request, u, false), besoin: 'enrolement' });
   }
 
@@ -344,4 +375,13 @@ export async function routesAuth({ request, env, route, method, body }) {
     return json({ ok: true });
   }
   return json({ ok: false, error: 'Route inconnue.' }, 404);
+}
+
+// Appel direct de l'API sans session valable (quelqu'un qui sonde l'admin sans passer par la page) : une alerte par heure et par adresse
+export async function signalerRefus(request, env, route) {
+  try {
+    if (!(await nbComptes(env))) return;
+    const ip = ipDe(request);
+    if (await uneParHeure(env, 'api:' + ip)) await alerte(env, `🚫 Appel refusé à l'admin sans connexion valable (${request.method} ${String(route).slice(0, 60)}).\n${fiche(request)}`);
+  } catch (e) { /* une alerte ratée ne doit jamais gêner la réponse */ }
 }

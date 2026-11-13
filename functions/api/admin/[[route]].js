@@ -40,7 +40,7 @@ import { getVisites } from '../../_visites.js';
 import { getSearchConsole } from '../../_google.js';
 import { cleCaisse, normaliserService, enregistrerService, ligneService, BURGERS_CAISSE } from '../../_caisse.js';
 import { addDays } from '../../_lib.js';
-import { identifier, routesAuth, preparerAuth } from '../../_auth.js';
+import { identifier, routesAuth, preparerAuth, signalerRefus } from '../../_auth.js';
 
 
 const num = (v, def = 0) => (v === '' || v === null || v === undefined || Number.isNaN(Number(v)) ? def : Number(v));
@@ -60,7 +60,7 @@ export async function onRequest({ request, env, params }) {
     return routesAuth({ request, env, route, method, body: b });
   }
   const qui = await identifier(request, env);
-  if (!qui.ok) return json({ ok: false, error: 'Accès refusé.', besoin: qui.besoin || '' }, 401);
+  if (!qui.ok) { if (!qui.besoin) await signalerRefus(request, env, route); return json({ ok: false, error: 'Accès refusé.', besoin: qui.besoin || '' }, 401); }
   const body = (method === 'PUT' || method === 'POST') && isJson ? await request.json().catch(() => ({})) : {};
 
   // ---- État complet
